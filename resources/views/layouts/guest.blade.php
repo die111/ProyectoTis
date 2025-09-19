@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>Oh! SanSi - Olimpiada en Ciencias y Tecnología</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Mulish:wght@400;500;600&display=swap" rel="stylesheet">
+    
+    <!-- Styles -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ asset('css/app.css') }}">
+
+    <style>
+        /* Tus estilos actuales para la página welcome */
+        :root {
+            --color-primary: #091c47;
+            --color-light-bg: #f5f4f4;
+            --color-white: #ffffff;
+            --color-black: #000000;
+            --color-text-dark: #2d2d2d;
+            --color-text-light: #fff8f8;
+            --font-poppins: 'Poppins', sans-serif;
+            --font-mulish: 'Mulish', sans-serif;
+        }
+
+        body {
+            font-family: var(--font-poppins);
+            background-color: var(--color-white);
+            color: var(--color-black);
+        }
+
+        .section-container {
+            padding: 60px 50px;
+        }
+
+        /* ... resto de tus estilos ... */
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <x-nav-header />
+
+    <!-- Contenido principal -->
+    <main>
+        @yield('content')
+    </main>
+
+    <!-- Footer -->
+    <x-footer />
+</body>
+</html>
