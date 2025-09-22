@@ -16,29 +16,52 @@
         
         <!-- Scripts -->
         <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+        <script src="{{ asset('js/sidebar.js') }}"></script>
         
         @stack('styles')
     </head>
-    <body class="bg-gray-50 font-sans antialiased">
-        <div class="flex h-screen overflow-hidden">
+    <body class="bg-gray-100 font-sans antialiased">
+        <!-- header -->
+        <x-nav-header/>
+
+        <div class="flex min-h-screen">
             <!-- Sidebar -->
             <x-sidebar />
 
-            <!-- Main Content -->
-            <div class="flex-1 flex flex-col overflow-hidden">
+            <!-- Main Content Wrapper -->
+            <div class="flex-1 flex flex-col min-h-screen main-content bg-gray-100">
                 <!-- Top Navigation -->
-                <header class="bg-white shadow-sm border-b border-gray-200 lg:hidden">
-                    <div class="flex items-center justify-between px-4 py-3">
-                        <button @click="sidebarOpen = !sidebarOpen" 
-                                class="text-gray-500 hover:text-gray-600 focus:outline-none">
-                            <i class="fas fa-bars text-xl"></i>
-                        </button>
-                        <div class="flex items-center space-x-2">
-                            <i class="fas fa-trophy text-yellow-500"></i>
-                            <span class="text-gray-900 font-medium">Oh! SanSi</span>
+                <nav class="bg-white shadow-sm">
+                    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                        <div class="flex justify-between h-16">
+                            <div class="flex">
+                                <!-- Mobile menu button -->
+                                <div class="flex items-center lg:hidden">
+                                    <button id="mobileMenuToggle" type="button" class="inline-flex items-center justify-center p-2 rounded-md text-gray-600 hover:text-gray-900 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500" aria-controls="mobile-menu" aria-expanded="false">
+                                        <span class="sr-only">Abrir menú principal</span>
+                                        <i class="fas fa-bars text-xl"></i>
+                                    </button>
+                                </div>
+                                
+                                <!-- Logo -->
+                                <div class="flex items-center">
+                                    <img src="{{ asset('images/logo.png') }}" alt="Logo" class="h-8 w-8">
+                                    <span class="ml-2 text-xl font-semibold text-gray-900">Oh! SanSi</span>
+                                </div>
+                            </div>
+
+                            <!-- Right side navigation items -->
+                            <div class="flex items-center">
+                                <div class="flex items-center space-x-4">
+                                    <span class="text-gray-700">{{ Auth::user()->name }}</span>
+                                    <div class="h-8 w-8 rounded-full bg-blue-500 flex items-center justify-center text-white">
+                                        {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                </header>
+                </nav>
 
                 <!-- Page Header -->
                 @if(isset($header))
@@ -95,18 +118,13 @@
                         </div>
                     @endif
 
-                    <!-- Page Content -->
+                    <!-- Contenido Variable -->
                     @yield('content')
                     {{ $slot ?? '' }}
                 </main>
 
                 <!-- Footer -->
-                <footer class="bg-white border-t border-gray-200 px-4 py-3 sm:px-6 lg:px-8">
-                    <div class="flex items-center justify-between text-sm text-gray-500">
-                        <p>© {{ date('Y') }} Universidad Mayor de San Simón - Oh! SanSi</p>
-                        <p>Versión 1.0</p>
-                    </div>
-                </footer>
+                <x-footer/>
             </div>
         </div>
 

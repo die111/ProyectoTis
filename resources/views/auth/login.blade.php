@@ -4,7 +4,7 @@
     <div class="login-promo">
         <h1 class="promo-title">Oh! SanSi</h1>
         <div class="promo-image">
-            <img src="{{ asset('images/logo.png') }}" alt="Logo Oh! SanSi">
+            <img src="{{ asset('images/logo-grande.jpg') }}" alt="Logo Oh! SanSi">
         </div>
     </div>
     <div class="login-panel">

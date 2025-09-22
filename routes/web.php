@@ -19,7 +19,7 @@ Route::middleware('auth')->group(function () {
     
     // Dashboard principal para todos los usuarios autenticados
     Route::get('/dashboard/main', [DashboardController::class, 'index'])->name('dashboard');
-    
+
     // Cargar rutas por roles
     // Ruta de admin
     require __DIR__.'/admin/routes.php';
