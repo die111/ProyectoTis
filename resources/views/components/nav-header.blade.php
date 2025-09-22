@@ -290,9 +290,9 @@
                 </a>
             </li>
             <li>
-                <a href="#" class="{{ request()->routeIs('classified.*') ? 'active' : '' }}">
-                    CLASIFICADOS
-                </a>
+               <a href="{{ route('clasificados.index') }}" class="{{ request()->routeIs('clasificados.*') ? 'active' : '' }}">
+                   CLASIFICADOS
+               </a>
             </li>
             <li>
                 <a href="#" class="{{ request()->routeIs('contact.*') ? 'active' : '' }}">
