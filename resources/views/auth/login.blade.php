@@ -4,7 +4,7 @@
     <div class="login-promo">
         <h1 class="promo-title">Oh! SanSi</h1>
         <div class="promo-image">
-            <img src="{{ asset('images/logo-grande.jpg') }}" alt="Logo Oh! SanSi">
+            <img src="{{ asset('images/logo_grande.png') }}" alt="Logo Oh! SanSi">
         </div>
     </div>
     <div class="login-panel">
@@ -76,23 +76,11 @@
 @endsection
 @section('scripts')
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const togglePassword = document.querySelector('#togglePassword');
-        const password = document.querySelector('#password');
-        const icon = togglePassword.querySelector('i');
-
-        togglePassword.addEventListener('click', function() {
-            const type = password.getAttribute('type') === 'password' ? 'text' : 'password';
-            password.setAttribute('type', type);
-
-            if (type === 'text') {
-                icon.classList.remove('fa-eye');
-                icon.classList.add('fa-eye-slash');
-            } else {
-                icon.classList.remove('fa-eye-slash');
-                icon.classList.add('fa-eye');
-            }
-        });
+    document.getElementById('togglePassword').addEventListener('click', function() {
+        const passwordField = document.getElementById('password');
+        const type = passwordField.getAttribute('type') === 'password' ? 'text' : 'password';
+        passwordField.setAttribute('type', type);
+        this.innerHTML = type === 'password' ? '<i class="fas fa-eye"></i>' : '<i class="fas fa-eye-slash"></i>';
     });
 </script>
 @endsection
@@ -137,11 +125,10 @@
     .login-promo {
         display: flex;
         flex-direction: column;
-        justify-content: center;
+        justify-content: absolute;
         align-items: center;
-        padding: 40px;
-        gap: 40px;
-        background: linear-gradient(135deg, #f5f7fa 0%, #ffffff 100%);
+        padding: 50px;
+        gap: 50px;
     }
 
     .promo-title {
