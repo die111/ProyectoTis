@@ -26,6 +26,12 @@ class Sidebar extends Component
         // Menús específicos por rol
         switch ($user->role) {
             case 'admin':
+                // [
+                //         'name' => 'Usuarios',
+                //         'route' => 'admin.users.create',
+                //         'icon' => 'fas fa-users',
+                //         'active' => $this->isRouteActive(['admin.users.*'])
+                //     ],
                 $items = [
                     [
                         'name' => 'Dashboard',
@@ -34,34 +40,34 @@ class Sidebar extends Component
                         'active' => $this->isRouteActive(['dashboard'])
                     ],
                     [
+                        'name' => 'Competicion',
+                        'route' => 'admin.competicion.index',
+                        'icon' => 'fas fa-trophy',
+                        'active' => $this->isRouteActive(['competicion.*'])
+                    ],
+                    [
+                        'name' => 'Roles',
+                        'route' => 'admin.roles.index',
+                        'icon' => 'fas fa-user-tag',
+                        'active' => $this->isRouteActive(['roles.*'])
+                    ],
+                    [
                         'name' => 'Usuarios',
-                        'route' => 'admin.users.create',
+                        'route' => 'admin.usuarios.index',
                         'icon' => 'fas fa-users',
-                        'active' => $this->isRouteActive(['admin.users.*'])
+                        'active' => $this->isRouteActive(['usuarios.*'])
                     ],
                     [
-                        'name' => 'Olimpistas',
-                        'route' => '#',
-                        'icon' => 'fas fa-user-graduate',
-                        'active' => $this->isRouteActive(['olimpistas.*'])
+                        'name' => 'Inscripcion',
+                        'route' => 'admin.inscripcion.index',
+                        'icon' => 'fas fa-clipboard-list',
+                        'active' => $this->isRouteActive(['inscripcion.*'])
                     ],
                     [
-                        'name' => 'Áreas',
-                        'route' => '#',
-                        'icon' => 'fas fa-layer-group',
-                        'active' => $this->isRouteActive(['areas.*'])
-                    ],
-                    [
-                        'name' => 'Evaluaciones',
-                        'route' => '#',
-                        'icon' => 'fas fa-clipboard-check',
-                        'active' => $this->isRouteActive(['evaluaciones.*'])
-                    ],
-                    [
-                        'name' => 'Reportes',
-                        'route' => '#',
-                        'icon' => 'fas fa-chart-bar',
-                        'active' => $this->isRouteActive(['reportes.*'])
+                        'name' => 'Gestion de fases',
+                        'route' => 'admin.etapas.index',
+                        'icon' => 'fas fa-sitemap',
+                        'active' => $this->isRouteActive(['gestion-fases.*'])
                     ],
                 ];
                 break;
@@ -185,7 +191,7 @@ class Sidebar extends Component
     private function isRouteActive(array $routePatterns): bool
     {
         $currentRoute = Route::currentRouteName();
-        
+
         foreach ($routePatterns as $pattern) {
             if (str_contains($pattern, '*')) {
                 $pattern = str_replace('*', '', $pattern);
@@ -198,7 +204,7 @@ class Sidebar extends Component
                 }
             }
         }
-        
+
         return false;
     }
 

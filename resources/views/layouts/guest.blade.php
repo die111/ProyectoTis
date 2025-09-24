@@ -49,8 +49,8 @@
     </style>
 </head>
 <body class="bg-gray-50">
-    <!-- Header -->
-    <x-nav-header />
+    <!-- Navbar -->
+    <x-nav-header :guest="true" />
 
     <!-- Contenido principal -->
     <main>

@@ -94,13 +94,7 @@
                 Acciones Rápidas
             </h3>
             <div class="space-y-3">
-                <a href="{{ route('admin.users.create') }}" 
-                   class="flex items-center p-4 rounded-lg border-2 border-dashed border-gray-200 hover:border-blue-300 hover:bg-blue-50 transition-all duration-200 group">
-                    <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mr-3 group-hover:bg-blue-200">
-                        <i class="fas fa-user-plus text-blue-500"></i>
-                    </div>
-                    <span class="font-medium text-gray-700 group-hover:text-blue-600">Crear Usuario</span>
-                </a>
+
                 
                 <a href="#" class="flex items-center p-4 rounded-lg border-2 border-dashed border-gray-200 hover:border-green-300 hover:bg-green-50 transition-all duration-200 group">
                     <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center mr-3 group-hover:bg-green-200">

@@ -309,13 +309,12 @@
     @else
         <div class="flex items-center space-x-4">
             <span class="text-black font-medium">{{ Auth::user()->name }}</span>
-            <form method="POST" action="{{ route('logout') }}" class="inline">
-                @csrf
-                <button type="submit" class="login-button">
-                    <span>Cerrar Sesión</span>
-                    <i src></i>
-                </button>
-            </form>
+            @if(!request()->is('dashboard') && !request()->is('panel-control') && !request()->is('admin/*'))
+                <a href="{{ route('dashboard') }}" class="login-button bg-green-600 hover:bg-green-700">
+                    <i class="fas fa-arrow-left mr-2"></i>
+                    <span>Volver al Panel</span>
+                </a>
+            @endif
         </div>
     @endguest
 </header>
