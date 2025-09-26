@@ -3,6 +3,7 @@
 use App\Http\Controllers\DashboardController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\WelcomeController;
+use App\Http\Controllers\EtapasController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\ClasificadosController;
 
@@ -18,6 +19,12 @@ Route::get('/contactos', [ContactController::class, 'index'])->name('contactos')
 Route::get('/clasificados', [ClasificadosController::class, 'index'])
     ->name('clasificados.index');
 
+Route::get('/etapas', [EtapasController::class, 'index'])
+    ->name('etapas.index'); // lista de etapas de la competición activa
+
+Route::get('/etapas/{etapa}', [EtapasController::class, 'show'])
+    ->whereNumber('etapa')
+    ->name('etapas.show'); // detalle simple (opcional por ahora)    
 // Rutas de autenticación
 require __DIR__.'/auth.php';
 
@@ -37,4 +44,8 @@ Route::middleware('auth')->group(function () {
     
     // Rutas compartidas
     require __DIR__.'/shared/profile.php';
+
+    Route::get('/admin/etapas', [EtapasController::class, 'admin'])
+        ->name('admin.etapas.index'); // para más adelante (CRUD, finalizar, etc.)
+    
 });
