@@ -4,6 +4,10 @@ use App\Http\Controllers\DashboardController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\WelcomeController;
 use App\Http\Controllers\EtapasController;
+use App\Http\Controllers\ContactController;
+use App\Http\Controllers\ClasificadosController;
+
+
 
 // Rutas públicas
 Route::get('/', function () {
@@ -11,6 +15,9 @@ Route::get('/', function () {
 })->name('home');
 
 Route::get('/welcome', [WelcomeController::class, 'index'])->name('welcome');
+Route::get('/contactos', [ContactController::class, 'index'])->name('contactos');
+Route::get('/clasificados', [ClasificadosController::class, 'index'])
+    ->name('clasificados.index');
 
 Route::get('/etapas', [EtapasController::class, 'index'])
     ->name('etapas.index'); // lista de etapas de la competición activa
