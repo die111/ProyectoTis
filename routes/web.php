@@ -4,6 +4,9 @@ use App\Http\Controllers\DashboardController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\WelcomeController;
 use App\Http\Controllers\ContactController;
+use App\Http\Controllers\ClasificadosController;
+
+
 
 // Rutas públicas
 Route::get('/', function () {
@@ -11,8 +14,9 @@ Route::get('/', function () {
 })->name('home');
 
 Route::get('/welcome', [WelcomeController::class, 'index'])->name('welcome');
-
 Route::get('/contactos', [ContactController::class, 'index'])->name('contactos');
+Route::get('/clasificados', [ClasificadosController::class, 'index'])
+    ->name('clasificados.index');
 
 // Rutas de autenticación
 require __DIR__.'/auth.php';
