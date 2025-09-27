@@ -30,21 +30,21 @@
           <!-- Nombre -->
           <div>
             <label for="name" class="block text-sm font-semibold text-gray-800 mb-1">Nombre*</label>
-            <input id="name" name="name" type="text" required placeholder="Deysi"
+            <input id="name" name="name" type="text" required placeholder="Ingrese su nombre"
                    class="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 placeholder:text-gray-400">
           </div>
 
           <!-- Apellido Paterno -->
           <div>
             <label class="block text-sm font-semibold text-gray-800 mb-1">Apellido Paterno*</label>
-            <input type="text" name="last_name_father" required placeholder="Quispe"
+            <input type="text" name="last_name_father" required placeholder="Ingrese su apellido paterno"
                    class="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 placeholder:text-gray-400">
           </div>
 
           <!-- Apellido Materno -->
           <div>
             <label class="block text-sm font-semibold text-gray-800 mb-1">Apellido Materno</label>
-            <input type="text" name="last_name_mother" placeholder="Condori"
+            <input type="text" name="last_name_mother" placeholder="Ingrese su apellido materno"
                    class="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 placeholder:text-gray-400">
           </div>
 
@@ -64,7 +64,7 @@
           <!-- Código Usuario -->
           <div>
             <label class="block text-sm font-semibold text-gray-800 mb-1">Código Usuario*</label>
-            <input type="text" name="user_code" required placeholder="28848292"
+            <input type="text" name="user_code" required placeholder="Ingrese el codigo de Usuario"
                    class="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 placeholder:text-gray-400">
           </div>
 
@@ -78,7 +78,7 @@
           <!-- Unidad Educativa -->
           <div>
             <label class="block text-sm font-semibold text-gray-800 mb-1">Unidad Educativa</label>
-            <input type="text" name="school" placeholder="Plurinacional San Isidro"
+            <input type="text" name="school" placeholder="Ingrese la unidad educativa"
                    class="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 placeholder:text-gray-400">
           </div>
 
@@ -101,7 +101,7 @@
           <!-- Email (col-span-3) -->
           <div class="md:col-span-3">
             <label for="email" class="block text-sm font-semibold text-gray-800 mb-1">Dirección de correo electrónico*</label>
-            <input id="email" name="email" type="email" required placeholder="deysiq368@gmail.com"
+            <input id="email" name="email" type="email" required placeholder="ingrese un correo electronico valido"
                    class="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 placeholder:text-gray-400">
           </div>
         </div>
