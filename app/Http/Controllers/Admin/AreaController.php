@@ -5,11 +5,10 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 
-class CompeticionController extends Controller
+class AreaController extends Controller
 {
     public function index()
     {
-        return view('admin.competicion.index');
+        return view('admin.areas.index');
     }
-    // ...otros métodos CRUD si es necesario...
 }

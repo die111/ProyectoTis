@@ -35,7 +35,7 @@ class UserSeeder extends Seeder
             User::create([
                 'name' => 'Responsable ' . $area,
                 'email' => strtolower('responsable.' . str_replace(' ', '', $area) . '@ohsansi.edu.bo'),
-                'password' => Hash::make('responsable123'),
+                'password' => Hash::make('  '),
                 'role' => 'responsable_area',
                 'is_active' => true,
                 'last_name_father' => 'Responsable',

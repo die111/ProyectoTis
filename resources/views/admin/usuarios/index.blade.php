@@ -207,7 +207,4 @@
             </div>
         </div>
     </section>
-
-
-
-
+@endsection

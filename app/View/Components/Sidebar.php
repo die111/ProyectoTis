@@ -34,24 +34,10 @@ class Sidebar extends Component
                         'active' => $this->isRouteActive(['dashboard'])
                     ],
                     [
-                        'name' => 'Competición',
-                        'route' => '#',
+                        'name' => 'Competicion',
+                        'route' => 'admin.competicion.index',
                         'icon' => 'fas fa-trophy',
-                        'active' => $this->isRouteActive(['admin.competicion.index', 'admin.etapas.*']),
-                        'submenu' => [
-                            [
-                                'name' => 'Panel de Competición',
-                                'route' => 'admin.competicion.index',
-                                'icon' => 'fas fa-trophy',
-                                'active' => $this->isRouteActive(['admin.competicion.index'])
-                            ],
-                            [
-                                'name' => 'Fases',
-                                'route' => 'admin.etapas.index',
-                                'icon' => 'fas fa-sitemap',
-                                'active' => $this->isRouteActive(['admin.etapas.*'])
-                            ],
-                        ]
+                        'active' => $this->isRouteActive(['competicion.*'])
                     ],
                     [
                         'name' => 'Roles',
@@ -66,11 +52,23 @@ class Sidebar extends Component
                         'active' => $this->isRouteActive(['usuarios.*'])
                     ],
                     [
-                        'name' => 'Inscripción',
+                        'name' => 'Inscripcion',
                         'route' => 'admin.inscripcion.index',
                         'icon' => 'fas fa-clipboard-list',
                         'active' => $this->isRouteActive(['inscripcion.*'])
                     ],
+                    [
+                        'name' => 'Gestion de fases',
+                        'route' => 'admin.etapas.index',
+                        'icon' => 'fas fa-sitemap',
+                        'active' => $this->isRouteActive(['gestion-fases.*'])
+                    ],
+                    [
+                        'name' => 'Gestion de Areas',
+                        'route' => 'admin.areas.index',
+                        'icon' => 'fas fa-th-large',
+                        'active' => $this->isRouteActive(['areas.*'])
+                    ]
                 ];
                 break;
 
