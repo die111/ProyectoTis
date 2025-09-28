@@ -21,7 +21,7 @@
       <p class="text-lg font-semibold text-gray-800">Los campos con * son obligatorios</p>
       <hr class="border-t border-gray-400 mt-2 mb-6" />
 
-      <form action="{{ route('admin.users.store') }}" method="POST" class="space-y-6">
+      <form action="{{ route('admin.usuarios.index') }}" method="POST" class="space-y-6">
         @csrf
         <input type="hidden" name="role" value="evaluador">
 
@@ -54,9 +54,9 @@
             <select id="area_id" name="area_id" required
                     class="appearance-none w-full rounded-xl border border-gray-300 bg-white px-4 py-3 pr-10 shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-800">
               <option value="" disabled selected>Selecciona un área</option>
-              <option value="1">Matemática</option>
-              <option value="2">Informática</option>
-              <option value="3">Física</option>
+              @foreach($areas as $area)
+                  <option value="{{ $area->id }}">{{ $area->name }}</option>
+              @endforeach
             </select>
             <i class="bi bi-chevron-down absolute right-3 top-9 pointer-events-none text-gray-500"></i>
           </div>
@@ -94,8 +94,7 @@
             </select>
             <i class="bi bi-chevron-down absolute right-3 top-9 pointer-events-none text-gray-500"></i>
           </div>
-
-          <!-- (Espaciador para mantener layout 3xN como en la imagen) -->
+          
           <div class="hidden md:block"></div>
 
           <!-- Email (col-span-3) -->
@@ -111,7 +110,7 @@
           <div class="w-full flex items-center justify-center">
             <button type="submit"
                     class="px-10 py-3 rounded-full font-semibold text-white bg-[#0C3E92] hover:opacity-95 transition">
-              Guardar y crear
+              Guardar y crear Evaluador
             </button>
           </div>
           <div class="w-2/3 md:w-1/2 mx-auto h-1 rounded bg-gray-300 mt-2"></div>

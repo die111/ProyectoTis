@@ -51,8 +51,8 @@
     }
 
     .logo-image {
-        width: 50px;
-        height: 50px;
+        width: 150px;
+        height: 150px;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -67,7 +67,7 @@
         color: var(--color-black);
         font-family: var(--font-poppins);
         font-weight: 700;
-        font-size: 28px;
+        font-size: 35px;
         line-height: 1.2;
         margin: 0;
     }
@@ -211,7 +211,7 @@
         .site-header {
             justify-content: space-between;
         }
-        
+
         .logo-text {
             font-size: 24px;
         }
@@ -234,25 +234,16 @@
         .mobile-menu li {
             padding: 10px 20px;
         }
-        
+
         .logo-text {
             font-size: 20px;
         }
-        
-        .logo-image {
-            width: 40px;
-            height: 40px;
-        }
+
     }
 
     @media (max-width: 480px) {
         .logo-text {
             font-size: 18px;
-        }
-
-        .logo-image {
-            width: 35px;
-            height: 35px;
         }
 
         .login-button {
@@ -312,17 +303,18 @@
     <!-- Login Button -->
     @guest
         <a href="{{ route('login') }}" class="login-button">
+            <img src="{{ asset('images/icono.jpg') }}" alt="icono" class="login-icon">
             <span>Iniciar Sesión</span>
         </a>
     @else
         <div class="flex items-center space-x-4">
             <span class="text-black font-medium">{{ Auth::user()->name }}</span>
-            <form method="POST" action="{{ route('logout') }}" class="inline">
-                @csrf
-                <button type="submit" class="login-button">
-                    <span>Cerrar Sesión</span>
-                </button>
-            </form>
+            @if(!request()->is('dashboard') && !request()->is('panel-control') && !request()->is('admin/*'))
+                <a href="{{ route('dashboard') }}" class="login-button bg-green-600 hover:bg-green-700">
+                    <i class="fas fa-arrow-left mr-2"></i>
+                    <span>Volver al Panel</span>
+                </a>
+            @endif
         </div>
     @endguest
 </header>

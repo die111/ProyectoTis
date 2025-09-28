@@ -16,29 +16,20 @@
         
         <!-- Scripts -->
         <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+        <script src="{{ asset('js/sidebar.js') }}"></script>
         
         @stack('styles')
     </head>
-    <body class="bg-gray-50 font-sans antialiased">
-        <div class="flex h-screen overflow-hidden">
+    <body class="bg-gray-100 font-sans antialiased">
+    <!-- Navbar -->
+    <x-nav-header :guest="false" />
+
+        <div class="flex min-h-screen">
             <!-- Sidebar -->
             <x-sidebar />
 
-            <!-- Main Content -->
-            <div class="flex-1 flex flex-col overflow-hidden">
-                <!-- Top Navigation -->
-                <header class="bg-white shadow-sm border-b border-gray-200 lg:hidden">
-                    <div class="flex items-center justify-between px-4 py-3">
-                        <button @click="sidebarOpen = !sidebarOpen" 
-                                class="text-gray-500 hover:text-gray-600 focus:outline-none">
-                            <i class="fas fa-bars text-xl"></i>
-                        </button>
-                        <div class="flex items-center space-x-2">
-                            <i class="fas fa-trophy text-yellow-500"></i>
-                            <span class="text-gray-900 font-medium">Oh! SanSi</span>
-                        </div>
-                    </div>
-                </header>
+            <!-- Main Content Wrapper -->
+            <div class="flex-1 flex flex-col min-h-screen main-content bg-gray-100">
 
                 <!-- Page Header -->
                 @if(isset($header))
@@ -95,22 +86,17 @@
                         </div>
                     @endif
 
-                    <!-- Page Content -->
+                    <!-- Contenido Variable -->
                     @yield('content')
                     {{ $slot ?? '' }}
                 </main>
 
-                <!-- Footer -->
-                <footer class="bg-white border-t border-gray-200 px-4 py-3 sm:px-6 lg:px-8">
-                    <div class="flex items-center justify-between text-sm text-gray-500">
-                        <p>© {{ date('Y') }} Universidad Mayor de San Simón - Oh! SanSi</p>
-                        <p>Versión 1.0</p>
-                    </div>
-                </footer>
             </div>
         </div>
 
-        <!-- Scripts -->
+        <!-- SweetAlert2 -->
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
         <script>
             // Auto-hide alerts after 5 seconds
             setTimeout(() => {
@@ -123,8 +109,26 @@
                     }
                 });
             }, 5000);
+
+            // SweetAlert2 global alerts
+            @if(session('swal_success'))
+                Swal.fire({
+                    icon: 'success',
+                    title: '¡Éxito!',
+                    text: '{{ session('swal_success') }}',
+                    confirmButtonColor: '#0C3E92',
+                });
+            @endif
+            @if(session('swal_error'))
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: '{{ session('swal_error') }}',
+                    confirmButtonColor: '#0C3E92',
+                });
+            @endif
         </script>
-        
+
         @stack('scripts')
     </body>
     </html>

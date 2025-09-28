@@ -14,13 +14,19 @@ return new class extends Migration
         Schema::create('users', function (Blueprint $table) {
             $table->id();
             $table->string('name');
+            $table->string('last_name_father')->nullable();
+            $table->string('last_name_mother')->nullable();
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->enum('role', ['admin', 'responsable_area', 'evaluador', 'coordinador'])
                   ->default('evaluador');
-            $table->string('area')->nullable(); // responsables y evaluadores
+            $table->integer('area_id');
+            $table->string('user_code')->unique();
+            $table->string('school')->nullable();
+            $table->string('level')->nullable();
             $table->boolean('is_active')->default(true);
+            $table->string('profile_photo')->nullable();
             $table->rememberToken();
             $table->timestamps();
             $table->softDeletes(); 
