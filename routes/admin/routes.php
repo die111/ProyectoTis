@@ -22,8 +22,4 @@ Route::middleware(['auth', 'role:admin'])->prefix('dashboard/admin')->name('admi
     Route::resource('inscripcion', InscripcionController::class);
     Route::resource('etapas', EtapaController::class);
     Route::resource('areas', AreaController::class);
-
-
-    // Futuras rutas de áreas (descomentar cuando estén listas)
-    // Route::resource('areas', App\Http\Controllers\Admin\AreaController::class);
 });
