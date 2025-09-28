@@ -51,4 +51,19 @@ class AreaController extends Controller
 
         return redirect()->route('admin.areas.index')->with('success', 'Área creada correctamente.');
     }
+
+    public function update(Request $request, $id)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'description' => 'required|string|max:1000',
+        ]);
+
+        $area = Area::findOrFail($id);
+        $area->name = $validated['name'];
+        $area->description = $validated['description'];
+        $area->save();
+
+        return redirect()->route('admin.areas.index')->with('success', 'Área actualizada correctamente.');
+    }
 }
