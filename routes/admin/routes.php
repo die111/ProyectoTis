@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\AreaController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Admin\CompeticionController;
@@ -20,6 +21,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('dashboard/admin')->name('admi
     Route::resource('usuarios', UsuarioController::class);
     Route::resource('inscripcion', InscripcionController::class);
     Route::resource('etapas', EtapaController::class);
+    Route::resource('areas', AreaController::class);
 
 
     // Futuras rutas de áreas (descomentar cuando estén listas)

@@ -69,6 +69,12 @@ class Sidebar extends Component
                         'icon' => 'fas fa-sitemap',
                         'active' => $this->isRouteActive(['gestion-fases.*'])
                     ],
+                    [
+                        'name' => 'Gestion de Areas',
+                        'route' => 'admin.areas.index',
+                        'icon' => 'fas fa-th-large',
+                        'active' => $this->isRouteActive(['areas.*'])
+                    ]
                 ];
                 break;
 
