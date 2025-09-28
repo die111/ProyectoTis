@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Competicion extends Model
 {
-    protected $table = 'competicion';
+    protected $table = 'competicions';
     protected $fillable = ['nombre','descripcion','anio'];
 
     public function etapas(): HasMany

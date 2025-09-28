@@ -211,7 +211,7 @@
         .site-header {
             justify-content: space-between;
         }
-        
+
         .logo-text {
             font-size: 24px;
         }
@@ -234,11 +234,11 @@
         .mobile-menu li {
             padding: 10px 20px;
         }
-        
+
         .logo-text {
             font-size: 20px;
         }
-        
+
         .logo-image {
             width: 40px;
             height: 40px;
@@ -285,10 +285,11 @@
                 </a>
             </li>
             <li>
-                <a href="#" class="{{ request()->routeIs('stages.*') ? 'active' : '' }}">
+                <a href="{{ route('etapas.index') }}" class="{{ request()->routeIs('etapas.*') ? 'active' : '' }}">
                     ETAPAS
                 </a>
             </li>
+
             <li>
                <a href="{{ route('clasificados.index') }}" class="{{ request()->routeIs('clasificados.*') ? 'active' : '' }}">
                    CLASIFICADOS
@@ -311,19 +312,19 @@
 
     <!-- Login Button -->
     @guest
-        <a href="{{ route('login') }}" class="login-button">
-            <span>Iniciar Sesión</span>
-        </a>
+    <a href="{{ route('login') }}" class="login-button">
+        <span>Iniciar Sesión</span>
+    </a>
     @else
-        <div class="flex items-center space-x-4">
-            <span class="text-black font-medium">{{ Auth::user()->name }}</span>
-            <form method="POST" action="{{ route('logout') }}" class="inline">
-                @csrf
-                <button type="submit" class="login-button">
-                    <span>Cerrar Sesión</span>
-                </button>
-            </form>
-        </div>
+    <div class="flex items-center space-x-4">
+        <span class="text-black font-medium">{{ Auth::user()->name }}</span>
+        <form method="POST" action="{{ route('logout') }}" class="inline">
+            @csrf
+            <button type="submit" class="login-button">
+                <span>Cerrar Sesión</span>
+            </button>
+        </form>
+    </div>
     @endguest
 </header>
 
@@ -337,7 +338,7 @@
             <a href="#">DOCUMENTOS</a>
         </li>
         <li>
-            <a href="#">ETAPAS</a>
+            <a href="{{ route('etapas.index') }}">ETAPAS</a>
         </li>
         <li>
             <a href="#">CLASIFICADOS</a>
@@ -348,16 +349,16 @@
              </a>
         </li>
         @guest
-            <li>
-                <a href="{{ route('login') }}">INICIAR SESIÓN</a>
-            </li>
+        <li>
+            <a href="{{ route('login') }}">INICIAR SESIÓN</a>
+        </li>
         @else
-            <li>
-                <form method="POST" action="{{ route('logout') }}" class="inline">
-                    @csrf
-                    <button type="submit" class="w-full text-left">CERRAR SESIÓN</button>
-                </form>
-            </li>
+        <li>
+            <form method="POST" action="{{ route('logout') }}" class="inline">
+                @csrf
+                <button type="submit" class="w-full text-left">CERRAR SESIÓN</button>
+            </form>
+        </li>
         @endguest
     </ul>
 </nav>

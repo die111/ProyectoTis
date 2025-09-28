@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Etapa extends Model
 {
-    protected $table = 'etapa';
+    protected $table = 'etapas';
     protected $fillable = ['competicion_id','nombre','fecha_inicio','fecha_fin','estado','orden'];
     protected $casts = ['fecha_inicio'=>'date','fecha_fin'=>'date'];
 

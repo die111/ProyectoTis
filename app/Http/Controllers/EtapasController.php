@@ -19,6 +19,8 @@ class EtapasController extends Controller
 
         $etapas = $competicion?->etapas ?? collect();
 
+        dd($etapas);
+
         return view('etapas.index', compact('competicion','etapas'));
     }
 
