@@ -22,4 +22,6 @@ Route::middleware(['auth', 'role:admin'])->prefix('dashboard/admin')->name('admi
     Route::resource('inscripcion', InscripcionController::class);
     Route::resource('etapas', EtapaController::class);
     Route::resource('areas', AreaController::class);
+    Route::post('areas/bulk-activate', [AreaController::class, 'bulkActivate'])->name('areas.bulk-activate');
+    Route::post('areas/bulk-deactivate', [AreaController::class, 'bulkDeactivate'])->name('areas.bulk-deactivate');
 });
