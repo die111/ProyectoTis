@@ -46,7 +46,7 @@
 
             {{-- Encargados de Área --}}
             <a href="?role=responsable_area" class="block">
-                <div class="bg-white rounded-lg shadow-md p-4 flex flex-col justify-between relative h-32">
+                <div class="bg-white rounded-lg shadow-md p-4 flex flex-col justify-between relative h-32 {{ request('role') == 'responsable_area' ? 'border-4 border-red-600' : '' }}">
                     <div class="flex items-center justify-center gap-3 h-full">
                         <i class="bi bi-people-fill text-3xl"></i>
                         <div class="flex flex-col items-center">
@@ -60,7 +60,7 @@
 
             {{-- Evaluadores --}}
             <a href="?role=evaluador" class="block">
-                <div class="bg-white rounded-lg shadow-md p-4 flex flex-col justify-between relative h-32">
+                <div class="bg-white rounded-lg shadow-md p-4 flex flex-col justify-between relative h-32 {{ request('role') == 'evaluador' ? 'border-4 border-red-800' : '' }}">
                     <div class="flex items-center justify-center gap-3 h-full">
                         <i class="bi bi-clipboard-check-fill text-3xl"></i>
                         <div class="flex flex-col items-center">
@@ -74,7 +74,7 @@
 
             {{-- Olimpistas --}}
             <a href="#" class="block">
-                <div class="bg-white rounded-lg shadow-md p-4 flex flex-col justify-between relative h-32">
+                <div class="bg-white rounded-lg shadow-md p-4 flex flex-col justify-between relative h-32 {{ request('role') == 'olimpista' ? 'border-4 border-green-700' : '' }}">
                     <div class="flex items-center justify-center gap-3 h-full">
                         <i class="bi bi-mortarboard-fill text-3xl"></i>
                         <div class="flex flex-col items-center">
@@ -88,7 +88,7 @@
 
             {{-- Usuarios Activos --}}
             <a href="?role=activos" class="block">
-                <div class="bg-white rounded-lg shadow-md p-4 flex flex-col justify-between relative h-32">
+                <div class="bg-white rounded-lg shadow-md p-4 flex flex-col justify-between relative h-32 {{ request('role') == 'activos' ? 'border-4 border-cyan-500' : '' }}">
                     <div class="flex items-center justify-center gap-3 h-full">
                         <i class="bi bi-person-lines-fill text-3xl"></i>
                         <div class="flex flex-col items-center">
