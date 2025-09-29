@@ -13,7 +13,7 @@ class AreaController extends Controller
         $query = $request->input('q');
         $areas = Area::query();
         if ($query) {
-            $areas->where('nombre', 'like', "%$query%");
+            $areas->where('name', 'like', "%$query%");
         }
         $areas = $areas->paginate(10);
         return view('admin.areas.index', compact('areas'));
