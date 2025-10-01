@@ -42,7 +42,6 @@
                 <thead class="bg-slate-600">
                     <tr class="text-left text-xs font-semibold uppercase tracking-wider text-white">
                         <th class="px-4 py-4 text-center"></th>
-                        <th class="px-6 py-4">ID</th>
                         <th class="px-6 py-4">Nombre de Área</th>
                         <th class="px-6 py-4">Descripción</th>
                     </tr>
@@ -55,15 +54,15 @@
                                     data-id="{{ $area->id }}" 
                                     data-name="{{ $area->name }}" 
                                     data-description="{{ $area->description }}"
+                                    data-route="{{ route('admin.areas.destroy', $area->id) }}"
                                     onclick="onlyOneCheckbox(this); event.stopPropagation();">
                             </td>
-                            <td class="px-6 py-3">{{ $area->id }}</td>
                             <td class="px-6 py-3 font-medium">{{ $area->name }}</td>
                             <td class="px-6 py-3">{{ Str::limit($area->description, 90) }}</td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="4" class="px-6 py-8 text-center text-slate-400 text-lg">
+                            <td colspan="3" class="px-6 py-8 text-center text-slate-400 text-lg">
                                 No hay áreas registradas.
                             </td>
                         </tr>
@@ -90,7 +89,6 @@
             <button type="submit" class="rounded-xl bg-[#0C204A] px-6 py-2 text-sm font-semibold text-white shadow">Desactivar</button>
         </form>
 
-        {{-- Botón único Editar Área --}}
         <form id="bulkEdit" method="POST" action="#" @submit.prevent>
             @csrf
             <button type="button"
@@ -107,6 +105,28 @@
                 "
                 class="rounded-xl bg-[#0C204A] px-6 py-2 text-sm font-semibold text-white shadow">
                 Editar
+            </button>
+        </form>
+
+        <form id="bulkDelete" method="POST" action="" onsubmit="event.preventDefault();">
+            @csrf
+            @method('DELETE')
+            <button type="button"
+                onclick="
+                    const selected = document.querySelector('.area-checkbox:checked');
+                    if(selected){
+                        if(confirm('¿Seguro que deseas eliminar esta área?')){
+                            const form = document.getElementById('bulkDelete');
+                            form.action = selected.dataset.route;
+                            form.onsubmit = null; // Permite el envío normal
+                            form.submit();
+                        }
+                    } else {
+                        alert('Selecciona un área para eliminar.');
+                    }
+                "
+                class="rounded-xl bg-red-600 px-6 py-2 text-sm font-semibold text-white shadow hover:bg-red-700">
+                Eliminar
             </button>
         </form>
     </div>

@@ -66,4 +66,11 @@ class AreaController extends Controller
 
         return redirect()->route('admin.areas.index')->with('success', 'Área actualizada correctamente.');
     }
+
+    public function destroy($id)
+    {
+        $area = Area::findOrFail($id);
+        $area->delete();
+        return redirect()->route('admin.areas.index')->with('success', 'Área eliminada correctamente.');
+    }
 }
