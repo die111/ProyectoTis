@@ -28,12 +28,26 @@ Route::middleware(['auth', 'role:admin'])->prefix('dashboard/admin')->name('admi
     // Formulario independiente para crear encargado de área
     Route::get('formulario-encargado', function() {
         $areas = \App\Models\Area::all();
-        return view('admin.formulario-encargado', compact('areas'));
+        return view('admin.usuarios.formulario-encargado', compact('areas'));
     })->name('formulario-encargado');
 
     // Formulario independiente para crear evaluador
     Route::get('formulario-evaluador', function() {
         $areas = \App\Models\Area::all();
-        return view('admin.formulario-evaluador', compact('areas'));
+        return view('admin.usuarios.formulario-evaluador', compact('areas'));
     })->name('formulario-evaluador');
+
+    // Formulario edición de Evaluador
+    Route::get('usuarios/{id}/edit-evaluador', function($id) {
+        $user = \App\Models\User::findOrFail($id);
+        $areas = \App\Models\Area::all();
+        return view('admin.usuarios.edit-evaluador', compact('user', 'areas'));
+    })->name('usuarios.edit-evaluador');
+
+    // Formulario edición de Encargado de Área
+    Route::get('usuarios/{id}/edit-encargado', function($id) {
+        $user = \App\Models\User::findOrFail($id);
+        $areas = \App\Models\Area::all();
+        return view('admin.usuarios.edit-encargado', compact('user', 'areas'));
+    })->name('usuarios.edit-encargado');
 });

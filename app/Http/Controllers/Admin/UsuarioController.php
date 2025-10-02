@@ -18,15 +18,36 @@ class UsuarioController extends Controller
         $usuarios_activos_count = User::where('is_active', true)->count();
 
         $role = $request->query('role');
+        $q = $request->query('q');
+        $area_id = $request->query('area');
+        $query = User::query();
         if ($role === 'responsable_area') {
-            $users = User::where('role', 'responsable_area')->where('is_active', true)->select('id', 'name', 'last_name_father', 'last_name_mother', 'email')->get();
+            $query->where('role', 'responsable_area')->where('is_active', true);
         } elseif ($role === 'evaluador') {
-            $users = User::where('role', 'evaluador')->where('is_active', true)->select('id', 'name', 'last_name_father', 'last_name_mother', 'email')->get();
+            $query->where('role', 'evaluador')->where('is_active', true);
         } elseif ($role === 'activos') {
-            $users = User::where('is_active', true)->select('id', 'name', 'last_name_father', 'last_name_mother', 'email')->get();
+            $query->where('is_active', true);
+        } elseif ($q || $area_id) {
+            $query->where('is_active', true);
         } else {
-            $users = [];
+            $query->whereRaw('1=0'); // No mostrar nada si no hay filtro ni búsqueda
         }
+        if ($q) {
+            $query->where(function($sub) use ($q) {
+                $sub->where('name', 'like', "%$q%")
+                    ->orWhere('last_name_father', 'like', "%$q%")
+                    ->orWhere('last_name_mother', 'like', "%$q%")
+                    ->orWhere('email', 'like', "%$q%")
+                    ->orWhere('user_code', 'like', "%$q%")
+                    ->orWhere('school', 'like', "%$q%")
+                    ->orWhere('level', 'like', "%$q%")
+                ;
+            });
+        }
+        if ($area_id) {
+            $query->where('area_id', $area_id);
+        }
+        $users = $query->select('id', 'name', 'last_name_father', 'last_name_mother', 'email')->get();
 
         return view('admin.usuarios.index', compact('areas', 'encargados_count', 'evaluadores_count', 'usuarios_activos_count', 'users'));
     }
@@ -67,7 +88,15 @@ class UsuarioController extends Controller
     public function edit($id)
     {
         $user = User::withTrashed()->findOrFail($id);
-        return view('users.edit', compact('user'));
+        $areas = Area::all();
+        if ($user->role === 'evaluador') {
+            return view('admin.usuarios.edit-evaluador', compact('user', 'areas'));
+        } elseif ($user->role === 'responsable_area') {
+            return view('admin.usuarios.edit-encargado', compact('user', 'areas'));
+        } else {
+            // Puedes agregar una vista genérica o redirigir
+            return redirect()->route('admin.usuarios.index')->with('error', 'Rol no soportado para edición personalizada');
+        }
     }
 
     public function update(Request $request, $id)

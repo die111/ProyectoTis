@@ -31,10 +31,9 @@
 
         {{-- Tarjetas (1 col móvil, 2 tablet, 4 desktop) --}}
         <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-
             {{-- Encargados de Área --}}
-            <a href="?role=responsable_area" class="block">
-                <div class="bg-white rounded-lg shadow-md p-4 flex flex-col justify-between relative h-32">
+            <a href="?role=responsable_area" class="block group">
+                <div class="bg-white rounded-lg shadow-md p-4 flex flex-col justify-between relative h-32 transition-all duration-200 hover:ring-4 hover:ring-red-600" id="card-encargado">
                     <div class="flex items-center justify-center gap-3 h-full">
                         <i class="bi bi-people-fill text-3xl"></i>
                         <div class="flex flex-col items-center">
@@ -47,8 +46,8 @@
             </a>
 
             {{-- Evaluadores --}}
-            <a href="?role=evaluador" class="block">
-                <div class="bg-white rounded-lg shadow-md p-4 flex flex-col justify-between relative h-32">
+            <a href="?role=evaluador" class="block group">
+                <div class="bg-white rounded-lg shadow-md p-4 flex flex-col justify-between relative h-32 transition-all duration-200 hover:ring-4 hover:ring-red-800" id="card-evaluador">
                     <div class="flex items-center justify-center gap-3 h-full">
                         <i class="bi bi-clipboard-check-fill text-3xl"></i>
                         <div class="flex flex-col items-center">
@@ -61,8 +60,8 @@
             </a>
 
             {{-- Olimpistas --}}
-            <a href="#" class="block">
-                <div class="bg-white rounded-lg shadow-md p-4 flex flex-col justify-between relative h-32">
+            <a href="#" class="block group">
+                <div class="bg-white rounded-lg shadow-md p-4 flex flex-col justify-between relative h-32 transition-all duration-200 hover:ring-4 hover:ring-green-700" id="card-olimpista">
                     <div class="flex items-center justify-center gap-3 h-full">
                         <i class="bi bi-mortarboard-fill text-3xl"></i>
                         <div class="flex flex-col items-center">
@@ -75,8 +74,8 @@
             </a>
 
             {{-- Usuarios Activos --}}
-            <a href="?role=activos" class="block">
-                <div class="bg-white rounded-lg shadow-md p-4 flex flex-col justify-between relative h-32">
+            <a href="?role=activos" class="block group">
+                <div class="bg-white rounded-lg shadow-md p-4 flex flex-col justify-between relative h-32 transition-all duration-200 hover:ring-4 hover:ring-cyan-500" id="card-activo">
                     <div class="flex items-center justify-center gap-3 h-full">
                         <i class="bi bi-person-lines-fill text-3xl"></i>
                         <div class="flex flex-col items-center">
@@ -87,7 +86,6 @@
                     <div class="absolute bottom-0 left-0 right-0 h-2 bg-cyan-500 rounded-b-lg"></div>
                 </div>
             </a>
-
         </div>
 
     </div>
@@ -98,30 +96,8 @@
 
             {{-- Filtro superior --}}
             <div class="flex flex-col items-center gap-6">
-                {{-- Select de Área --}}
-                <div>
-                    <label for="area" class="sr-only">Área</label>
-                    <div class="relative">
-                        <select id="area" name="area"
-                            class="appearance-none w-72 rounded-lg border border-slate-300 bg-white/95 px-4 py-2.5 pr-10 text-slate-800 shadow-sm focus:border-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-500/20">
-                            <option selected>Area</option>
-                            {{-- Ejemplos; reemplaza con tus áreas --}}
-                            <option value="fisica">Física</option>
-                            <option value="quimica">Química</option>
-                            <option value="biologia">Biología</option>
-                        </select>
-                        <span class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2">
-                            <svg class="h-4 w-4 text-slate-600" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                                <path fill-rule="evenodd"
-                                    d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.24a.75.75 0 01-1.06 0L5.21 8.29a.75.75 0 01.02-1.08z"
-                                    clip-rule="evenodd" />
-                            </svg>
-                        </span>
-                    </div>
-                </div>
-
                 {{-- Buscador --}}
-                <form action="#" method="GET" class="flex w-full max-w-3xl items-center gap-3">
+                <form action="{{ route('admin.usuarios.index') }}" method="GET" class="flex w-full max-w-3xl items-center gap-3" id="searchForm">
                     <div class="relative flex-1">
                         <span class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2">
                             <svg class="h-5 w-5 text-slate-500" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -130,10 +106,15 @@
                                 <path d="M20 20l-3.5-3.5" stroke-width="2" stroke-linecap="round" />
                             </svg>
                         </span>
-                        <input type="text" name="q" placeholder="Buscar Usuario"
+                        <input type="text" name="q" value="{{ request('q') }}" placeholder="Buscar Usuario"
                             class="w-full rounded-lg border border-slate-300 bg-white/95 pl-10 pr-4 py-2.5 text-slate-800 placeholder-slate-400 shadow-sm focus:border-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-500/20" />
                     </div>
-
+                    <select id="area" name="area" class="appearance-none w-72 rounded-lg border border-slate-300 bg-white/95 px-4 py-2.5 pr-10 text-slate-800 shadow-sm focus:border-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-500/20">
+                        <option value="" selected>Área</option>
+                        @foreach($areas as $area)
+                            <option value="{{ $area->id }}" {{ request('area') == $area->id ? 'selected' : '' }}>{{ $area->name }}</option>
+                        @endforeach
+                    </select>
                     <button type="submit"
                         class="rounded-full bg-[#0C204A] px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:brightness-110 active:translate-y-[1px]">
                         Buscar
@@ -195,4 +176,24 @@
             </div>
         </div>
     </section>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const params = new URLSearchParams(window.location.search);
+            const role = params.get('role');
+            if(role === 'responsable_area') {
+                document.getElementById('card-encargado').classList.add('ring-4', 'ring-red-600');
+            } else if(role === 'evaluador') {
+                document.getElementById('card-evaluador').classList.add('ring-4', 'ring-red-800');
+            } else if(role === 'activos') {
+                document.getElementById('card-activo').classList.add('ring-4', 'ring-cyan-500');
+            } else if(role === 'olimpista') {
+                document.getElementById('card-olimpista').classList.add('ring-4', 'ring-green-700');
+            }
+            // Búsqueda automática al cambiar área
+            document.getElementById('area').addEventListener('change', function() {
+                document.getElementById('searchForm').submit();
+            });
+        });
+    </script>
 @endsection
