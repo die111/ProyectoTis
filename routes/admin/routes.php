@@ -24,4 +24,16 @@ Route::middleware(['auth', 'role:admin'])->prefix('dashboard/admin')->name('admi
     Route::resource('areas', AreaController::class);
     Route::post('areas/bulk-activate', [AreaController::class, 'bulkActivate'])->name('areas.bulk-activate');
     Route::post('areas/bulk-deactivate', [AreaController::class, 'bulkDeactivate'])->name('areas.bulk-deactivate');
+
+    // Formulario independiente para crear encargado de área
+    Route::get('formulario-encargado', function() {
+        $areas = \App\Models\Area::all();
+        return view('admin.formulario-encargado', compact('areas'));
+    })->name('formulario-encargado');
+
+    // Formulario independiente para crear evaluador
+    Route::get('formulario-evaluador', function() {
+        $areas = \App\Models\Area::all();
+        return view('admin.formulario-evaluador', compact('areas'));
+    })->name('formulario-evaluador');
 });

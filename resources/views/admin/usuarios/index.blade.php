@@ -15,30 +15,18 @@
         <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
             <h3 class="text-xl font-semibold">Usuarios</h3>
 
-            <div x-data="{ openEval:false, openEnc:false, modalTitle:'' }">
-                <div class="flex gap-2 mb-4">
-
-                    <button @click="openEnc = true; modalTitle = 'Crear Encargado de Área'"
-                        class="inline-flex items-center gap-2 rounded-full px-4 py-2 font-semibold text-white hover:opacity-95"
-                        style="background:#0C3E92">
-                        <i class="bi bi-plus-circle"></i> Crear Encargado de Area
-                    </button>
-
-                    <button @click="openEval = true; modalTitle = 'Crear Evaluador'"
-                        class="inline-flex items-center gap-2 rounded-full px-4 py-2 font-semibold text-white hover:opacity-95"
-                        style="background:#0C3E92">
-                        <i class="bi bi-plus-circle"></i> Crear Evaluador
-                    </button>
-
-                </div>
-
-                {{-- Pasa el nombre del estado que controlará cada modal --}}
-                @include('components.modals.formulario-evaluador', ['state' => 'openEval', 'areas' => $areas])
-                @include('components.modals.formulario-encargado', ['state' => 'openEnc', 'areas' => $areas])
+            <div class="flex gap-2 mb-4">
+                <a href="{{ route('admin.formulario-encargado') }}"
+                    class="inline-flex items-center gap-2 rounded-full px-4 py-2 font-semibold text-white hover:opacity-95"
+                    style="background:#0C3E92">
+                    <i class="bi bi-plus-circle"></i> Crear Encargado de Area
+                </a>
+                <a href="{{ route('admin.formulario-evaluador') }}"
+                    class="inline-flex items-center gap-2 rounded-full px-4 py-2 font-semibold text-white hover:opacity-95"
+                    style="background:#0C3E92">
+                    <i class="bi bi-plus-circle"></i> Crear Evaluador
+                </a>
             </div>
-
-
-
         </div>
 
         {{-- Tarjetas (1 col móvil, 2 tablet, 4 desktop) --}}
