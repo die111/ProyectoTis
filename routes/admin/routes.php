@@ -33,7 +33,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('dashboard/admin')->name('admi
 
     // Formulario independiente para crear evaluador
     Route::get('formulario-evaluador', function() {
-        $areas = \App\Models\Area::all();
+        $areas = \App\Models\Area::where('is_active', true)->get();
         return view('admin.usuarios.formulario-evaluador', compact('areas'));
     })->name('formulario-evaluador');
 

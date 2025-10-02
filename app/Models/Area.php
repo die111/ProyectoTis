@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 class Area extends Model
 {
     protected $fillable = [
-        'name', 'description'
+        'name', 'description', 'is_active'
     ];
 
     public function phases()    

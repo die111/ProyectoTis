@@ -44,6 +44,7 @@
                         <th class="px-4 py-4 text-center"></th>
                         <th class="px-6 py-4">Nombre de Área</th>
                         <th class="px-6 py-4">Descripción</th>
+                        <th class="px-6 py-4">Estado</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-200 bg-white/95">
@@ -55,14 +56,22 @@
                                     data-name="{{ $area->name }}" 
                                     data-description="{{ $area->description }}"
                                     data-route="{{ route('admin.areas.destroy', $area->id) }}"
+                                    data-active="{{ $area->is_active }}"
                                     onclick="onlyOneCheckbox(this); event.stopPropagation();">
                             </td>
                             <td class="px-6 py-3 font-medium">{{ $area->name }}</td>
                             <td class="px-6 py-3">{{ Str::limit($area->description, 90) }}</td>
+                            <td class="px-6 py-3 text-center">
+                                @if($area->is_active)
+                                    <span class="rounded bg-green-100 px-2 py-1 text-xs text-green-700">Activo</span>
+                                @else
+                                    <span class="rounded bg-red-100 px-2 py-1 text-xs text-red-700">Inactivo</span>
+                                @endif
+                            </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="3" class="px-6 py-8 text-center text-slate-400 text-lg">
+                            <td colspan="4" class="px-6 py-8 text-center text-slate-400 text-lg">
                                 No hay áreas registradas.
                             </td>
                         </tr>
@@ -79,13 +88,15 @@
 
     {{-- Acciones Inferiores --}}
     <div class="mt-8 flex items-center justify-center gap-16">
-        <form id="bulkActivate" method="POST" action="{{ route('admin.areas.bulk-activate') }}">
+        <form id="bulkActivate" method="POST" action="{{ route('admin.areas.bulk-activate') }}" onsubmit="return submitSelectedIds(this)">
             @csrf
+            <input type="hidden" name="ids" id="activateIds">
             <button type="submit" class="rounded-xl bg-[#0C204A] px-6 py-2 text-sm font-semibold text-white shadow">Activar</button>
         </form>
 
-        <form id="bulkDeactivate" method="POST" action="{{ route('admin.areas.bulk-deactivate') }}">
+        <form id="bulkDeactivate" method="POST" action="{{ route('admin.areas.bulk-deactivate') }}" onsubmit="return submitSelectedIds(this)">
             @csrf
+            <input type="hidden" name="ids" id="deactivateIds">
             <button type="submit" class="rounded-xl bg-[#0C204A] px-6 py-2 text-sm font-semibold text-white shadow">Desactivar</button>
         </form>
 
@@ -142,6 +153,16 @@
             if (checkbox) {
                 checkbox.checked = true;
                 onlyOneCheckbox(checkbox);
+            }
+        }
+        function submitSelectedIds(form) {
+            const selected = document.querySelector('.area-checkbox:checked');
+            if (selected) {
+                form.querySelector('input[name="ids"]').value = selected.dataset.id;
+                return true;
+            } else {
+                alert('Selecciona un área para la acción.');
+                return false;
             }
         }
     </script>

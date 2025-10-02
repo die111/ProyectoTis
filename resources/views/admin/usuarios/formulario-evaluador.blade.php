@@ -38,7 +38,9 @@
                     class="appearance-none w-full rounded-xl border border-gray-300 bg-white px-4 py-3 pr-10 shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-800">
               <option value="" disabled selected>Selecciona un área</option>
               @foreach($areas as $area)
-                  <option value="{{ $area->id }}">{{ $area->name }}</option>
+                  @if($area->is_active)
+                      <option value="{{ $area->id }}">{{ $area->name }}</option>
+                  @endif
               @endforeach
             </select>
             <i class="bi bi-chevron-down absolute right-3 top-9 pointer-events-none text-gray-500"></i>
