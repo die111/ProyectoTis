@@ -127,7 +127,7 @@
                 <table class="min-w-full divide-y divide-slate-200">
                     <thead class="bg-slate-600">
                         <tr class="text-left text-xs font-semibold uppercase tracking-wider text-white">
-                            <th scope="col" class="px-6 py-4">ID</th>
+                            <!-- <th scope="col" class="px-6 py-4">ID</th> -->
                             <th scope="col" class="px-6 py-4">Nombre</th>
                             <th scope="col" class="px-6 py-4">Apellido Paterno</th>
                             <th scope="col" class="px-6 py-4">Apellido Materno</th>
@@ -139,13 +139,13 @@
                     <tbody class="divide-y divide-slate-200 bg-white/95">
                         @if(empty($users) || count($users) === 0)
                             <tr>
-                                <td colspan="6" class="px-6 py-8 text-center text-slate-400 text-lg">No hay usuarios registrados.
+                                <td colspan="5" class="px-6 py-8 text-center text-slate-400 text-lg">No hay usuarios registrados.
                                 </td>
                             </tr>
                         @else
                             @foreach($users as $user)
                                 <tr class="text-sm text-slate-800 hover:bg-slate-50">
-                                    <td class="px-6 py-3">{{ $user->id }}</td>
+                                    <!-- <td class="px-6 py-3">{{ $user->id }}</td> -->
                                     <td class="px-6 py-3">{{ $user->name }}</td>
                                     <td class="px-6 py-3">{{ $user->last_name_father }}</td>
                                     <td class="px-6 py-3">{{ $user->last_name_mother }}</td>
@@ -161,9 +161,7 @@
                                                 @csrf
                                                 @method('DELETE')
                                                 <button type="submit" class="rounded p-1.5 hover:bg-slate-100" title="Eliminar" aria-label="Eliminar" onclick="return confirm('¿Seguro que deseas eliminar este usuario?');">
-                                                    <svg class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
-                                                        <path d="M6 7h12v2H6zM9 9h6l-1 11H10L9 9zm3-6a2 2 0 0 1 2 2h3v2H6V5h3a2 2 0 0 1 2-2z" />
-                                                    </svg>
+                                                    <i class="bi bi-trash-fill text-red-600"></i>
                                                 </button>
                                             </form>
                                         </div>
@@ -177,6 +175,22 @@
         </div>
     </section>
 
+    @if(session('role'))
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                const role = '{{ session('role') }}';
+                if(role === 'responsable_area') {
+                    document.getElementById('card-encargado').classList.add('ring-4', 'ring-red-600');
+                } else if(role === 'evaluador') {
+                    document.getElementById('card-evaluador').classList.add('ring-4', 'ring-red-800');
+                } else if(role === 'activos') {
+                    document.getElementById('card-activo').classList.add('ring-4', 'ring-cyan-500');
+                } else if(role === 'olimpista') {
+                    document.getElementById('card-olimpista').classList.add('ring-4', 'ring-green-700');
+                }
+            });
+        </script>
+    @endif
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const params = new URLSearchParams(window.location.search);

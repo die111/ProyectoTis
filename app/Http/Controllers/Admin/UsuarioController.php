@@ -108,8 +108,11 @@ class UsuarioController extends Controller
             'email' => 'required|email|unique:users,email,' . $id,
             'password' => 'nullable|string|min:8|confirmed',
             'role' => 'required|in:admin,responsable_area,evaluador,coordinador',
-            'area' => 'nullable|string|max:255',
+            'area_id' => 'nullable|integer|exists:areas,id',
             'is_active' => 'boolean',
+            'last_name_father' => 'required|string|max:255',
+            'last_name_mother' => 'nullable|string|max:255',
+            'user_code' => 'required|string|max:255',
         ]);
 
         if (!empty($validated['password'])) {
@@ -120,8 +123,9 @@ class UsuarioController extends Controller
 
         $user->update($validated);
 
-        return redirect()->route('admin.usuarios.index')
-            ->with('success', 'Usuario actualizado exitosamente');
+        return redirect()->route('admin.usuarios.index', ['role' => $user->role])
+            ->with('success', 'Usuario actualizado exitosamente')
+            ->with('role', $user->role);
     }
 
     public function destroy($id)
@@ -136,8 +140,9 @@ class UsuarioController extends Controller
         $user->is_active = false;
         $user->save();
 
-        return redirect()->route('admin.usuarios.index')
-            ->with('success', 'Usuario desactivado exitosamente');
+        return redirect()->route('admin.usuarios.index', ['role' => $user->role])
+            ->with('success', 'Usuario desactivado exitosamente')
+            ->with('role', $user->role);
     }
 
     // MÉTODOS SOFT DELETE
