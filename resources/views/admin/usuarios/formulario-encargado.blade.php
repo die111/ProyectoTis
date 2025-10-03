@@ -80,7 +80,10 @@
               name="password"
               type="password"
               required
-              placeholder="De14697@"
+              minlength="8"
+              pattern="^(?=.*[A-Z])(?=.*[^A-Za-z0-9]).{8,}$"
+              title="La contraseña debe tener al menos 8 caracteres, una mayúscula y un caracter especial."
+              placeholder="Ingrese su Contraseña"
               class="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 pr-12 shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 placeholder:text-gray-400" />
 
             <!-- Botón mostrar/ocultar -->

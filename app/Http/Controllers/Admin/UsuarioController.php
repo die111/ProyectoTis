@@ -106,7 +106,7 @@ class UsuarioController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email,' . $id,
-            'password' => 'nullable|string|min:8|confirmed',
+            'password' => 'nullable|string|min:8',
             'role' => 'required|in:admin,responsable_area,evaluador,coordinador',
             'area_id' => 'nullable|integer|exists:areas,id',
             'is_active' => 'boolean',
