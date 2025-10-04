@@ -18,6 +18,7 @@
           @csrf
           @method('PUT')
           <input type="hidden" name="role" value="responsable_area">
+          <input type="hidden" name="return" value="{{ request('return', url()->previous()) }}">
 
           <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
             <!-- Nombre -->
@@ -73,10 +74,10 @@
             <!-- Contraseña con botón ojo (opcional) -->
             <div class="relative">
               <label for="password_edit" class="block text-sm font-semibold text-gray-800 mb-1">Contraseña*</label>
-              <input id="password_edit" name="password" type="password" required minlength="8"
+              <input id="password_edit" name="password" type="password" minlength="8
                 pattern="^(?=.*[A-Z])(?=.*[^A-Za-z0-9]).{8,}$"
                 title="La contraseña debe tener al menos 8 caracteres, una mayúscula y un caracter especial."
-                placeholder="De14697@"
+                placeholder="Nueva contraseña"
                 class="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 pr-12 shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 placeholder:text-gray-400">
               <!-- botón mostrar/ocultar -->
               <button type="button" id="togglePasswordEdit"
@@ -111,7 +112,7 @@
           <!-- Acciones -->
           <div class="pt-1">
             <div class="w-full flex items-center justify-center gap-4">
-              <a href="{{ route('admin.usuarios.index') }}"
+              <a href="{{ request('return', route('admin.usuarios.index')) }}"
                 class="px-8 py-3 rounded-full font-semibold text-white bg-gray-500 hover:bg-gray-700 transition flex items-center gap-2">
                 <i class="bi bi-arrow-left"></i> Volver
               </a>

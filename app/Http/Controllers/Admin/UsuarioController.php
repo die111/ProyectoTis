@@ -85,16 +85,16 @@ class UsuarioController extends Controller
         return view('users.show', compact('user'));
     }
 
-    public function edit($id)
+    public function edit($id, Request $request)
     {
         $user = User::withTrashed()->findOrFail($id);
         $areas = Area::all();
+        $return = $request->get('return', url()->previous());
         if ($user->role === 'evaluador') {
-            return view('admin.usuarios.edit-evaluador', compact('user', 'areas'));
+            return view('admin.usuarios.edit-evaluador', compact('user', 'areas', 'return'));
         } elseif ($user->role === 'responsable_area') {
-            return view('admin.usuarios.edit-encargado', compact('user', 'areas'));
+            return view('admin.usuarios.edit-encargado', compact('user', 'areas', 'return'));
         } else {
-            // Puedes agregar una vista genérica o redirigir
             return redirect()->route('admin.usuarios.index')->with('error', 'Rol no soportado para edición personalizada');
         }
     }
@@ -106,6 +106,7 @@ class UsuarioController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email,' . $id,
+            // password opcional en edición
             'password' => 'nullable|string|min:8',
             'role' => 'required|in:admin,responsable_area,evaluador,coordinador',
             'area_id' => 'nullable|integer|exists:areas,id',
@@ -123,6 +124,10 @@ class UsuarioController extends Controller
 
         $user->update($validated);
 
+        $return = $request->input('return');
+        if ($return) {
+            return redirect()->to($return)->with('success', 'Usuario actualizado exitosamente');
+        }
         return redirect()->route('admin.usuarios.index', ['role' => $user->role])
             ->with('success', 'Usuario actualizado exitosamente')
             ->with('role', $user->role);
