@@ -104,9 +104,10 @@ class UsuarioController extends Controller
         $user = User::withTrashed()->findOrFail($id);
         $areas = Area::all();
         $return = $request->get('return', url()->previous());
-        if ($user->role === 'evaluador') {
+        // Corrección: acceder al nombre del rol
+        if ($user->role && $user->role->name === 'evaluador') {
             return view('admin.usuarios.edit-evaluador', compact('user', 'areas', 'return'));
-        } elseif ($user->role === 'responsable_area') {
+        } elseif ($user->role && $user->role->name === 'responsable_area') {
             return view('admin.usuarios.edit-encargado', compact('user', 'areas', 'return'));
         } else {
             return redirect()->route('admin.usuarios.index')->with('error', 'Rol no soportado para edición personalizada');

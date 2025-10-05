@@ -1,8 +1,7 @@
 @extends('layouts.app')
 @section('title', 'Dashboard Administrador')
 @section('content')
-    @push('styles')
-        <link rel="stylesheet" href="{{ asset('estilos/GestionUsuario.css') }}">
+    @push('styles')        
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
 
     @endpush
