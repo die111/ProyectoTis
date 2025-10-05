@@ -23,15 +23,10 @@ class Sidebar extends Component
         $user = $this->user;
         $items = [];
 
-        // Menús específicos por rol
-        switch ($user->role) {
+    // Menús específicos por rol
+    $role = $user->role ? $user->role->name : null;
+    switch ($role) {
             case 'admin':
-                // [
-                //         'name' => 'Usuarios',
-                //         'route' => 'admin.users.create',
-                //         'icon' => 'fas fa-users',
-                //         'active' => $this->isRouteActive(['admin.users.*'])
-                //     ],
                 $items = [
                     [
                         'name' => 'Dashboard',
@@ -58,7 +53,7 @@ class Sidebar extends Component
                         'active' => $this->isRouteActive(['usuarios.*'])
                     ],
                     [
-                        'name' => 'Inscripcion',
+                        'name' => 'Inscripción',
                         'route' => 'admin.inscripcion.index',
                         'icon' => 'fas fa-clipboard-list',
                         'active' => $this->isRouteActive(['inscripcion.*'])
@@ -69,6 +64,12 @@ class Sidebar extends Component
                         'icon' => 'fas fa-sitemap',
                         'active' => $this->isRouteActive(['gestion-fases.*'])
                     ],
+                    [
+                        'name' => 'Gestion de Areas',
+                        'route' => 'admin.areas.index',
+                        'icon' => 'fas fa-th-large',
+                        'active' => $this->isRouteActive(['areas.*'])
+                    ]
                 ];
                 break;
 

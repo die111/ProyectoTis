@@ -15,13 +15,33 @@
             <nav class="mt-5 px-2">
                 <ul class="space-y-1">
                     @foreach($menuItems ?? [] as $item)
-                        <li>
-                            <a href="{{ isset($item['route']) && $item['route'] !== '#' ? route($item['route']) : '#' }}"
-                               class="group flex items-center px-4 py-2 text-sm font-medium rounded-md transition-colors duration-150 {{ isset($item['active']) && $item['active'] ? 'bg-primary-800 text-white' : 'text-gray-300 hover:bg-primary-800 hover:text-white' }}"imary-800 hover:text-white' }}">
-                                <i class="{{ $item['icon'] }} w-6 h-6 mr-3 text-lg"></i>
-                                <span class="hide-on-collapse">{{ $item['name'] }}</span>
-                            </a>
-                        </li>
+                        @if(isset($item['submenu']))
+                            <li class="relative" x-data="{ open: false }">
+                                <button type="button" @click="open = !open" class="group flex items-center px-4 py-2 w-full text-sm font-medium rounded-md transition-colors duration-150 text-gray-300 hover:bg-primary-800 hover:text-white focus:outline-none">
+                                    <i class="{{ $item['icon'] }} w-6 h-6 mr-3 text-lg"></i>
+                                    <span class="hide-on-collapse">{{ $item['name'] }}</span>
+                                    <i :class="open ? 'fa-chevron-up' : 'fa-chevron-down'" class="fas ml-auto transition-transform duration-200"></i>
+                                </button>
+                                <ul class="ml-8 mt-1 space-y-1" x-show="open" x-transition>
+                                    @foreach($item['submenu'] as $sub)
+                                        <li>
+                                            <a href="{{ route($sub['route']) }}" class="group flex items-center px-4 py-2 text-sm font-medium rounded-md transition-colors duration-150 {{ isset($sub['active']) && $sub['active'] ? 'bg-primary-800 text-white' : 'text-gray-300 hover:bg-primary-800 hover:text-white' }}">
+                                                <i class="{{ $sub['icon'] }} w-5 h-5 mr-2 text-lg"></i>
+                                                <span class="hide-on-collapse">{{ $sub['name'] }}</span>
+                                            </a>
+                                        </li>
+                                    @endforeach
+                                </ul>
+                            </li>
+                        @else
+                            <li>
+                                <a href="{{ isset($item['route']) && $item['route'] !== '#' ? route($item['route']) : '#' }}"
+                                   class="group flex items-center px-4 py-2 text-sm font-medium rounded-md transition-colors duration-150 {{ isset($item['active']) && $item['active'] ? 'bg-primary-800 text-white' : 'text-gray-300 hover:bg-primary-800 hover:text-white' }}">
+                                    <i class="{{ $item['icon'] }} w-6 h-6 mr-3 text-lg"></i>
+                                    <span class="hide-on-collapse">{{ $item['name'] }}</span>
+                                </a>
+                            </li>
+                        @endif
                     @endforeach
                 </ul>
             </nav>

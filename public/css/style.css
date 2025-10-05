@@ -1,0 +1,33 @@
+/*7) EFECTOS DE APARICIÓN */
+/*Efecto de aparición de escala*/
+.efect{
+    opacity: 0;
+    transform: scale(0.8);
+    transition: opacity 0.5s ease, transform 0.5s ease;
+}
+.efect.mostrar {
+    opacity: 1;
+    transform: scale(1);
+}
+/*Efecto de aparición lateral de una sola vez*/
+.efect2 {
+    opacity: 0;
+    transform: translateX(20%);
+    transition: all 0.5s ease-in-out;
+}
+  
+.efect2.in-view {
+    opacity: 1;
+    transform: translateX(0);
+}
+/*Efecto de aparición central de una sola vez*/
+.efect3 {
+    opacity: 0;
+    transform: scale(0.8);
+    transition: opacity 0.5s ease, transform 0.5s ease;
+}
+  
+.efect3.in-view2 {
+    opacity: 1;
+    transform: scale(1);
+}

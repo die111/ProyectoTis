@@ -1,88 +1,89 @@
 @extends('layouts.guest')
 @section('content')
-<main id="login" class="login-section">
-    <div class="login-promo">
-        <h1 class="promo-title">Oh! SanSi</h1>
-        <div class="promo-image">
-            <img src="{{ asset('images/logo_grande.png') }}" alt="Logo Oh! SanSi">
-        </div>
-    </div>
-    <div class="login-panel">
-        <div class="login-content">
-            <div class="welcome-header">
-                <h2>¡Bienvenido!</h2>
-                <p>¿Listo Para un Nuevo Día?</p>
+    <main id="login" class="login-section">
+        <div class="login-promo">
+            <h1 class="promo-title">Oh! SanSi</h1>
+            <div class="promo-image">
+                <img src="{{ asset('images/logo_animado.gif') }}" alt="Logo Oh! SanSi">
             </div>
-            <p class="login-prompt">Inicia Sesión para continuar</p>
-
-            <form class="login-form" method="POST" action="{{ route('login') }}">
-                @csrf
-
-                <div class="form-group">
-                    <label for="email">Correo electrónico</label>
-                    <input type="email" id="email" name="email" value="{{ old('email') }}" required
-                        autocomplete="email" autofocus class="@error('email') error @enderror"
-                        placeholder="Correo electrónico">
-                    @error('email')
-                        <span class="error-message">{{ $message }}</span>
-                    @enderror
-                </div>
-
-                <div class="form-group">
-                    <label for="password">Contraseña</label>
-                    <div class="password-wrapper">
-                        <input type="password" id="password" name="password" required autocomplete="current-password"
-                            class="@error('password') error @enderror" placeholder="Contraseña">
-                        <button type="button" id="togglePassword" class="password-toggle-icon">
-                            <i class="fas fa-eye"></i>
-                        </button>
-                    </div>
-                    @error('password')
-                        <span class="error-message">{{ $message }}</span>
-                    @enderror
-                </div>
-
-                @if ($errors->any())
-                    <div class="error-container">
-                        <ul>
-                            @foreach ($errors->all() as $error)
-                                <li>{{ $error }}</li>
-                            @endforeach
-                        </ul>
-                    </div>
-                @endif
-
-                <div class="remember-forgot">
-                    <div class="remember-me">
-                        <input id="remember" name="remember" type="checkbox">
-                        <label for="remember">Recordarme</label>
-                    </div>
-
-                    @if (Route::has('password.request'))
-                        <a href="{{ route('password.request') }}" class="forgot-password">¿Olvidaste tu contraseña?</a>
-                    @endif
-                </div>
-
-                <button type="submit" class="btn btn-primary">Iniciar Sesión</button>
-
-                @if (Route::has('register'))
-                    <div class="separator">o</div>
-                    <a href="{{ route('register') }}" class="btn btn-secondary">Registrarse</a>
-                @endif
-            </form>
         </div>
-    </div>
-</main>
+        <div class="login-panel">
+            <div class="login-content">
+                <div class="welcome-header">
+                    <h2>¡Bienvenido!</h2>
+                    <p>¿Listo Para un Nuevo Día?</p>
+                </div>
+                <p class="login-prompt">Inicia Sesión para continuar</p>
+
+                <form class="login-form" method="POST" action="{{ route('login') }}">
+                    @csrf
+
+                    <div class="form-group">
+                        <label for="email">Correo electrónico</label>
+                        <input type="email" id="email" name="email" value="{{ old('email') }}" required
+                            autocomplete="email" autofocus class="@error('email') error @enderror"
+                            placeholder="Correo electrónico">
+                        @error('email')
+                            <span class="error-message">{{ $message }}</span>
+                        @enderror
+                    </div>
+
+                    <div class="form-group">
+                        <label for="password">Contraseña</label>
+                        <div class="password-wrapper">
+                            <input type="password" id="password" name="password" required autocomplete="current-password"
+                                class="@error('password') error @enderror" placeholder="Contraseña">
+                            <button type="button" id="togglePassword" class="password-toggle-icon">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
+                        @error('password')
+                            <span class="error-message">{{ $message }}</span>
+                        @enderror
+                    </div>
+
+                    @if ($errors->any())
+                        <div class="error-container">
+                            <ul>
+                                @foreach ($errors->all() as $error)
+                                    <li>{{ $error }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    @endif
+
+                    <div class="remember-forgot">
+                        <div class="remember-me">
+                            <input id="remember" name="remember" type="checkbox">
+                            <label for="remember">Recordarme</label>
+                        </div>
+
+                        @if (Route::has('password.request'))
+                            <a href="{{ route('password.request') }}" class="forgot-password">¿Olvidaste tu contraseña?</a>
+                        @endif
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">Iniciar Sesión</button>
+
+                    @if (Route::has('register'))
+                        <div class="separator">o</div>
+                        <a href="{{ route('register') }}" class="btn btn-secondary">Registrarse</a>
+                    @endif
+                </form>
+            </div>
+        </div>
+    </main>
 @endsection
 @section('scripts')
-<script>
-    document.getElementById('togglePassword').addEventListener('click', function() {
-        const passwordField = document.getElementById('password');
-        const type = passwordField.getAttribute('type') === 'password' ? 'text' : 'password';
-        passwordField.setAttribute('type', type);
-        this.innerHTML = type === 'password' ? '<i class="fas fa-eye"></i>' : '<i class="fas fa-eye-slash"></i>';
-    });
-</script>
+    <script>
+        document.getElementById('togglePassword').addEventListener('click', function() {
+            const passwordField = document.getElementById('password');
+            const type = passwordField.getAttribute('type') === 'password' ? 'text' : 'password';
+            passwordField.setAttribute('type', type);
+            this.innerHTML = type === 'password' ? '<i class="fas fa-eye"></i>' :
+                '<i class="fas fa-eye-slash"></i>';
+        });
+    </script>
 @endsection
 <style>
     :root {
@@ -125,10 +126,11 @@
     .login-promo {
         display: flex;
         flex-direction: column;
-        justify-content: absolute;
+        justify-content: center;
         align-items: center;
         padding: 50px;
-        gap: 50px;
+        gap: 10px;
+        /* Reducido de 50px a 20px */
     }
 
     .promo-title {
@@ -142,24 +144,18 @@
     }
 
     .promo-image {
-        max-width: 100%;
         width: 500px;
         height: 500px;
-        /* background-color: var(--color-primary); */
         display: flex;
         align-items: center;
         justify-content: center;
-        color: var(--color-white);
-        font-size: 100px;
-        /* border-radius: 15px; */
-        /* box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15); */
         overflow: hidden;
     }
 
     .promo-image img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
+        max-width: 100%;
+        max-height: 100%;
+        object-fit: contain;
     }
 
     .login-panel {
@@ -185,11 +181,11 @@
 
     .welcome-header {
         text-align: center;
-            padding: 24px;
-            background-color: var(--color-gray-medium);
-            width: 100%;
-            margin: 0; 
-            box-sizing: border-box; 
+        padding: 24px;
+        background-color: var(--color-gray-medium);
+        width: 100%;
+        margin: 0;
+        box-sizing: border-box;
     }
 
     .welcome-header h2 {
@@ -409,7 +405,7 @@
         font-size: 14px;
     }
 
-    @media (max-width: 992px) {
+    @media (max-width: 640px) {
         .login-section {
             grid-template-columns: 1fr;
         }

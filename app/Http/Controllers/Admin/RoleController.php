@@ -4,11 +4,104 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use App\Models\Role;
 
 class RoleController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        return view('admin.roles.index');
+        $query = $request->input('search');
+        $roles = Role::query();
+        if ($query) {
+            $roles->where('name', 'like', "%$query%")
+                  ->orWhere('description', 'like', "%$query%");
+        }
+        $roles = $roles->orderBy('id')->paginate(10);
+        return view('admin.roles.index', compact('roles', 'query'));
+    }
+
+    public function create()
+    {
+        return view('admin.roles.create');
+    }
+
+    public function store(Request $request)
+    {
+        $request->validate([
+            'name' => 'required|string|max:255|unique:roles,name',
+            'description' => 'nullable|string',
+        ]);
+        Role::create($request->only('name', 'description'));
+        return redirect()->route('admin.roles.index')
+        ->with([
+            'swal_custom' => true,
+            'swal_title' => '¡Éxito!',
+            'swal_icon' => 'success',
+            'swal_text' => 'Rol creado correctamente.'
+        ]);
+    }
+
+    public function edit($id)
+    {
+        $role = Role::findOrFail($id);
+        return view('admin.roles.edit', compact('role'));
+    }
+
+    public function update(Request $request, $id)
+    {
+        $role = Role::findOrFail($id);
+        $request->validate([
+            'name' => 'required|string|max:255|unique:roles,name,' . $role->id,
+            'description' => 'nullable|string',
+        ]);
+        $role->update($request->only('name', 'description'));
+        return redirect()->route('admin.roles.index')
+        ->with([
+            'swal_custom' => true,
+            'swal_title' => '¡Éxito!',
+            'swal_icon' => 'success',
+            'swal_text' => 'Rol actualizado correctamente.'
+        ]);
+    }
+
+    public function destroy($id)
+    {
+        $role = Role::findOrFail($id);
+        $role->delete();
+        return redirect()->route('admin.roles.index')
+        ->with([
+            'swal_custom' => true,
+            'swal_title' => '¡Éxito!',
+            'swal_icon' => 'success',
+            'swal_text' => 'Rol deshabilitado correctamente.'
+        ]);
+    }
+
+    public function activate($id)
+    {
+        $role = Role::findOrFail($id);
+        $role->is_active = true;
+        $role->save();
+        return redirect()->route('admin.roles.index')
+        ->with([
+            'swal_custom' => true,
+            'swal_title' => '¡Éxito!',
+            'swal_icon' => 'success',
+            'swal_text' => 'Rol activado correctamente.'
+        ]);
+    }
+
+    public function deactivate($id)
+    {
+        $role = Role::findOrFail($id);
+        $role->is_active = false;
+        $role->save();
+        return redirect()->route('admin.roles.index')
+        ->with([
+            'swal_custom' => true,
+            'swal_title' => '¡Éxito!',
+            'swal_icon' => 'success',
+            'swal_text' => 'Rol desactivado correctamente.'
+        ]);
     }
 }
