@@ -1,6 +1,8 @@
 @extends('layouts.app')
 @section('title', 'Competicion · Admin')
 
+@section('title', 'Competicion · Admin')
+
 @section('content')
     <!--  CABECERA / ACCIONES   -->
     <div class="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
@@ -92,3 +94,4 @@
       </script>
       @endpush
 @endsection
+

@@ -6,16 +6,118 @@
     <h2 class="text-2xl font-semibold text-gray-800 mb-2 text-center">Registrar Estudiante</h2>
     <p class="text-sm text-gray-500 mb-6">Datos con * son importantes</p>
 
-    @include('components.inscripcion.upload-csv')
+    <!-- Upload CSV (muestra nombre del archivo) -->
+    <div class="upload-inline mb-6">
+      <label for="csvUpload" class="upload-label">Subir CSV*:</label>
 
-    @include('components.inscripcion.search-bar')
+      <div id="fakeFile" class="fake-file" title="Seleccionar archivo CSV">
+        <span id="fileName" class="file-name">Ningún archivo seleccionado</span>
+        <!-- icono upload -->
+        <svg class="ico ico-18 upload-ico" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M12 16V4M12 4l-4 4m4-4 4 4M4 20h16" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
 
-    @include('components.inscripcion.students-table')
+      <input id="csvUpload" type="file" accept=".csv" class="hidden-file"/>
 
-    @include('components.inscripcion.action-buttons')
+      <button id="btnUpload"
+              class="px-4 py-2 rounded-md bg-[#091c47] text-white text-sm font-medium hover:bg-[#0c3e92]"
+              disabled>
+        Subir
+      </button>
+    </div>
+
+    <!-- BUSCADOR -->
+    <div class="flex items-center justify-center gap-3 mb-4">
+      <div class="search-pill">
+        <input id="txtSearch" type="text" placeholder="Estudiante" aria-label="Buscar estudiante">
+        <button id="btnSearchIcon" class="search-icon" type="button" aria-label="Buscar">
+          <svg class="ico ico-18" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M21 21l-4.35-4.35M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15z"
+                  stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+      </div>
+      <button id="btnSearch" class="px-4 py-2 rounded-full bg-[#091c47] text-white text-sm font-medium hover:bg-[#0c3e92]">Buscar</button>
+    </div>
+
+    <!-- TABLA (solo lectura) -->
+    <div class="table-shell">
+      <div class="table-inner">
+        <div id="tblWrap" class="tbl-wrap">
+          <table class="min-w-full bg-white insc-table">
+            <thead class="thead-sticky">
+              <tr>
+                <th class="px-3 py-3 text-left w-24">ID</th>
+                <th class="px-3 py-3 text-left">Nombre</th>
+                <th class="px-3 py-3 text-left">Apellido Paterno</th>
+                <th class="px-3 py-3 text-left">Apellido Materno</th>
+                <th class="px-3 py-3 text-left">Área</th>
+              </tr>
+            </thead>
+            <tbody id="tbodyEstudiantes" class="text-sm text-gray-700"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Acciones -->
+    <div class="flex items-center gap-3 justify-center mt-6">
+      <button id="btnAdd" class="btn-pill" title="Añadir estudiante">
+        <svg class="ico ico-18" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span>Añadir</span>
+      </button>
+
+      <button id="btnDelete" class="btn-pill">
+        <svg class="ico ico-18" viewBox="0 0 24 24"><path d="M9 6h6M10 6v12m4-12v12M5 6h14l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6z" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span>Eliminar</span>
+      </button>
+
+      <button id="btnExport" class="btn-pill">
+        <svg class="ico ico-18" viewBox="0 0 24 24"><path d="M12 3v12m0 0l-4-4m4 4 4-4M4 21h16" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span>Guardar y Exportar</span>
+      </button>
+    </div>
   </div>
 
-  @include('components.inscripcion.add-modal')
+  {{-- MODAL AÑADIR (centrado, header sticky, scroll interno) --}}
+  <div id="modalAdd" class="md-modal" aria-hidden="true">
+    <div class="md-backdrop" data-close></div>
+
+    <div class="md-panel">
+      <section id="registration-form" class="registration-section">
+        <div class="registration-modal">
+          <header class="modal-header">
+            <div class="modal-title-wrapper">
+              <h1>Registrar Estudiante</h1>
+            </div>
+            <button class="close-button" data-close aria-label="Cerrar modal">
+              <svg width="24" height="24" viewBox="0 0 24 24" class="text-white" style="stroke:#fff;fill:none;stroke-width:2">
+                <path d="M6 6l12 12M18 6l-12 12" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
+          </header>
+
+          <main class="modal-body">
+            <div class="notice-section">
+              <p>Los campos con * son obligatorios</p>
+              <hr class="divider">
+            </div>
+
+            <form id="frmAdd" class="registration-form" onsubmit="return false;">
+              <div class="form-grid">
+                <div class="form-column">
+                  <div class="input-group">
+                    <label for="m_id">ID*:</label>
+                    <input type="text" id="m_id" name="m_id" placeholder="A001 (opcional)" data-autofocus>
+                  </div>
+                  <div class="input-group">
+                    <label for="m_nombre">Nombre*:</label>
+                    <input type="text" id="m_nombre" name="m_nombre" placeholder="Nombre" required>
+                  </div>
+                  <div class="input-group">
+                    <label for="m_paterno">Apellido Paterno*:</label>
+                    <input type="text" id="m_paterno" name="m_paterno" placeholder="Apellido paterno" required>
                   </div>
                   <div class="input-group">
                     <label for="m_materno">Apellido Materno*:</label>

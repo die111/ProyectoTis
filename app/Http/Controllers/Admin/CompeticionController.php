@@ -9,6 +9,8 @@ use App\Models\Area;
 use App\Models\Phase;
 use App\Models\Level;
 
+
+
 class CompeticionController extends Controller
 {
     public function show($id)

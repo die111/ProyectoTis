@@ -1,6 +1,8 @@
 @extends('layouts.app')
 @section('title', 'Roles · Admin')
 
+@section('title', 'Roles · Admin')
+
 @section('content')
 <!--  CABECERA / ACCIONES   -->
 <div class="content-header">
