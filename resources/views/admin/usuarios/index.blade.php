@@ -153,16 +153,14 @@
                                     <td class="px-6 py-3">{{ $user->email }}</td>
                                     <td class="px-6 py-3">
                                         <div class="flex items-center justify-end gap-3">
-                                            <a href="{{ route('admin.usuarios.edit', $user->id) }}?return={{ urlencode(request()->fullUrl()) }}" class="rounded p-1.5 hover:bg-slate-100" title="Editar" aria-label="Editar">
-                                                <svg class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor">
-                                                    <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1.003 1.003 0 0 0 0-1.42l-2.34-2.34a1.003 1.003 0 0 0-1.42 0l-1.83 1.83 3.75 3.75 1.84-1.82z" />
-                                                </svg>
+                                            <a href="{{ route('admin.usuarios.edit', $user->id) }}?return={{ urlencode(request()->fullUrl()) }}" class="px-3 py-1.5 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md transition-colors duration-200" title="Editar">
+                                                Editar
                                             </a>
                                             <form action="{{ route('admin.usuarios.destroy', $user->id) }}" method="POST" style="display:inline" class="delete-user-form">
                                                 @csrf
                                                 @method('DELETE')
-                                                <button type="button" class="rounded p-1.5 hover:bg-slate-100 btn-eliminar" title="Eliminar" aria-label="Eliminar">
-                                                    <i class="bi bi-trash-fill text-red-600"></i>
+                                                <button type="button" class="px-3 py-1.5 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-md transition-colors duration-200 btn-eliminar" title="Eliminar">
+                                                    Eliminar
                                                 </button>
                                             </form>
                                         </div>
@@ -216,7 +214,7 @@
     <div id="modal-eliminar" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 hidden">
         <div class="bg-white rounded-lg shadow-lg p-8 w-full max-w-md text-center relative">
             <h3 class="text-lg font-semibold mb-4">¿Seguro que deseas eliminar este usuario?</h3>
-            {{-- <video id="michi-video" src="{{ asset('videos/MichiSad.mp4') }}" preload="auto" loop class="mx-auto mb-4 rounded-lg shadow w-48 h-48 object-cover"></video> --}}
+            <video id="michi-video" src="{{ asset('videos/MichiSad.mp4') }}" preload="auto" loop class="mx-auto mb-4 rounded-lg shadow w-48 h-48 object-cover"></video>
             <div class="flex justify-center gap-6 mt-6">
                 <button id="cancelar-eliminar" class="px-5 py-2 rounded bg-slate-300 hover:bg-slate-400 text-slate-800 font-semibold">Cancelar</button>
                 <button id="confirmar-eliminar" class="px-5 py-2 rounded bg-red-600 hover:bg-red-700 text-white font-semibold">Eliminar</button>

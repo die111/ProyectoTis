@@ -46,6 +46,9 @@ Route::middleware(['auth', 'role:admin'])->prefix('dashboard/admin')->name('admi
     Route::resource('etapas', EtapaController::class);
     Route::resource('areas', AreaController::class);
 
+    // Ruta para guardar estudiantes
+    Route::post('inscripcion/guardar-estudiantes', [InscripcionController::class, 'guardarEstudiantes'])->name('inscripcion.guardarEstudiantes');
+
     // Futuras rutas de áreas (descomentar cuando estén listas)
     // Route::resource('areas', App\Http\Controllers\Admin\AreaController::class);
 });
