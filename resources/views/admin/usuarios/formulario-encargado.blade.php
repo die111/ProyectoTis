@@ -151,5 +151,13 @@
       });
     }
   })();
+
+  // Solo letras y espacios en nombre y apellido paterno
+  function soloLetras(e) {
+    e.target.value = e.target.value.replace(/[^A-Za-zÁÉÍÓÚáéíóúÑñ\s]/g, '');
+  }
+  document.getElementById('name').addEventListener('input', soloLetras);
+  document.getElementById('last_name_father').addEventListener('input', soloLetras);
+  document.getElementById('last_name_mother').addEventListener('input', soloLetras);
 </script>
 @endsection

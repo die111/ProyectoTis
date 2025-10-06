@@ -1,5 +1,5 @@
 <!-- Sidebar -->
-<aside class="fixed top-[64px] left-0 z-40 w-64 bg-[#091c47] text-white transition-all duration-300 ease-in-out transform h-[calc(100vh-64px)]" id="sidebar">
+<aside class="fixed md:sticky top-[64px] md:top-[64px] left-0 z-50 w-64 bg-[#091c47] text-white transition-all duration-300 ease-in-out transform h-[calc(100vh-64px)] md:h-[calc(100vh-64px)]" id="sidebar">
     <div class="flex flex-col h-full">
         <!-- Top section -->
         <div class="flex-1 overflow-y-auto">
@@ -71,7 +71,7 @@
 </aside>
 
 <!-- Mobile sidebar overlay -->
-<div class="fixed inset-0 bg-gray-900 bg-opacity-50 z-30 hidden transition-opacity duration-300" id="sidebarOverlay"></div>
+<div class="fixed inset-0 bg-gray-900 bg-opacity-50 z-40 hidden transition-opacity duration-300" id="sidebarOverlay"></div>
 
 <style>
     :root {
@@ -81,98 +81,28 @@
 
     #sidebar {
         background-color: var(--primary-900);
+        z-index: 50; /* sobre footer */
     }
 
-    /* Desktop collapsed state */
-    #sidebar.collapsed {
-        width: 5rem;
-    }
+    /* Estado colapsado escritorio */
+    #sidebar.collapsed { width: 5rem; }
+    #sidebar.collapsed .hide-on-collapse { opacity: 0; width: 0; overflow: hidden; white-space: nowrap; }
+    #sidebar.collapsed #hideSidebar i { transform: rotate(180deg); }
 
-    #sidebar.collapsed .hide-on-collapse {
-        opacity: 0;
-        width: 0;
-        overflow: hidden;
-        white-space: nowrap;
-    }
-
-    #sidebar.collapsed #hideSidebar i {
-        transform: rotate(180deg);
-    }
-
-    /* Mobile styles */
+    /* Móvil: off-canvas */
     @media (max-width: 768px) {
-        #sidebar {
-            transform: translateX(-100%);
-            width: 16rem !important; /* Forzar ancho completo en móvil */
-            top: 64px; /* Altura del header */
-            height: calc(100vh - 64px); /* Altura total menos header */
-        }
-
-        #sidebar.active {
-            transform: translateX(0);
-        }
-
-        #sidebar.collapsed {
-            width: 16rem !important; /* En móvil nunca colapsar */
-        }
-
-        #sidebar.collapsed .hide-on-collapse {
-            opacity: 1 !important;
-            width: auto !important;
-            overflow: visible !important;
-        }
-
-        #sidebar .fas,
-        #sidebar .fa {
-            display: inline-block !important;
-            width: 1.5rem !important;
-            text-align: center !important;
-        }
-
-        #sidebar a,
-        #sidebar button {
-            display: flex !important;
-            align-items: center !important;
-        }
-
-        #sidebarOverlay.active {
-            display: block;
-        }
+        #sidebar { transform: translateX(-100%); width: 16rem !important; top:64px; height:calc(100vh - 64px); }
+        #sidebar.active { transform: translateX(0); }
+        #sidebar.collapsed { width:16rem !important; }
+        #sidebar.collapsed .hide-on-collapse { opacity:1 !important; width:auto !important; overflow:visible !important; }
+        #sidebarOverlay.active { display:block; }
     }
 
-    /* Main content adjustments */
-    .main-content {
-        margin-left: 16rem;
-        transition: margin-left 0.3s ease-in-out;
-    }
+    /* Transiciones */
+    .hide-on-collapse { transition: opacity .3s ease-in-out, width .3s ease-in-out; }
 
-    .main-content.sidebar-collapsed {
-        margin-left: 5rem;
-    }
+    body.sidebar-open { overflow:hidden; }
+    @media (max-width:768px){ body.sidebar-open { position:fixed; width:100%; } }
 
-    @media (max-width: 768px) {
-        .main-content {
-            margin-left: 0 !important;
-        }
-        
-        .main-content.sidebar-collapsed {
-            margin-left: 0 !important;
-        }
-    }
-
-    /* Smooth transitions */
-    .hide-on-collapse {
-        transition: opacity 0.3s ease-in-out, width 0.3s ease-in-out;
-    }
-
-    body.sidebar-open {
-        overflow: hidden;
-    }
-
-    @media (max-width: 768px) {
-        body.sidebar-open {
-            position: fixed;
-            width: 100%;
-        }
-    }
+    /* Eliminado el margin-left previo de .main-content para que footer abarque todo */
 </style>

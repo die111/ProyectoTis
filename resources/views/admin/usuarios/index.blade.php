@@ -137,9 +137,9 @@
                     </thead>
 
                     <tbody class="divide-y divide-slate-200 bg-white/95">
-                        @if(empty($users) || count($users) === 0)
+                        @if($users->isEmpty())
                             <tr>
-                                <td colspan="5" class="px-6 py-8 text-center text-slate-400 text-lg">No hay usuarios registrados.
+                                <td colspan="6" class="px-6 py-8 text-center text-slate-400 text-lg">No hay usuarios registrados.
                                 </td>
                             </tr>
                         @else
@@ -170,6 +170,10 @@
                         @endif
                     </tbody>
                 </table>
+                {{-- Paginación --}}
+                <div class="px-6 py-4 bg-white/95">
+                    {{ $users->links() }}
+                </div>
             </div>
         </div>
     </section>

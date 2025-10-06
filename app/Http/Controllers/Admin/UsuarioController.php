@@ -50,7 +50,8 @@ class UsuarioController extends Controller
         if ($area_id) {
             $query->where('area_id', $area_id);
         }
-        $users = $query->with('role')->get();
+        // Paginación: 10 por página, conservando parámetros de query
+        $users = $query->with('role')->paginate(10)->withQueryString();
 
         return view('admin.usuarios.index', compact('areas', 'encargados_count', 'evaluadores_count', 'usuarios_activos_count', 'users'));
     }

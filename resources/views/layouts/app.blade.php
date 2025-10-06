@@ -26,44 +26,48 @@
     <!-- Navbar -->
     <x-nav-header :guest="false" />
 
-    <div class="flex min-h-screen">
-        <!-- Sidebar -->
-        <x-sidebar />
+    <div class="flex min-h-screen flex-col">
+        <!-- Ajuste: añadir min-h para que la fila ocupe al menos el alto de la pantalla menos el header -->
+        <div class="flex flex-1 min-h-[calc(100vh-64px)]">
+            <!-- Sidebar -->
+            <x-sidebar />
 
-        <!-- Main Content Wrapper -->
-        <div class="flex-1 flex flex-col min-h-screen main-content bg-gray-100">
+            <!-- Main Content Wrapper -->
+            <div class="flex-1 flex flex-col min-h-screen main-content bg-gray-100">
 
-            <!-- Page Header -->
-            @if (isset($header))
-                <header class="bg-white shadow-sm">
-                    <div class="px-4 py-6 sm:px-6 lg:px-8">
-                        {{ $header }}
-                    </div>
-                </header>
-            @endif
-
-            <!-- Main Content Area -->
-            <main class="flex-1 overflow-y-auto p-4 lg:p-6">
-                <!-- Breadcrumb -->
-                @if (isset($breadcrumb))
-                    <nav class="mb-4" aria-label="Breadcrumb">
-                        <ol class="flex items-center space-x-2 text-sm text-gray-500">
-                            {{ $breadcrumb }}
-                        </ol>
-                    </nav>
+                <!-- Page Header -->
+                @if (isset($header))
+                    <header class="bg-white shadow-sm">
+                        <div class="px-4 py-6 sm:px-6 lg:px-8">
+                            {{ $header }}
+                        </div>
+                    </header>
                 @endif
 
-                <!-- Alerts Tradicionales -->
-                {{-- <x-alert-clasic/> --}}
+                <!-- Main Content Area -->
+                <main class="flex-1 overflow-y-auto p-4 lg:p-6">
+                    <!-- Breadcrumb -->
+                    @if (isset($breadcrumb))
+                        <nav class="mb-4" aria-label="Breadcrumb">
+                            <ol class="flex items-center space-x-2 text-sm text-gray-500">
+                                {{ $breadcrumb }}
+                            </ol>
+                        </nav>
+                    @endif
 
-                <!-- Contenido Variable -->
-                @yield('content')
-                {{ $slot ?? '' }}
-            </main>
+                    <!-- Alerts Tradicionales -->
+                    {{-- <x-alert-clasic/> --}}
 
+                    <!-- Contenido Variable -->
+                    @yield('content')
+                    {{ $slot ?? '' }}
+                </main>
+
+            </div>
         </div>
     </div>
-    
+    <!-- Footer fuera del contenedor flex principal -->
+    @include('components.footer')
     @include('components.global-swal')
 
     @stack('scripts')
