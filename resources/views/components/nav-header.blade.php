@@ -24,17 +24,17 @@
                 </a>
             </li>
             <li>
-                <a href="#" class="{{ request()->routeIs('stages.*') ? 'active' : '' }}">
+                <a href="{{ route('etapas.index') }}" class="{{ request()->routeIs('stages.*') ? 'active' : '' }}">
                     ETAPAS
                 </a>
             </li>
             <li>
-                <a href="#" class="{{ request()->routeIs('classified.*') ? 'active' : '' }}">
-                    CLASIFICADOS
-                </a>
+               <a href="{{ route('clasificados.index') }}" class="{{ request()->routeIs('clasificados.*') ? 'active' : '' }}">
+                   CLASIFICADOS
+               </a>
             </li>
             <li>
-                <a href="#" class="{{ request()->routeIs('contact.*') ? 'active' : '' }}">
+                 <a href="{{ route('contactos') }}" class="{{ request()->routeIs('contactos') ? 'active' : '' }}">
                     CONTACTOS
                 </a>
             </li>
@@ -51,7 +51,8 @@
     <!-- Login Button -->
     @guest
         <a href="{{ route('login') }}" class="login-button">
-            <img src="{{ asset('images/icono.jpg') }}" alt="icono" class="login-icon">
+            <img src="{{ asset('images/icono.png') }}" alt="icono" class="login-icon"
+                style="width: 28px; min-width: 28px; max-width: 28px;">
             <span>Iniciar Sesión</span>
         </a>
     @else
@@ -83,7 +84,9 @@
             <a href="#">CLASIFICADOS</a>
         </li>
         <li>
-            <a href="#">CONTACTOS</a>
+             <a href="{{ route('contactos') }}" class="{{ request()->routeIs('contactos') ? 'active' : '' }}">
+              CONTACTOS
+             </a>
         </li>
         @guest
             <li>

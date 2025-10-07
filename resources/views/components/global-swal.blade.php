@@ -7,6 +7,7 @@
             title: '{{ session('swal_title') }}',
             text: '{{ session('swal_text') }}',
             confirmButtonColor: '#0C3E92',
+            iconColor: '#091c47',
         });
     @endif
     @if(session('swal_error'))
@@ -15,6 +16,7 @@
             title: 'Error',
             text: '{{ session('swal_error') }}',
             confirmButtonColor: '#0C3E92',
+            iconColor: '#091c47',
         });
     @endif
 
@@ -25,10 +27,11 @@
             Swal.fire({
                 title: '¿Seguro que deseas eliminar?',
                 icon: 'warning',
+                iconColor: '#091c47',
                 showCancelButton: true,
                 confirmButtonColor: '#d33',
                 cancelButtonColor: '#3085d6',
-                confirmButtonText: 'Sí, eliminar',
+                confirmButtonText: 'Eliminar',
                 cancelButtonText: 'Cancelar'
             }).then((result) => {
                 if (result.isConfirmed) {

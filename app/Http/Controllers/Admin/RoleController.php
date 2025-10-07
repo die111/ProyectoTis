@@ -13,8 +13,9 @@ class RoleController extends Controller
         $query = $request->input('search');
         $roles = Role::query();
         if ($query) {
-            $roles->where('name', 'like', "%$query%")
-                  ->orWhere('description', 'like', "%$query%");
+            $search = mb_strtolower($query);
+            $roles->whereRaw('LOWER(name) LIKE ?', ["%$search%"])
+                  ->orWhereRaw('LOWER(description) LIKE ?', ["%$search%"]);
         }
         $roles = $roles->orderBy('id')->paginate(10);
         return view('admin.roles.index', compact('roles', 'query'));

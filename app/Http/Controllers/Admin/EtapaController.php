@@ -11,8 +11,16 @@ class EtapaController extends Controller
 {
     public function index()
     {
-        $phases = Phase::orderBy('name')->paginate(10);
-        return view('admin.etapas.index', compact('phases'));
+        $query = request('search');
+        $phases = Phase::query()
+            ->when($query, function($q) use ($query) {
+                $search = mb_strtolower($query);
+                $q->whereRaw('LOWER(name) LIKE ?', ["%$search%"])
+                  ->orWhereRaw('LOWER(description) LIKE ?', ["%$search%"]);
+            })
+            ->orderBy('name')
+            ->paginate(10);
+        return view('admin.etapas.index', compact('phases', 'query'));
     }
 
     public function create()
@@ -63,8 +71,27 @@ class EtapaController extends Controller
     public function destroy($id)
     {
         $phase = Phase::findOrFail($id);
-        $phase->delete();
+        $phase->is_active = false;
+        $phase->save();
         return redirect()->route('admin.etapas.index')
-        ->with('success', 'Fase eliminada correctamente.');
+            ->with([
+            'swal_custom' => true,
+            'swal_title' => '¡Éxito!',
+            'swal_icon' => 'success',
+            'swal_text' => 'Fase deshabilitado correctamente.'
+        ]);
+    }
+    public function habilitar($id)
+    {
+        $phase = Phase::findOrFail($id);
+        $phase->is_active = true;
+        $phase->save();
+        return redirect()->route('admin.etapas.index')
+            ->with([
+            'swal_custom' => true,
+            'swal_title' => '¡Éxito!',
+            'swal_icon' => 'success',
+            'swal_text' => 'Fase activado correctamente.'
+        ]);
     }
 }

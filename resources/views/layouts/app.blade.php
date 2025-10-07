@@ -27,7 +27,6 @@
     <x-nav-header :guest="false" />
 
     <div class="flex min-h-screen flex-col">
-        <!-- Ajuste: añadir min-h para que la fila ocupe al menos el alto de la pantalla menos el header -->
         <div class="flex flex-1 min-h-[calc(100vh-64px)]">
             <!-- Sidebar -->
             <x-sidebar />

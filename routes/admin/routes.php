@@ -44,6 +44,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('dashboard/admin')->name('admi
     
     Route::resource('inscripcion', InscripcionController::class);
     Route::resource('etapas', EtapaController::class);
+    Route::patch('etapas/{id}/habilitar', [EtapaController::class, 'habilitar'])->name('etapas.habilitar');
     Route::resource('areas', AreaController::class);
 
     // Ruta para guardar estudiantes

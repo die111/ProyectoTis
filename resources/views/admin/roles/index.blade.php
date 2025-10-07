@@ -48,11 +48,17 @@
         <td class="py-2 px-2 align-middle">
           <div class="flex flex-wrap gap-2 justify-center">
             <a href="{{ route('admin.roles.edit', $role->id) }}" class="btn btn-primary btn-pressable px-3 py-1 text-sm">Editar</a>
-            <form action="{{ route('admin.roles.destroy', $role->id) }}" method="POST" style="display:inline-block;">
-              @csrf
-              @method('DELETE')
-              <button type="submit" class="btn btn-secondary btn-pressable px-3 py-1 text-sm" onclick="return confirm('¿Deshabilitar este rol?')">Deshabilitar</button>
-            </form>
+            @if($role->is_active)
+              <form action="{{ route('admin.roles.deactivate', $role->id) }}" method="POST" style="display:inline-block;" class="swal-delete">
+                @csrf
+                <button type="submit" class="btn btn-secondary btn-pressable px-3 py-1 text-sm">Desactivar</button>
+              </form>
+            @else
+              <form action="{{ route('admin.roles.activate', $role->id) }}" method="POST" style="display:inline-block;">
+                @csrf
+                <button type="submit" class="btn btn-primary btn-pressable px-3 py-1 text-sm">Activar</button>
+              </form>
+            @endif
           </div>
         </td>
       </tr>

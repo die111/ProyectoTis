@@ -88,7 +88,10 @@
                                 <select name="levels[]" id="levels" multiple x-model="selectedLevels"
                                     class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                                     @foreach($levelsCatalog as $level)
-                                        <option value="{{ $level->id }}">{{ $level->nombre }}</option>
+                                        <option value="{{ $level->id }}" 
+                                            @if(collect($competicion->levels)->pluck('id')->contains($level->id)) selected @endif>
+                                            {{ $level->nombre }}
+                                        </option>
                                     @endforeach
                                 </select>
                                 <small class="text-muted-foreground">Ctrl+Click para seleccionar varios</small>
@@ -98,7 +101,10 @@
                                 <select name="areas[]" id="areas" multiple x-model="selectedAreas"
                                     class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                                     @foreach($areasCatalog as $a)
-                                        <option value="{{ $a->id }}">{{ $a->name }}</option>
+                                        <option value="{{ $a->id }}" 
+                                            @if(collect($competicion->areas)->pluck('id')->contains($a->id)) selected @endif>
+                                            {{ $a->name }}
+                                        </option>
                                     @endforeach
                                 </select>
                                 <small class="text-muted-foreground">Ctrl+Click para seleccionar varios</small>

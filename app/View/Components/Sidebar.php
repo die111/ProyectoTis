@@ -59,7 +59,7 @@ class Sidebar extends Component
                         'active' => $this->isRouteActive(['inscripcion.*'])
                     ],
                     [
-                        'name' => 'Gestion de fases',
+                        'name' => 'Gestion de Fases',
                         'route' => 'admin.etapas.index',
                         'icon' => 'fas fa-sitemap',
                         'active' => $this->isRouteActive(['gestion-fases.*'])

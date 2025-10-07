@@ -14,6 +14,9 @@ Route::get('/welcome', [WelcomeController::class, 'index'])->name('welcome');
 // Rutas de autenticación
 require __DIR__.'/auth.php';
 
+//Rutas publicas
+require __DIR__.'/public/routes.php';
+
 // Rutas protegidas
 Route::middleware('auth')->group(function () {
     

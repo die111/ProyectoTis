@@ -374,12 +374,12 @@
             areas: [],
             levels: [],
             editingPhase: null,
-            currentDate: new Date(),
+            currentDate: new Date(), // Mes actual
 
             init() {
                 this.addArea();
                 this.addLevel();
-                this.currentDate = new Date(2025, 8, 1); // Septiembre 2025
+                // Eliminar la línea que fija septiembre 2025
             },
 
             get currentMonth() {
@@ -512,11 +512,13 @@
 
             selectDate(date, isCurrentMonth) {
                 // Solo permitir seleccionar días del mes actual
-                if (!isCurrentMonth) {
-                    return;
-                }
+                if (!isCurrentMonth) return;
 
-                console.log('Fecha seleccionada:', date);
+                // No permitir fechas anteriores a hoy
+                const today = new Date();
+                today.setHours(0,0,0,0);
+                const selected = new Date(date);
+                if (selected < today) return;
 
                 // Si ya hay un rango completo seleccionado, empezamos de nuevo
                 if (this.startDate && this.endDate) {
@@ -525,19 +527,14 @@
                     this.phases = [];
                     return;
                 }
-
                 // Si no hay fecha de inicio, la establecemos
                 if (!this.startDate) {
                     this.startDate = date;
                     return;
                 }
-
                 // Si hay fecha de inicio pero no de fin
                 if (!this.endDate) {
                     const start = new Date(this.startDate);
-                    const selected = new Date(date);
-
-                    // Si la fecha seleccionada es anterior a la de inicio, intercambiamos
                     if (selected < start) {
                         this.endDate = this.startDate;
                         this.startDate = date;
@@ -868,9 +865,15 @@
 
     .calendar-day.disabled {
         @apply text-gray-300 cursor-not-allowed bg-gray-50;
+        opacity: 0.5;
+        filter: blur(0.5px);
+        pointer-events: none;
+        transition: opacity 0.2s, filter 0.2s;
     }
 
     .calendar-day.disabled:hover {
         @apply bg-gray-50 border-gray-200;
+        opacity: 0.5;
+        filter: blur(0.5px);
     }
 </style>
