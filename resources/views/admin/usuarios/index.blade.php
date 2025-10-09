@@ -15,26 +15,16 @@
             <h3 class="text-xl font-semibold">Usuarios</h3>
 
             <div class="flex gap-2 mb-4">
-                <a href="{{ route('admin.formulario-encargado') }}"
-                    class="inline-flex items-center gap-2 rounded-full px-4 py-2 font-semibold text-white hover:opacity-95"
-                    style="background:#0C3E92">
-                    <i class="bi bi-plus-circle"></i> Crear Encargado de Area
-                </a>
-                <a href="{{ route('admin.formulario-evaluador') }}"
-                    class="inline-flex items-center gap-2 rounded-full px-4 py-2 font-semibold text-white hover:opacity-95"
-                    style="background:#0C3E92">
-                    <i class="bi bi-plus-circle"></i> Crear Evaluador
-                </a>
                 <a href="{{ route('admin.formulario-usuario') }}"
                     class="inline-flex items-center gap-2 rounded-full px-4 py-2 font-semibold text-white hover:opacity-95"
-                    style="background:#198754">
+                    style="background:#091C47">
                     <i class="bi bi-person-plus"></i> Crear Usuario
                 </a>
             </div>
         </div>
 
         {{-- Tarjetas (1 col móvil, 2 tablet, 4 desktop) --}}
-        <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+        <div class="grid grid-cols-1 xl:grid-cols-5 gap-4">
             {{-- Encargados de Área --}}
             <a href="?role=responsable_area" class="block group">
                 <div class="bg-white rounded-lg shadow-md p-4 flex flex-col justify-between relative h-32 transition-all duration-200 hover:ring-4 hover:ring-red-600" id="card-encargado">
@@ -90,6 +80,20 @@
                     <div class="absolute bottom-0 left-0 right-0 h-2 bg-cyan-500 rounded-b-lg"></div>
                 </div>
             </a>
+
+            {{-- Usuarios Inactivos --}}
+            <a href="?role=inactivos" class="block group">
+                <div class="bg-white rounded-lg shadow-md p-4 flex flex-col justify-between relative h-32 transition-all duration-200 hover:ring-4 hover:ring-gray-500" id="card-inactivo">
+                    <div class="flex items-center justify-center gap-3 h-full">
+                        <i class="bi bi-person-dash-fill text-3xl"></i>
+                        <div class="flex flex-col items-center">
+                            <span class="font-semibold">Usuarios Inactivos</span>
+                            <span class="text-lg">{{ $usuarios_inactivos_count ?? 0 }}</span>
+                        </div>
+                    </div>
+                    <div class="absolute bottom-0 left-0 right-0 h-2 bg-gray-500 rounded-b-lg"></div>
+                </div>
+            </a>
         </div>
 
     </div>
@@ -120,7 +124,7 @@
                         @endforeach
                     </select>
                     <button type="submit"
-                        class="rounded-full bg-[#0C204A] px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:brightness-110 active:translate-y-[1px]">
+                        class="rounded-full bg-[#091C47] px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:brightness-110 active:translate-y-[1px]">
                         Buscar
                     </button>
                 </form>
@@ -131,12 +135,12 @@
                 <table class="min-w-full divide-y divide-slate-200">
                     <thead class="bg-slate-600">
                         <tr class="text-left text-xs font-semibold uppercase tracking-wider text-white">
-                            <!-- <th scope="col" class="px-6 py-4">ID</th> -->
                             <th scope="col" class="px-6 py-4">Nombre</th>
-                            <th scope="col" class="px-6 py-4">Rol</th>
                             <th scope="col" class="px-6 py-4">Apellido Paterno</th>
                             <th scope="col" class="px-6 py-4">Apellido Materno</th>
-                            <th scope="col" class="px-6 py-4">Correo</th>
+                            <th scope="col" class="px-6 py-4">Rol</th>
+                            <th scope="col" class="px-6 py-4">Nivel</th>
+                            <th scope="col" class="px-6 py-4">Estado</th>
                             <th scope="col" class="px-6 py-4 text-right">Acciones</th>
                         </tr>
                     </thead>
@@ -144,30 +148,42 @@
                     <tbody class="divide-y divide-slate-200 bg-white/95">
                         @if($users->isEmpty())
                             <tr>
-                                <td colspan="6" class="px-6 py-8 text-center text-slate-400 text-lg">No hay usuarios registrados.
+                                <td colspan="7" class="px-6 py-8 text-center text-slate-400 text-lg">No hay usuarios registrados.
                                 </td>
                             </tr>
                         @else
                             @foreach($users as $user)
                                 <tr class="text-sm text-slate-800 hover:bg-slate-50">
-                                    <!-- <td class="px-6 py-3">{{ $user->id }}</td> -->
                                     <td class="px-6 py-3">{{ $user->name }}</td>
-                                    <td class="px-6 py-3">{{ $user->role ? $user->role->name : '-' }}</td>
                                     <td class="px-6 py-3">{{ $user->last_name_father }}</td>
                                     <td class="px-6 py-3">{{ $user->last_name_mother }}</td>
-                                    <td class="px-6 py-3">{{ $user->email }}</td>
+                                    <td class="px-6 py-3">{{ $user->role ? $user->role->name : '-' }}</td>
+                                    <td class="px-6 py-3">{{ $user->level ?? '-' }}</td>
                                     <td class="px-6 py-3">
-                                        <div class="flex items-center justify-end gap-3">
-                                            <a href="{{ route('admin.usuarios.edit', $user->id) }}?return={{ urlencode(request()->fullUrl()) }}" class="px-3 py-1.5 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md transition-colors duration-200" title="Editar">
-                                                Editar
-                                            </a>
-                                            <form action="{{ route('admin.usuarios.destroy', $user->id) }}" method="POST" style="display:inline" class="delete-user-form">
+                                        @if($user->is_active)
+                                            <span class="inline-block px-3 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">Activo</span>
+                                        @else
+                                            <span class="inline-block px-3 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">Inactivo</span>
+                                        @endif
+                                    </td>
+                                    <td class="px-6 py-3">
+                                        <div class="flex items-center justify-end gap-2">
+                                            <form action="{{ route('admin.usuarios.destroy', $user->id) }}" method="POST" style="display:inline" class="deactivate-user-form">
                                                 @csrf
                                                 @method('DELETE')
-                                                <button type="button" class="px-3 py-1.5 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-md transition-colors duration-200 btn-eliminar" title="Eliminar">
-                                                    Eliminar
-                                                </button>
+                                                @if($user->is_active)
+                                                    <button type="submit" class="px-2 py-1 text-xs font-medium text-white bg-red-600 hover:bg-red-700 rounded-full transition-colors duration-200" title="Desactivar">
+                                                        Desactivar
+                                                    </button>
+                                                @else
+                                                    <button type="submit" class="px-2 py-1 text-xs font-medium text-white bg-green-700 hover:brightness-110 rounded-full transition-colors duration-200" title="Activar">
+                                                        Activar
+                                                    </button>
+                                                @endif
                                             </form>
+                                            <a href="{{ route('admin.usuarios.edit', $user->id) }}?return={{ urlencode(request()->fullUrl()) }}" class="px-2 py-1 text-xs font-medium text-white bg-[#091C47] hover:brightness-110 rounded-full transition-colors duration-200" title="Editar">
+                                                Editar
+                                            </a>
                                         </div>
                                     </td>
                                 </tr>
@@ -193,6 +209,8 @@
                     document.getElementById('card-evaluador').classList.add('ring-4', 'ring-red-800');
                 } else if(role === 'activos') {
                     document.getElementById('card-activo').classList.add('ring-4', 'ring-cyan-500');
+                } else if(role === 'inactivos') {
+                    document.getElementById('card-inactivo').classList.add('ring-4', 'ring-gray-500');
                 } else if(role === 'olimpista') {
                     document.getElementById('card-olimpista').classList.add('ring-4', 'ring-green-700');
                 }
@@ -209,6 +227,8 @@
                 document.getElementById('card-evaluador').classList.add('ring-4', 'ring-red-800');
             } else if(role === 'activos') {
                 document.getElementById('card-activo').classList.add('ring-4', 'ring-cyan-500');
+            } else if(role === 'inactivos') {
+                document.getElementById('card-inactivo').classList.add('ring-4', 'ring-gray-500');
             } else if(role === 'olimpista') {
                 document.getElementById('card-olimpista').classList.add('ring-4', 'ring-green-700');
             }
@@ -219,48 +239,29 @@
         });
     </script>
 
-    {{-- Modal para confirmar eliminación --}}
-    <div id="modal-eliminar" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 hidden">
-        <div class="bg-white rounded-lg shadow-lg p-8 w-full max-w-md text-center relative">
-            <h3 class="text-lg font-semibold mb-4">¿Seguro que deseas eliminar este usuario?</h3>
-            <video id="michi-video" src="{{ asset('videos/MichiSad.mp4') }}" preload="auto" loop class="mx-auto mb-4 rounded-lg shadow w-48 h-48 object-cover"></video>
-            <div class="flex justify-center gap-6 mt-6">
-                <button id="cancelar-eliminar" class="px-5 py-2 rounded bg-slate-300 hover:bg-slate-400 text-slate-800 font-semibold">Cancelar</button>
-                <button id="confirmar-eliminar" class="px-5 py-2 rounded bg-red-600 hover:bg-red-700 text-white font-semibold">Eliminar</button>
-            </div>
-            <button id="cerrar-modal" class="absolute top-3 right-3 text-slate-400 hover:text-slate-600">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+    {{-- Notificación de éxito tipo modal flotante centrada --}}
+    @if(session('success'))
+        <div id="success-modal-overlay" class="fixed inset-0 z-50 flex items-center justify-center bg-black/30" onclick="document.getElementById('success-modal-overlay').remove()">
+            <div class="bg-white rounded-2xl shadow-2xl px-10 py-10 flex flex-col items-center max-w-md w-full animate-fade-in-modal relative" onclick="event.stopPropagation()">
+                <svg xmlns="http://www.w3.org/2000/svg" class="mb-6" width="100" height="100" viewBox="0 0 100 100" fill="none">
+                    <circle cx="50" cy="50" r="42" stroke="#091C47" stroke-width="6" fill="white"/>
+                    <path d="M32 52L46 66L68 38" stroke="#091C47" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
-            </button>
+                <div class="text-center text-2xl font-normal text-black mb-8" style="font-family: 'Montserrat', Arial, sans-serif;">
+                    {{ session('success') }}
+                </div>
+                <button onclick="document.getElementById('success-modal-overlay').remove()" class="px-6 py-2 rounded-xl bg-[#091C47] text-white text-base font-medium hover:brightness-110 transition-all">Ok</button>
+            </div>
         </div>
-    </div>
-    <script>
-        let formToDelete = null;
-        const michiVideo = document.getElementById('michi-video');
-        document.querySelectorAll('.btn-eliminar').forEach(btn => {
-            btn.addEventListener('click', function(e) {
-                e.preventDefault();
-                formToDelete = btn.closest('form');
-                document.getElementById('modal-eliminar').classList.remove('hidden');
-                if(michiVideo) {
-                    michiVideo.currentTime = 0;
-                    michiVideo.play();
-                }
-            });
-        });
-        document.getElementById('cancelar-eliminar').onclick = function() {
-            document.getElementById('modal-eliminar').classList.add('hidden');
-            if(michiVideo) michiVideo.pause();
-            formToDelete = null;
-        };
-        document.getElementById('cerrar-modal').onclick = function() {
-            document.getElementById('modal-eliminar').classList.add('hidden');
-            if(michiVideo) michiVideo.pause();
-            formToDelete = null;
-        };
-        document.getElementById('confirmar-eliminar').onclick = function() {
-            if(formToDelete) formToDelete.submit();
-        };
-    </script>
+        <style>
+            @keyframes fade-in-modal { from { opacity: 0; transform: scale(0.95);} to { opacity: 1; transform: scale(1);} }
+            .animate-fade-in-modal { animation: fade-in-modal 0.3s; }
+        </style>
+        <script>
+            setTimeout(function() {
+                var modal = document.getElementById('success-modal-overlay');
+                if(modal) modal.remove();
+            }, 3500);
+        </script>
+    @endif
 @endsection

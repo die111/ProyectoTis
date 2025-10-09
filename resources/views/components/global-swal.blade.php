@@ -25,13 +25,13 @@
         form.addEventListener('submit', function(e) {
             e.preventDefault();
             Swal.fire({
-                title: '¿Seguro que deseas eliminar?',
+                title: '¿Seguro que deseas Desactivar?',
                 icon: 'warning',
                 iconColor: '#091c47',
                 showCancelButton: true,
                 confirmButtonColor: '#d33',
                 cancelButtonColor: '#3085d6',
-                confirmButtonText: 'Eliminar',
+                confirmButtonText: 'Desactivar',
                 cancelButtonText: 'Cancelar'
             }).then((result) => {
                 if (result.isConfirmed) {

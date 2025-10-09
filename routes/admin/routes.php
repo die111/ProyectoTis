@@ -15,20 +15,10 @@ Route::middleware(['auth', 'role:admin'])->prefix('dashboard/admin')->name('admi
 
     // Rutas de usuarios
     Route::resource('usuarios', UsuarioController::class);
-    // Formulario independiente para crear encargado de área
-    Route::get('formulario-encargado', function() {
-        $areas = \App\Models\Area::all();
-        return view('admin.usuarios.formulario-encargado', compact('areas'));
-    })->name('formulario-encargado');
-    // Formulario independiente para crear evaluador
-    Route::get('formulario-evaluador', function() {
-        $areas = \App\Models\Area::where('is_active', true)->get();
-        return view('admin.usuarios.formulario-evaluador', compact('areas'));
-    })->name('formulario-evaluador');
     // Formulario independiente para crear usuario
     Route::get('formulario-usuario', function() {
         $areas = \App\Models\Area::all();
-        $roles = \App\Models\Role::all();
+        $roles = \App\Models\Role::where('is_active', true)->get();
         return view('admin.usuarios.formulario-usuario', compact('areas', 'roles'));
     })->name('formulario-usuario');
 

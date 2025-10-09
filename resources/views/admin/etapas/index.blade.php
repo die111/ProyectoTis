@@ -6,7 +6,7 @@
 @section('content')
 <!--  CABECERA / ACCIONES   -->
 <div class="content-header">
-    <h1 class="content-title">Etapas</h1>
+    <h1 class="content-title">Fases</h1>
     <a href="{{ route('admin.etapas.create') }}" class="create-btn btn-pressable">
         <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
             <path fill="currentColor" d="M11 11V5h2v6h6v2h-6v6h-2v-6H5v-2z"/>
