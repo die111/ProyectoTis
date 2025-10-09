@@ -29,6 +29,10 @@ return new class extends Migration
             $table->rememberToken();
             $table->timestamps();
             $table->softDeletes(); 
+            $table->string('ci')->unique()->nullable();
+            $table->string('address')->nullable();
+            $table->string('telephone_number')->nullable();
+            $table->date('date_of_birth')->nullable();
         });
 
         Schema::create('password_reset_tokens', function (Blueprint $table) {

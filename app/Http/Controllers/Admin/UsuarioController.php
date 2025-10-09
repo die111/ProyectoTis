@@ -64,24 +64,24 @@ class UsuarioController extends Controller
 
     public function store(Request $request)
     {
-
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'last_name_father' => 'required|string|max:255',
             'last_name_mother' => 'nullable|string|max:255',
             'email' => 'required|email|unique:users,email',
-            'password' => 'required',
-            'role' => 'required|in:admin,responsable_area,evaluador,coordinador',
+            'password' => 'required|string|min:8',
+            'role_id' => 'required|integer|exists:roles,id',
             'area_id' => 'required|integer|exists:areas,id',
             'user_code' => 'required|string|max:255|unique:users,user_code',
+            'level' => 'required|string|in:Primaria,Secundaria,Preuniversitario',
+            'ci' => 'required|string|max:20|unique:users,ci',
+            'address' => 'nullable|string|max:255',
+            'telephone_number' => 'required|string|max:20',
+            'date_of_birth' => 'required|date',
         ]);
 
         $validated['password'] = bcrypt($validated['password']);
-
-        // Buscar el id del rol
-        $roleId = \App\Models\Role::where('name', $validated['role'])->value('id');
-        unset($validated['role']);
-        $validated['role_id'] = $roleId;
+        $validated['is_active'] = true;
 
         User::create($validated);
 

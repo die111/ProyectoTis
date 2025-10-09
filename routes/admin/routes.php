@@ -25,6 +25,12 @@ Route::middleware(['auth', 'role:admin'])->prefix('dashboard/admin')->name('admi
         $areas = \App\Models\Area::where('is_active', true)->get();
         return view('admin.usuarios.formulario-evaluador', compact('areas'));
     })->name('formulario-evaluador');
+    // Formulario independiente para crear usuario
+    Route::get('formulario-usuario', function() {
+        $areas = \App\Models\Area::all();
+        $roles = \App\Models\Role::all();
+        return view('admin.usuarios.formulario-usuario', compact('areas', 'roles'));
+    })->name('formulario-usuario');
 
 
     Route::resource('competicion', CompeticionController::class);

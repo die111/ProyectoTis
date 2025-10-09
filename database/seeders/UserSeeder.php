@@ -30,6 +30,10 @@ class UserSeeder extends Seeder
             'user_code' => 'ADMIN001',
             'school' => 'OHSANSI',
             'level' => 'N/A',
+            'ci' => '12345678',
+            'address' => 'Av. Principal 123',
+            'telephone_number' => '78945612',
+            'date_of_birth' => '1980-01-01',
         ]);
 
         // Usuarios responsables de área
@@ -49,6 +53,10 @@ class UserSeeder extends Seeder
                 'user_code' => 'RESP' . str_pad($area_id, 3, '0', STR_PAD_LEFT),
                 'school' => 'OHSANSI',
                 'level' => 'N/A',
+                'ci' => 'RESPCI' . $area_id,
+                'address' => 'Zona ' . $area,
+                'telephone_number' => '7000000' . $area_id,
+                'date_of_birth' => '1985-01-0' . $area_id,
             ]);
             $area_id++;
         }
@@ -76,6 +84,10 @@ class UserSeeder extends Seeder
                 'user_code' => $evaluador['user_code'],
                 'school' => $evaluador['school'],
                 'level' => $evaluador['level'],
+                'ci' => 'EVALCI' . $evaluador['area_id'],
+                'address' => 'Calle ' . $evaluador['area'],
+                'telephone_number' => '6000000' . $evaluador['area_id'],
+                'date_of_birth' => '1990-01-0' . $evaluador['area_id'],
             ]);
         }
 
@@ -93,6 +105,10 @@ class UserSeeder extends Seeder
             'user_code' => 'COORD001',
             'school' => 'OHSANSI',
             'level' => 'N/A',
+            'ci' => '87654321',
+            'address' => 'Av. Secundaria 456',
+            'telephone_number' => '78912345',
+            'date_of_birth' => '1982-05-10',
         ]);
 
         // Nuevos usuarios de ejemplo con campos adicionales
@@ -108,6 +124,10 @@ class UserSeeder extends Seeder
             'school' => 'Unidad Educativa Central',
             'level' => 'Secundaria',
             'is_active' => true,
+            'ci' => '11111111',
+            'address' => 'Calle Central 1',
+            'telephone_number' => '70011111',
+            'date_of_birth' => '1995-03-15',
         ]);
 
         User::create([
@@ -122,6 +142,10 @@ class UserSeeder extends Seeder
             'school' => 'Unidad Educativa Sur',
             'level' => 'Primaria',
             'is_active' => true,
+            'ci' => '22222222',
+            'address' => 'Calle Sur 2',
+            'telephone_number' => '70022222',
+            'date_of_birth' => '1997-07-20',
         ]);
     }
 }

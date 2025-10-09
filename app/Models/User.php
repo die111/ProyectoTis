@@ -24,6 +24,10 @@ class User extends Authenticatable
         'school',
         'level',
         'profile_photo',
+        'ci',
+        'address',
+        'telephone_number',
+        'date_of_birth',
     ];
 
     protected $hidden = [

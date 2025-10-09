@@ -25,6 +25,11 @@
                     style="background:#0C3E92">
                     <i class="bi bi-plus-circle"></i> Crear Evaluador
                 </a>
+                <a href="{{ route('admin.formulario-usuario') }}"
+                    class="inline-flex items-center gap-2 rounded-full px-4 py-2 font-semibold text-white hover:opacity-95"
+                    style="background:#198754">
+                    <i class="bi bi-person-plus"></i> Crear Usuario
+                </a>
             </div>
         </div>
 
