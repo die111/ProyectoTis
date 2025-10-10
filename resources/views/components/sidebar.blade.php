@@ -16,8 +16,17 @@
                 <ul class="space-y-1">
                     @foreach($menuItems ?? [] as $item)
                         @if(isset($item['submenu']))
-                            <li class="relative" x-data="{ open: false }">
-                                <button type="button" @click="open = !open" class="group flex items-center px-4 py-2 w-full text-sm font-medium rounded-md transition-colors duration-150 text-gray-300 hover:bg-primary-800 hover:text-white focus:outline-none">
+                            @php
+                                $hasActiveSubmenu = false;
+                                foreach($item['submenu'] as $sub) {
+                                    if(isset($sub['active']) && $sub['active']) {
+                                        $hasActiveSubmenu = true;
+                                        break;
+                                    }
+                                }
+                            @endphp
+                            <li class="relative" x-data="{ open: {{ $hasActiveSubmenu ? 'true' : 'false' }} }">
+                                <button type="button" @click="open = !open" class="sidebar-item group flex items-center px-4 py-2 w-full text-sm font-medium rounded-md transition-all duration-200 text-gray-300 hover:bg-primary-800 hover:text-white focus:outline-none {{ isset($item['active']) && $item['active'] ? 'sidebar-item-active' : '' }}" data-menu="{{ $item['name'] }}">
                                     <i class="{{ $item['icon'] }} w-6 h-6 mr-3 text-lg"></i>
                                     <span class="hide-on-collapse">{{ $item['name'] }}</span>
                                     <i :class="open ? 'fa-chevron-up' : 'fa-chevron-down'" class="fas ml-auto transition-transform duration-200"></i>
@@ -25,7 +34,7 @@
                                 <ul class="ml-8 mt-1 space-y-1" x-show="open" x-transition>
                                     @foreach($item['submenu'] as $sub)
                                         <li>
-                                            <a href="{{ route($sub['route']) }}" class="group flex items-center px-4 py-2 text-sm font-medium rounded-md transition-colors duration-150 {{ isset($sub['active']) && $sub['active'] ? 'bg-primary-800 text-white' : 'text-gray-300 hover:bg-primary-800 hover:text-white' }}">
+                                            <a href="{{ route($sub['route']) }}" class="sidebar-item group flex items-center px-4 py-2 text-sm font-medium rounded-md transition-all duration-200 {{ isset($sub['active']) && $sub['active'] ? 'sidebar-item-active' : 'text-gray-300 hover:bg-primary-800 hover:text-white' }}" data-menu="{{ $sub['name'] }}">
                                                 <i class="{{ $sub['icon'] }} w-5 h-5 mr-2 text-lg"></i>
                                                 <span class="hide-on-collapse">{{ $sub['name'] }}</span>
                                             </a>
@@ -36,7 +45,7 @@
                         @else
                             <li>
                                 <a href="{{ isset($item['route']) && $item['route'] !== '#' ? route($item['route']) : '#' }}"
-                                   class="group flex items-center px-4 py-2 text-sm font-medium rounded-md transition-colors duration-150 {{ isset($item['active']) && $item['active'] ? 'bg-primary-800 text-white' : 'text-gray-300 hover:bg-primary-800 hover:text-white' }}">
+                                   class="sidebar-item group flex items-center px-4 py-2 text-sm font-medium rounded-md transition-all duration-200 {{ isset($item['active']) && $item['active'] ? 'sidebar-item-active' : 'text-gray-300 hover:bg-primary-800 hover:text-white' }}" data-menu="{{ $item['name'] }}">
                                     <i class="{{ $item['icon'] }} w-6 h-6 mr-3 text-lg"></i>
                                     <span class="hide-on-collapse">{{ $item['name'] }}</span>
                                 </a>
@@ -49,20 +58,20 @@
 
         <!-- Bottom section -->
         <div class="border-t border-gray-700/50 p-4 space-y-2 mt-auto">
-            <a href="#" class="sidebar-item flex items-center px-4 py-2 text-sm font-medium text-gray-300 rounded-md hover:bg-primary-800 hover:text-white transition-colors duration-150">
+            <a href="#" class="sidebar-item flex items-center px-4 py-2 text-sm font-medium text-gray-300 rounded-md hover:bg-primary-800 hover:text-white transition-all duration-200">
                 <i class="fas fa-user w-6 h-6 mr-3 text-lg"></i>
                 <span class="hide-on-collapse">Perfil</span>
             </a>
 
             <form method="POST" action="{{ route('logout') }}" class="w-full">
                 @csrf
-                <button type="submit" class="sidebar-item w-full flex items-center px-4 py-2 text-sm font-medium text-gray-300 rounded-md hover:bg-primary-800 hover:text-white transition-colors duration-150">
+                <button type="submit" class="sidebar-item w-full flex items-center px-4 py-2 text-sm font-medium text-gray-300 rounded-md hover:bg-primary-800 hover:text-white transition-all duration-200">
                     <i class="fas fa-sign-out-alt w-6 h-6 mr-3 text-lg"></i>
                     <span class="hide-on-collapse">Cerrar Sesión</span>
                 </button>
             </form>
 
-            <button id="hideSidebar" class="sidebar-item w-full flex items-center px-4 py-2 text-sm font-medium text-gray-300 rounded-md hover:bg-primary-800 hover:text-white transition-colors duration-150">
+            <button id="hideSidebar" class="sidebar-item w-full flex items-center px-4 py-2 text-sm font-medium text-gray-300 rounded-md hover:bg-primary-800 hover:text-white transition-all duration-200">
                 <i class="fas fa-chevron-left w-6 h-6 mr-3 text-lg transition-transform duration-300"></i>
                 <span class="hide-on-collapse">Ocultar</span>
             </button>
@@ -77,11 +86,74 @@
     :root {
         --primary-900: #091c47;
         --primary-800: #112a66;
+        --active-color: #5AA9E6;
+        --hover-color: #1e40af;
     }
 
     #sidebar {
         background-color: var(--primary-900);
         z-index: 50; /* sobre footer */
+    }
+
+    /* Estilo para elementos activos */
+    .sidebar-item-active {
+        background-color: var(--active-color) !important;
+        color: white !important;
+    }
+
+    .sidebar-item-active:hover {
+        background-color: var(--active-color) !important;
+    }
+
+    /* Efectos de hover mejorados */
+    .sidebar-item {
+        transition: all 0.2s ease-in-out;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .sidebar-item:hover {
+        background-color: var(--hover-color) !important;
+        color: white !important;
+        transform: translateX(4px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .sidebar-item:hover i {
+        transform: scale(1.1);
+        color: #ffffff;
+    }
+
+    /* Efecto de brillo en hover */
+    .sidebar-item::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+        transition: left 0.5s ease-in-out;
+        pointer-events: none;
+    }
+
+    .sidebar-item:hover::before {
+        left: 100%;
+    }
+
+    /* Efectos especiales para botones principales */
+    .sidebar-item:not(.sidebar-item-active):hover {
+        border-left: 4px solid var(--active-color);
+    }
+
+    /* Animación para iconos */
+    .sidebar-item i {
+        transition: all 0.2s ease-in-out;
+    }
+
+    /* Efectos para elementos del submenú */
+    .sidebar-item:hover .hide-on-collapse {
+        font-weight: 600;
     }
 
     /* Estado colapsado escritorio */
@@ -96,6 +168,11 @@
         #sidebar.collapsed { width:16rem !important; }
         #sidebar.collapsed .hide-on-collapse { opacity:1 !important; width:auto !important; overflow:visible !important; }
         #sidebarOverlay.active { display:block; }
+        
+        /* Reducir efectos en móvil para mejor rendimiento */
+        .sidebar-item:hover {
+            transform: none;
+        }
     }
 
     /* Transiciones */

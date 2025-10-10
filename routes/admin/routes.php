@@ -38,10 +38,14 @@ Route::middleware(['auth', 'role:admin'])->prefix('dashboard/admin')->name('admi
     Route::post('areas/bulk-activate', [AreaController::class, 'bulkActivate'])->name('areas.bulk-activate');
     Route::post('areas/bulk-deactivate', [AreaController::class, 'bulkDeactivate'])->name('areas.bulk-deactivate');
     
+    // Ruta para la página de solicitud de inscripción (debe ir ANTES del resource)
+    Route::get('inscripcion/solicitud', function() {
+        return view('admin.inscripcion.solicitud');
+    })->name('inscripcion.solicitud');
+    
     Route::resource('inscripcion', InscripcionController::class);
     Route::resource('etapas', EtapaController::class);
     Route::patch('etapas/{id}/habilitar', [EtapaController::class, 'habilitar'])->name('etapas.habilitar');
-    Route::resource('areas', AreaController::class);
 
     // Ruta para guardar estudiantes
     Route::post('inscripcion/guardar-estudiantes', [InscripcionController::class, 'guardarEstudiantes'])->name('inscripcion.guardarEstudiantes');

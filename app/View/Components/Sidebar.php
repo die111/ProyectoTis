@@ -54,9 +54,22 @@ class Sidebar extends Component
                     ],
                     [
                         'name' => 'Inscripción',
-                        'route' => 'admin.inscripcion.index',
                         'icon' => 'fas fa-clipboard-list',
-                        'active' => $this->isRouteActive(['inscripcion.*'])
+                        'active' => $this->isRouteActive(['admin.inscripcion.*']),
+                        'submenu' => [
+                            [
+                                'name' => 'Inscribir por CSV',
+                                'route' => 'admin.inscripcion.index',
+                                'icon' => 'fas fa-file-csv',
+                                'active' => $this->isRouteActive(['admin.inscripcion.index'])
+                            ],
+                            [
+                                'name' => 'Solicitud',
+                                'route' => 'admin.inscripcion.solicitud',
+                                'icon' => 'fas fa-file-alt',
+                                'active' => $this->isRouteActive(['admin.inscripcion.solicitud'])
+                            ]
+                        ]
                     ],
                     [
                         'name' => 'Gestion de Fases',
@@ -206,6 +219,19 @@ class Sidebar extends Component
             }
         }
 
+        return false;
+    }
+
+    /**
+     * Check if any submenu item is active
+     */
+    private function hasActiveSubmenu(array $submenu): bool
+    {
+        foreach ($submenu as $item) {
+            if (isset($item['active']) && $item['active']) {
+                return true;
+            }
+        }
         return false;
     }
 

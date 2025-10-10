@@ -14,22 +14,17 @@ class UsuarioController extends Controller
     public function index(Request $request)
     {
         $areas = Area::all();
-        $responsableRoleId = \App\Models\Role::where('name', 'responsable_area')->value('id');
-        $evaluadorRoleId = \App\Models\Role::where('name', 'evaluador')->value('id');
-        $encargados_count = User::where('role_id', $responsableRoleId)->where('is_active', true)->count();
-        $evaluadores_count = User::where('role_id', $evaluadorRoleId)->where('is_active', true)->count();
+        $roles = Role::where('is_active', true)->get();
         $usuarios_activos_count = User::where('is_active', true)->count();
         $usuarios_inactivos_count = User::where('is_active', false)->count();
 
         $role = $request->query('role');
+        $role_id = $request->query('role_id');
         $q = $request->query('q');
         $area_id = $request->query('area');
         $query = User::query();
-        if ($role === 'responsable_area') {
-            $query->where('role_id', $responsableRoleId)->where('is_active', true);
-        } elseif ($role === 'evaluador') {
-            $query->where('role_id', $evaluadorRoleId)->where('is_active', true);
-        } elseif ($role === 'activos') {
+        
+        if ($role === 'activos') {
             $query->where('is_active', true);
         } elseif ($role === 'inactivos') {
             $query->where('is_active', false);
@@ -37,6 +32,11 @@ class UsuarioController extends Controller
             // Por defecto mostrar todos los usuarios (activos e inactivos)
             // No aplicar filtro de is_active
         }
+        
+        if ($role_id) {
+            $query->where('role_id', $role_id);
+        }
+        
         if ($q) {
             $query->where(function ($sub) use ($q) {
                 $sub->where('name', 'like', "%$q%")
@@ -55,7 +55,7 @@ class UsuarioController extends Controller
         // Paginación: 10 por página, conservando parámetros de query
         $users = $query->with('role')->orderBy('id')->paginate(10)->withQueryString();
 
-        return view('admin.usuarios.index', compact('areas', 'encargados_count', 'evaluadores_count', 'usuarios_activos_count', 'usuarios_inactivos_count', 'users'));
+        return view('admin.usuarios.index', compact('areas', 'roles', 'usuarios_activos_count', 'usuarios_inactivos_count', 'users'));
     }
 
     public function create()

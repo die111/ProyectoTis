@@ -23,50 +23,8 @@
             </div>
         </div>
 
-        {{-- Tarjetas (1 col móvil, 2 tablet, 4 desktop) --}}
-        <div class="grid grid-cols-1 xl:grid-cols-5 gap-4">
-            {{-- Encargados de Área --}}
-            <a href="?role=responsable_area" class="block group">
-                <div class="bg-white rounded-lg shadow-md p-4 flex flex-col justify-between relative h-32 transition-all duration-200 hover:ring-4 hover:ring-red-600" id="card-encargado">
-                    <div class="flex items-center justify-center gap-3 h-full">
-                        <i class="bi bi-people-fill text-3xl"></i>
-                        <div class="flex flex-col items-center">
-                            <span class="font-semibold">Encargados de Área</span>
-                            <span class="text-lg">{{ $encargados_count ?? 0 }}</span>
-                        </div>
-                    </div>
-                    <div class="absolute bottom-0 left-0 right-0 h-2 bg-red-600 rounded-b-lg"></div>
-                </div>
-            </a>
-
-            {{-- Evaluadores --}}
-            <a href="?role=evaluador" class="block group">
-                <div class="bg-white rounded-lg shadow-md p-4 flex flex-col justify-between relative h-32 transition-all duration-200 hover:ring-4 hover:ring-red-800" id="card-evaluador">
-                    <div class="flex items-center justify-center gap-3 h-full">
-                        <i class="bi bi-clipboard-check-fill text-3xl"></i>
-                        <div class="flex flex-col items-center">
-                            <span class="font-semibold">Evaluadores</span>
-                            <span class="text-lg">{{ $evaluadores_count ?? 0 }}</span>
-                        </div>
-                    </div>
-                    <div class="absolute bottom-0 left-0 right-0 h-2 bg-red-800 rounded-b-lg"></div>
-                </div>
-            </a>
-
-            {{-- Olimpistas --}}
-            <a href="#" class="block group">
-                <div class="bg-white rounded-lg shadow-md p-4 flex flex-col justify-between relative h-32 transition-all duration-200 hover:ring-4 hover:ring-green-700" id="card-olimpista">
-                    <div class="flex items-center justify-center gap-3 h-full">
-                        <i class="bi bi-mortarboard-fill text-3xl"></i>
-                        <div class="flex flex-col items-center">
-                            <span class="font-semibold">Olimpistas</span>
-                            <span class="text-lg">0</span>
-                        </div>
-                    </div>
-                    <div class="absolute bottom-0 left-0 right-0 h-2 bg-green-700 rounded-b-lg"></div>
-                </div>
-            </a>
-
+        {{-- Tarjetas (1 col móvil, 2 tablet, 2 desktop) --}}
+        <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
             {{-- Usuarios Activos --}}
             <a href="?role=activos" class="block group">
                 <div class="bg-white rounded-lg shadow-md p-4 flex flex-col justify-between relative h-32 transition-all duration-200 hover:ring-4 hover:ring-cyan-500" id="card-activo">
@@ -105,7 +63,7 @@
             {{-- Filtro superior --}}
             <div class="flex flex-col items-center gap-6">
                 {{-- Buscador --}}
-                <form action="{{ route('admin.usuarios.index') }}" method="GET" class="flex w-full max-w-3xl items-center gap-3" id="searchForm">
+                <form action="{{ route('admin.usuarios.index') }}" method="GET" class="flex w-full max-w-4xl items-center gap-3" id="searchForm">
                     <div class="relative flex-1">
                         <span class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2">
                             <svg class="h-5 w-5 text-slate-500" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -117,8 +75,16 @@
                         <input type="text" name="q" value="{{ request('q') }}" placeholder="Buscar Usuario"
                             class="w-full rounded-lg border border-slate-300 bg-white/95 pl-10 pr-4 py-2.5 text-slate-800 placeholder-slate-400 shadow-sm focus:border-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-500/20" />
                     </div>
-                    <select id="area" name="area" class="appearance-none w-72 rounded-lg border border-slate-300 bg-white/95 px-4 py-2.5 pr-10 text-slate-800 shadow-sm focus:border-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-500/20">
-                        <option value="" selected>Área</option>
+                    <select id="role_id" name="role_id" class="appearance-none w-56 rounded-lg border border-slate-300 bg-white/95 px-4 py-2.5 pr-10 text-slate-800 shadow-sm focus:border-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-500/20">
+                        <option value="" selected>Todos los Roles</option>
+                        @foreach($roles as $role)
+                            <option value="{{ $role->id }}" {{ request('role_id') == $role->id ? 'selected' : '' }}>
+                                {{ $role->name == 'olimpista' ? 'Estudiante' : ucfirst(str_replace('_', ' ', $role->name)) }}
+                            </option>
+                        @endforeach
+                    </select>
+                    <select id="area" name="area" class="appearance-none w-56 rounded-lg border border-slate-300 bg-white/95 px-4 py-2.5 pr-10 text-slate-800 shadow-sm focus:border-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-500/20">
+                        <option value="" selected>Todas las Áreas</option>
                         @foreach($areas as $area)
                             <option value="{{ $area->id }}" {{ request('area') == $area->id ? 'selected' : '' }}>{{ $area->name }}</option>
                         @endforeach
@@ -203,16 +169,10 @@
         <script>
             document.addEventListener('DOMContentLoaded', function() {
                 const role = '{{ session('role') }}';
-                if(role === 'responsable_area') {
-                    document.getElementById('card-encargado').classList.add('ring-4', 'ring-red-600');
-                } else if(role === 'evaluador') {
-                    document.getElementById('card-evaluador').classList.add('ring-4', 'ring-red-800');
-                } else if(role === 'activos') {
+                if(role === 'activos') {
                     document.getElementById('card-activo').classList.add('ring-4', 'ring-cyan-500');
                 } else if(role === 'inactivos') {
                     document.getElementById('card-inactivo').classList.add('ring-4', 'ring-gray-500');
-                } else if(role === 'olimpista') {
-                    document.getElementById('card-olimpista').classList.add('ring-4', 'ring-green-700');
                 }
             });
         </script>
@@ -221,19 +181,16 @@
         document.addEventListener('DOMContentLoaded', function() {
             const params = new URLSearchParams(window.location.search);
             const role = params.get('role');
-            if(role === 'responsable_area') {
-                document.getElementById('card-encargado').classList.add('ring-4', 'ring-red-600');
-            } else if(role === 'evaluador') {
-                document.getElementById('card-evaluador').classList.add('ring-4', 'ring-red-800');
-            } else if(role === 'activos') {
+            if(role === 'activos') {
                 document.getElementById('card-activo').classList.add('ring-4', 'ring-cyan-500');
             } else if(role === 'inactivos') {
                 document.getElementById('card-inactivo').classList.add('ring-4', 'ring-gray-500');
-            } else if(role === 'olimpista') {
-                document.getElementById('card-olimpista').classList.add('ring-4', 'ring-green-700');
             }
-            // Búsqueda automática al cambiar área
+            // Búsqueda automática al cambiar área o rol
             document.getElementById('area').addEventListener('change', function() {
+                document.getElementById('searchForm').submit();
+            });
+            document.getElementById('role_id').addEventListener('change', function() {
                 document.getElementById('searchForm').submit();
             });
         });
