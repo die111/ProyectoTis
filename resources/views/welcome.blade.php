@@ -1,3 +1,61 @@
+@extends('layouts.guest')
+
+@section('content')
+<x-nav-header />
+
+<!-- Hero Section -->
+@include('home.partials.hero-section')
+
+<!-- Olympiads Section -->
+<section class="section-container olympiads-section">
+    <h2 class="olympiads-title">OLIMPIADAS CIENTÍFICAS UMSS</h2>
+    <p class="olympiads-description">
+        La Olimpiada de Ciencias y Tecnología Oh! Sansi busca fomentar el interés por la ciencia, la tecnología y la innovación en estudiantes de distintos niveles educativos. La plataforma asegura un proceso transparente en inscripción, evaluación, publicación de resultados y reclamos, garantizando igualdad de oportunidades y promoviendo el desarrollo académico y científico de la comunidad.
+    </p>
+</section>
+
+<!-- Subjects Section -->
+<section class="section-container subjects-section">
+    <div class="subjects-title-wrapper">
+        <h2 class="subjects-title">ÁREAS ESPECÍFICAS</h2>
+    </div>
+    <div class="carousel-wrapper">
+        <div class="carousel-track">
+            <div class="subject-item">
+                <div class="subject-icon">
+                    <i class="fas fa-atom"></i>
+                </div>
+                <div class="subject-name">FÍSICA</div>
+            </div>
+            <div class="subject-item">
+                <div class="subject-icon">
+                    <i class="fas fa-flask"></i>
+                </div>
+                <div class="subject-name">QUÍMICA</div>
+            </div>
+            <div class="subject-item">
+                <div class="subject-icon">
+                    <i class="fas fa-dna"></i>
+                </div>
+                <div class="subject-name">BIOLOGÍA</div>
+            </div>
+            <div class="subject-item">
+                <div class="subject-icon">
+                    <i class="fas fa-calculator"></i>
+                </div>
+                <div class="subject-name">MATEMÁTICAS</div>
+            </div>
+            <div class="subject-item">
+                <div class="subject-icon">
+                    <i class="fas fa-globe-americas"></i>
+                </div>
+                <div class="subject-name">GEOGRAFÍA</div>
+            </div>
+        </div>
+    </div>
+</section>
+@endsection
+
 <style>
     :root {
         --color-primary: #091c47;
@@ -17,61 +75,18 @@
     }
 
     .section-container {
-        padding: 60px 50px;
+        padding: 40px 20px;
     }
 
-    @media (max-width: 992px) {
+    @media (min-width: 768px) {
         .section-container {
-            padding: 40px 30px;
+            padding: 50px 30px;
         }
     }
 
-    @media (max-width: 768px) {
+    @media (min-width: 992px) {
         .section-container {
-            padding: 30px 20px;
-        }
-    }
-
-    /* Hero Section */
-    .hero-content {
-        display: flex;
-        align-items: center;
-        gap: 27px;
-    }
-
-    .hero-image-container {
-        flex: 0 0 379px;
-    }
-
-    .hero-image-container img {
-        width: 100%;
-        height: auto;
-        display: block;
-        border-radius: 10px;
-    }
-
-    .hero-text-container {
-        flex: 1;
-    }
-
-    .hero-text-container p {
-        color: var(--color-text-dark);
-        font-family: var(--font-mulish);
-        font-weight: 400;
-        font-size: 21px;
-        line-height: 1.5;
-        margin: 0;
-    }
-
-    @media (max-width: 992px) {
-        .hero-content {
-            flex-direction: column;
-            text-align: center;
-        }
-
-        .hero-image-container {
-            flex: 0 0 auto;
-            max-width: 500px;
+            padding: 60px 50px;
         }
     }
 
@@ -85,9 +100,16 @@
         color: var(--color-black);
         font-family: var(--font-poppins);
         font-weight: 700;
-        font-size: 20px;
-        line-height: 26px;
-        margin: 0 0 37px 0;
+        font-size: 18px;
+        line-height: 1.3;
+        margin: 0 0 25px 0;
+    }
+
+    @media (min-width: 768px) {
+        .olympiads-title {
+            font-size: 20px;
+            margin-bottom: 30px;
+        }
     }
 
     .olympiads-description {
@@ -96,8 +118,20 @@
         color: var(--color-text-dark);
         font-family: var(--font-mulish);
         font-weight: 400;
-        font-size: 21px;
+        font-size: 16px;
         line-height: 1.5;
+    }
+
+    @media (min-width: 768px) {
+        .olympiads-description {
+            font-size: 18px;
+        }
+    }
+
+    @media (min-width: 992px) {
+        .olympiads-description {
+            font-size: 21px;
+        }
     }
 
     /* Subjects Section */
@@ -110,7 +144,13 @@
 
     .subjects-title-wrapper {
         text-align: center;
-        margin-bottom: 40px;
+        margin-bottom: 30px;
+    }
+
+    @media (min-width: 768px) {
+        .subjects-title-wrapper {
+            margin-bottom: 40px;
+        }
     }
 
     .subjects-title {
@@ -119,10 +159,16 @@
         color: var(--color-black);
         font-family: var(--font-poppins);
         font-weight: 700;
-        font-size: 20px;
-        line-height: 26px;
+        font-size: 18px;
+        line-height: 1.3;
         margin: 0;
         padding-bottom: 16px;
+    }
+
+    @media (min-width: 768px) {
+        .subjects-title {
+            font-size: 20px;
+        }
     }
 
     .subjects-title::before {
@@ -131,9 +177,15 @@
         bottom: 4px;
         left: 50%;
         transform: translateX(-50%);
-        width: 224px;
+        width: 180px;
         height: 1px;
         background-color: var(--color-black);
+    }
+
+    @media (min-width: 768px) {
+        .subjects-title::before {
+            width: 224px;
+        }
     }
 
     .subjects-title::after {
@@ -142,9 +194,15 @@
         bottom: 0;
         left: 50%;
         transform: translateX(-50%);
-        width: 94px;
+        width: 80px;
         height: 4px;
         background-color: var(--color-black);
+    }
+
+    @media (min-width: 768px) {
+        .subjects-title::after {
+            width: 94px;
+        }
     }
 
     .carousel-wrapper {
@@ -154,150 +212,79 @@
         border-bottom: 1px solid #000;
         display: flex;
         align-items: center;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+    }
+
+    .carousel-wrapper::-webkit-scrollbar {
+        display: none;
     }
 
     .carousel-track {
         display: flex;
-        justify-content: space-around;
+        justify-content: space-between;
         align-items: flex-start;
-        padding: 40px 0;
+        padding: 30px 20px;
         width: 100%;
+        min-width: min-content;
+    }
+
+    @media (min-width: 768px) {
+        .carousel-track {
+            justify-content: space-around;
+            padding: 40px 0;
+        }
     }
 
     .subject-item {
         display: flex;
         flex-direction: column;
         align-items: center;
-        gap: 15px;
+        gap: 12px;
         text-align: center;
         flex-shrink: 0;
+        margin: 0 15px;
+        min-width: 80px;
+    }
+
+    @media (min-width: 768px) {
+        .subject-item {
+            margin: 0;
+            gap: 15px;
+        }
     }
 
     .subject-icon {
-        height: 80px;
-        width: 80px;
+        height: 60px;
+        width: 60px;
         background-color: var(--color-primary);
         border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
         color: white;
-        font-size: 32px;
+        font-size: 24px;
+    }
+
+    @media (min-width: 768px) {
+        .subject-icon {
+            height: 80px;
+            width: 80px;
+            font-size: 32px;
+        }
     }
 
     .subject-name {
         font-family: var(--font-poppins);
         font-weight: 600;
-        font-size: 16px;
+        font-size: 14px;
         color: var(--color-black);
     }
 
-    /* Footer */
-    .site-footer {
-        background-color: var(--color-primary);
-        color: var(--color-white);
-        padding: 40px 50px;
-    }
-
-    .footer-content {
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-        flex-wrap: wrap;
-        gap: 30px;
-    }
-
-    .footer-info h4 {
-        font-family: var(--font-poppins);
-        font-weight: 400;
-        font-size: 16px;
-        line-height: 24px;
-        margin: 0 0 12px 0;
-    }
-
-    .footer-info p {
-        font-family: var(--font-poppins);
-        font-weight: 400;
-        font-size: 16px;
-        line-height: 24px;
-        margin: 0;
-    }
-
-    .footer-credits {
-        text-align: right;
-    }
-
-    .footer-credits p {
-        font-family: var(--font-poppins);
-        font-weight: 400;
-        font-size: 16px;
-        line-height: 24px;
-        margin: 0;
-        margin-bottom: 16px;
-    }
-
-    .footer-credits p:last-child {
-        margin-bottom: 0;
-    }
-
-    @media (max-width: 992px) {
-        .footer-content {
-            flex-direction: column;
-            align-items: center;
-            text-align: center;
-        }
-
-        .footer-credits {
-            text-align: center;
+    @media (min-width: 768px) {
+        .subject-name {
+            font-size: 16px;
         }
     }
 </style>
-@extends('layouts.guest')
-<!-- Header/Navigation -->
-@section('content')
-    <x-nav-header />
-
-   {{-- Hero + Olimpiadas (reutilizado desde partials/home-hero.blade.php) --}}
-    @include('partials.home-hero') 
-
-    <!-- Subjects Section -->
-    <section class="section-container subjects-section">
-        <div class="subjects-title-wrapper">
-            <h2 class="subjects-title">ÁREAS ESPECÍFICAS</h2>
-        </div>
-        <div class="carousel-wrapper">
-            <div class="carousel-track">
-                <div class="subject-item">
-                    <div class="subject-icon">
-                        <i class="fas fa-atom"></i>
-                    </div>
-                    <div class="subject-name">FÍSICA</div>
-                </div>
-                <div class="subject-item">
-                    <div class="subject-icon">
-                        <i class="fas fa-flask"></i>
-                    </div>
-                    <div class="subject-name">QUÍMICA</div>
-                </div>
-                <div class="subject-item">
-                    <div class="subject-icon">
-                        <i class="fas fa-dna"></i>
-                    </div>
-                    <div class="subject-name">BIOLOGÍA</div>
-                </div>
-                <div class="subject-item">
-                    <div class="subject-icon">
-                        <i class="fas fa-calculator"></i>
-                    </div>
-                    <div class="subject-name">MATEMÁTICAS</div>
-                </div>
-                <div class="subject-item">
-                    <div class="subject-icon">
-                        <i class="fas fa-globe-americas"></i>
-                    </div>
-                    <div class="subject-name">GEOGRAFÍA</div>
-                </div>
-            </div>
-        </div>
-    </section>
-@endsection

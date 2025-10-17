@@ -17,8 +17,8 @@ class DashboardController extends Controller
     public function index(): View
     {
         $user = Auth::user();
-        
-        return match($user->role) {
+        $role = $user->role ? $user->role->name : null;
+        return match($role) {
             'admin' => $this->adminDashboard(),
             'responsable_area' => $this->responsableDashboard(),
             'evaluador' => $this->evaluadorDashboard(),
@@ -29,11 +29,12 @@ class DashboardController extends Controller
 
     private function adminDashboard(): View
     {
+
         $stats = [
-            'total_olimpistas' => 0,
-            'total_evaluaciones' => 0,
-            'areas_activas' => 0,
-            'usuarios_activos' => User::where('is_active', true)->count()
+            'total_olimpistas' => 0, 
+            'total_evaluaciones' => 0, 
+            'areas_activas' => \App\Models\Area::where('is_active', true)->count(),
+            'usuarios_activos' => User::where('is_active', true)->count(),
         ];
 
         return view('dashboard.admin', compact('stats'));

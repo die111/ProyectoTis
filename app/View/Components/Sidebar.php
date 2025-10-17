@@ -5,6 +5,7 @@ namespace App\View\Components;
 use Illuminate\View\Component;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Route;
 
 class Sidebar extends Component
 {
@@ -22,128 +23,216 @@ class Sidebar extends Component
         $user = $this->user;
         $items = [];
 
-        // Dashboard común para todos
-        $items[] = [
-            'name' => 'Dashboard',
-            'route' => 'dashboard',
-            'icon' => 'fas fa-home',
-            'active' => request()->routeIs('dashboard*')
-        ];
-
-        // Menús específicos por rol
-        switch ($user->role) {
+    // Menús específicos por rol
+    $role = $user->role ? $user->role->name : null;
+    switch ($role) {
             case 'admin':
-                $items = array_merge($items, [
+                $items = [
+                    [
+                        'name' => 'Dashboard',
+                        'route' => 'dashboard',
+                        'icon' => 'fas fa-tachometer-alt',
+                        'active' => $this->isRouteActive(['dashboard'])
+                    ],
+                    [
+                        'name' => 'Competicion',
+                        'route' => 'admin.competicion.index',
+                        'icon' => 'fas fa-trophy',
+                        'active' => $this->isRouteActive(['competicion.*'])
+                    ],
+                    [
+                        'name' => 'Roles',
+                        'route' => 'admin.roles.index',
+                        'icon' => 'fas fa-user-tag',
+                        'active' => $this->isRouteActive(['roles.*'])
+                    ],
                     [
                         'name' => 'Usuarios',
-                        'route' => 'users.index',
+                        'route' => 'admin.usuarios.index',
                         'icon' => 'fas fa-users',
-                        'active' => request()->routeIs('users*')
+                        'active' => $this->isRouteActive(['usuarios.*'])
                     ],
                     [
-                        'name' => 'Olimpistas',
-                        'route' => 'olimpistas.index',
-                        'icon' => 'fas fa-user-graduate',
-                        'active' => request()->routeIs('olimpistas*')
+                        'name' => 'Inscripción',
+                        'icon' => 'fas fa-clipboard-list',
+                        'active' => $this->isRouteActive(['admin.inscripcion.*']),
+                        'submenu' => [
+                            [
+                                'name' => 'Inscribir por CSV',
+                                'route' => 'admin.inscripcion.index',
+                                'icon' => 'fas fa-file-csv',
+                                'active' => $this->isRouteActive(['admin.inscripcion.index'])
+                            ],
+                            [
+                                'name' => 'Solicitud',
+                                'route' => 'admin.inscripcion.solicitud',
+                                'icon' => 'fas fa-file-alt',
+                                'active' => $this->isRouteActive(['admin.inscripcion.solicitud'])
+                            ]
+                        ]
                     ],
                     [
-                        'name' => 'Áreas',
-                        'route' => 'areas.index',
-                        'icon' => 'fas fa-layer-group',
-                        'active' => request()->routeIs('areas*')
+                        'name' => 'Gestion de Fases',
+                        'route' => 'admin.etapas.index',
+                        'icon' => 'fas fa-sitemap',
+                        'active' => $this->isRouteActive(['gestion-fases.*'])
                     ],
                     [
-                        'name' => 'Evaluaciones',
-                        'route' => 'evaluaciones.index',
-                        'icon' => 'fas fa-clipboard-check',
-                        'active' => request()->routeIs('evaluaciones*')
-                    ],
-                    [
-                        'name' => 'Reportes',
-                        'route' => 'reportes.index',
-                        'icon' => 'fas fa-chart-bar',
-                        'active' => request()->routeIs('reportes*')
-                    ],
-                    [
-                        'name' => 'Configuración',
-                        'route' => 'config.index',
-                        'icon' => 'fas fa-cog',
-                        'active' => request()->routeIs('config*')
+                        'name' => 'Gestion de Areas',
+                        'route' => 'admin.areas.index',
+                        'icon' => 'fas fa-th-large',
+                        'active' => $this->isRouteActive(['areas.*'])
                     ]
-                ]);
+                ];
                 break;
 
             case 'responsable_area':
-                $items = array_merge($items, [
+                $items = [
                     [
-                        'name' => 'Mi Área',
-                        'route' => 'responsable.area',
-                        'icon' => 'fas fa-layer-group',
-                        'active' => request()->routeIs('responsable.area*')
+                        'name' => 'Dashboard',
+                        'route' => 'dashboard',
+                        'icon' => 'fas fa-tachometer-alt',
+                        'active' => $this->isRouteActive(['dashboard'])
                     ],
                     [
-                        'name' => 'Evaluadores',
-                        'route' => 'responsable.evaluadores',
-                        'icon' => 'fas fa-users',
-                        'active' => request()->routeIs('responsable.evaluadores*')
+                        'name' => 'Solicitud Inscripcion',
+                        'route' => '#',
+                        'icon' => 'fas fa-file-alt',
+                        'active' => $this->isRouteActive(['responsable.inscripciones.*'])
                     ],
                     [
-                        'name' => 'Evaluaciones',
-                        'route' => 'responsable.evaluaciones',
-                        'icon' => 'fas fa-clipboard-check',
-                        'active' => request()->routeIs('responsable.evaluaciones*')
+                        'name' => 'Registrar CSV',
+                        'route' => '#',
+                        'icon' => 'fas fa-file-csv',
+                        'active' => $this->isRouteActive(['responsable.csv.*'])
                     ],
                     [
-                        'name' => 'Clasificados',
-                        'route' => 'responsable.clasificados',
+                        'name' => 'Modificar Usuario',
+                        'route' => '#',
+                        'icon' => 'fas fa-user-edit',
+                        'active' => $this->isRouteActive(['responsable.usuarios.*'])
+                    ],
+                    [
+                        'name' => 'Fases',
+                        'route' => '#',
+                        'icon' => 'fas fa-list-ol',
+                        'active' => $this->isRouteActive(['responsable.fases.*'])
+                    ],
+                    [
+                        'name' => 'Listas',
+                        'route' => '#',
+                        'icon' => 'fas fa-list',
+                        'active' => $this->isRouteActive(['responsable.listas.*'])
+                    ],
+                    [
+                        'name' => 'Premiados',
+                        'route' => '#',
                         'icon' => 'fas fa-trophy',
-                        'active' => request()->routeIs('responsable.clasificados*')
+                        'active' => $this->isRouteActive(['responsable.premiados.*'])
                     ],
                     [
-                        'name' => 'Certificados',
-                        'route' => 'responsable.certificados',
-                        'icon' => 'fas fa-certificate',
-                        'active' => request()->routeIs('responsable.certificados*')
-                    ]
-                ]);
+                        'name' => 'Reclamos',
+                        'route' => '#',
+                        'icon' => 'fas fa-exclamation-triangle',
+                        'active' => $this->isRouteActive(['responsable.reclamos.*'])
+                    ],
+                ];
                 break;
 
             case 'evaluador':
-                $items = array_merge($items, [
+                $items = [
+                    [
+                        'name' => 'Dashboard',
+                        'route' => 'dashboard',
+                        'icon' => 'fas fa-tachometer-alt',
+                        'active' => $this->isRouteActive(['dashboard'])
+                    ],
                     [
                         'name' => 'Mis Evaluaciones',
-                        'route' => 'evaluador.evaluaciones',
+                        'route' => '#',
                         'icon' => 'fas fa-clipboard-check',
-                        'active' => request()->routeIs('evaluador.evaluaciones*')
+                        'active' => $this->isRouteActive(['evaluador.evaluaciones.*'])
                     ],
                     [
                         'name' => 'Olimpistas',
-                        'route' => 'evaluador.olimpistas',
+                        'route' => '#',
                         'icon' => 'fas fa-user-graduate',
-                        'active' => request()->routeIs('evaluador.olimpistas*')
+                        'active' => $this->isRouteActive(['evaluador.olimpistas.*'])
                     ]
-                ]);
+                ];
                 break;
 
             case 'coordinador':
-                $items = array_merge($items, [
+                $items = [
+                    [
+                        'name' => 'Dashboard',
+                        'route' => 'dashboard',
+                        'icon' => 'fas fa-tachometer-alt',
+                        'active' => $this->isRouteActive(['dashboard'])
+                    ],
                     [
                         'name' => 'Seguimiento',
-                        'route' => 'coordinador.seguimiento',
+                        'route' => '#',
                         'icon' => 'fas fa-tasks',
-                        'active' => request()->routeIs('coordinador.seguimiento*')
+                        'active' => $this->isRouteActive(['coordinador.seguimiento.*'])
                     ],
                     [
                         'name' => 'Reportes',
-                        'route' => 'coordinador.reportes',
+                        'route' => '#',
                         'icon' => 'fas fa-chart-line',
-                        'active' => request()->routeIs('coordinador.reportes*')
+                        'active' => $this->isRouteActive(['coordinador.reportes.*'])
                     ]
-                ]);
+                ];
                 break;
+
+            default:
+                $items = [
+                    [
+                        'name' => 'Dashboard',
+                        'route' => 'dashboard',
+                        'icon' => 'fas fa-tachometer-alt',
+                        'active' => $this->isRouteActive(['dashboard'])
+                    ]
+                ];
         }
 
         return $items;
+    }
+
+    /**
+     * Check if current route matches any of the given patterns
+     */
+    private function isRouteActive(array $routePatterns): bool
+    {
+        $currentRoute = Route::currentRouteName();
+
+        foreach ($routePatterns as $pattern) {
+            if (str_contains($pattern, '*')) {
+                $pattern = str_replace('*', '', $pattern);
+                if (str_starts_with($currentRoute, $pattern)) {
+                    return true;
+                }
+            } else {
+                if ($currentRoute === $pattern) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Check if any submenu item is active
+     */
+    private function hasActiveSubmenu(array $submenu): bool
+    {
+        foreach ($submenu as $item) {
+            if (isset($item['active']) && $item['active']) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public function render(): View

@@ -15,9 +15,11 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="{{ asset('css/app.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/figma-design.css') }}">
+    
 
     <style>
-        /* Tus estilos actuales para la página welcome */
+        /* Estilos para la página welcome */
         :root {
             --color-primary: #091c47;
             --color-light-bg: #f5f4f4;
@@ -33,18 +35,23 @@
             font-family: var(--font-poppins);
             background-color: var(--color-white);
             color: var(--color-black);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
         }
 
-        .section-container {
-            padding: 60px 50px;
+        main {
+            flex: 1;
         }
 
-        /* ... resto de tus estilos ... */
+        .max-w-7xl {
+            width: 100%;
+        }
     </style>
 </head>
-<body>
-    <!-- Header -->
-    <x-nav-header />
+<body class="bg-gray-50">
+    <!-- Navbar -->
+    <x-nav-header :guest="true" />
 
     <!-- Contenido principal -->
     <main>

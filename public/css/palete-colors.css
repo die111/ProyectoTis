@@ -1,0 +1,28 @@
+ /*.bg-primary { background-color: #1f2937; } /* gray-900 */
+ .bg-primary {
+     background-color: #ffffff;
+ }
+
+ /*  */
+ .bg-secondary {
+     background-color: #1013c9;
+ }
+
+ /* gray-950 */
+ .text-primary {
+     color: #2B2B2B;
+ }
+
+ /* gray-50 */
+ .text-accent {
+     color: #5AA9E6;
+ }
+
+ /* yellow-500 */
+ .border-accent {
+     border-color: #E1E6EB;
+ }
+
+ .hover-bg-secondary:hover {
+     background-color: #111827;
+ }

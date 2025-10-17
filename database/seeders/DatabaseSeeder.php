@@ -9,8 +9,14 @@ class DatabaseSeeder extends Seeder
     /**
      * Run the database seeds.
      */
-    public function run(): void
+    public function run()
     {
-        $this->call(UserSeeder::class);
+        $this->call([
+            RoleSeeder::class,
+            AreaSeeder::class,
+            PhaseSeeder::class,
+            UserSeeder::class,
+            LevelSeeder::class,
+        ]);
     }
 }

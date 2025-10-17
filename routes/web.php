@@ -28,12 +28,22 @@ Route::get('/etapas/{etapa}', [EtapasController::class, 'show'])
 // Rutas de autenticación
 require __DIR__.'/auth.php';
 
+//Rutas publicas
+require __DIR__.'/public/routes.php';
+
 // Rutas protegidas
 Route::middleware('auth')->group(function () {
     
     // Dashboard principal para todos los usuarios autenticados
     Route::get('/dashboard/main', [DashboardController::class, 'index'])->name('dashboard');
-    
+
+
+    //route visualizar sin controlador
+    Route::get('/admin/etapas', function () {
+        return view('admin.etapas.index');
+    });
+
+
     // Cargar rutas por roles
     // Ruta de admin
     require __DIR__.'/admin/routes.php';
