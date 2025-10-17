@@ -103,25 +103,56 @@ class CompeticionController extends Controller
 
     public function edit($id)
     {
-    $competicion = Competicion::findOrFail($id);
-    $areasCatalog = Area::all();
-    $levelsCatalog = Level::all();
-    $fasesCatalog = Phase::all();
-    return view('admin.competicion.edit', compact('competicion', 'areasCatalog', 'levelsCatalog', 'fasesCatalog'));
+        $competicion = Competicion::with(['areas', 'phases', 'levels'])->findOrFail($id);
+        $areasCatalog = Area::all();
+        $levelsCatalog = Level::all();
+        $fasesCatalog = Phase::all();
+        return view('admin.competicion.edit', compact('competicion', 'areasCatalog', 'levelsCatalog', 'fasesCatalog'));
     }
 
     public function update(Request $request, $id)
     {
         $request->validate([
             'name' => 'required|string',
-            'nivel' => 'required|string',
+            'description' => 'nullable|string',
             'fechaInicio' => 'required|date',
             'fechaFin' => 'required|date|after_or_equal:fechaInicio',
-            'area_id' => 'required|exists:areas,id',
-            'phase_id' => 'required|exists:phases,id',
+            'level_ids' => 'nullable|array',
+            'level_ids.*' => 'exists:levels,id',
+            'area_ids' => 'nullable|array',
+            'area_ids.*' => 'exists:areas,id',
+            'phases' => 'nullable|array',
         ]);
+
         $competicion = Competicion::findOrFail($id);
-        $competicion->update($request->all());
+        
+        $competicion->update([
+            'name' => $request->name,
+            'description' => $request->description,
+            'fechaInicio' => $request->fechaInicio,
+            'fechaFin' => $request->fechaFin,
+        ]);
+
+        // Update levels and areas (polymorphic)
+        $competicion->levels()->sync($request->level_ids ?? []);
+        $competicion->areas()->sync($request->area_ids ?? []);
+
+        // Update phases with dates - solo las que están seleccionadas
+        $phaseData = [];
+        if ($request->has('phases')) {
+            foreach ($request->phases as $phase) {
+                // Solo agregar si está seleccionada y tiene fechas
+                if (isset($phase['selected']) && $phase['selected'] == '1' && 
+                    !empty($phase['start_date']) && !empty($phase['end_date'])) {
+                    $phaseData[$phase['phase_id']] = [
+                        'start_date' => $phase['start_date'],
+                        'end_date' => $phase['end_date'],
+                    ];
+                }
+            }
+        }
+        $competicion->phases()->sync($phaseData);
+
         return redirect()->route('admin.competicion.index')
         ->with([
             'swal_custom' => true,

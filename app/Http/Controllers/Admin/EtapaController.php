@@ -31,7 +31,7 @@ class EtapaController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'name' => 'required|string|max:255',
+            'name' => 'required|string|max:255|unique:phases,name',
             'description' => 'nullable|string',
             'clasificados' => 'required|integer|min:1',
         ]);
