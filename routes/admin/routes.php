@@ -7,14 +7,15 @@ use App\Http\Controllers\Admin\EtapaController;
 use App\Http\Controllers\Admin\InscripcionController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\UsuarioController;
+use App\Http\Controllers\Admin\EvaluacionController;
 use Illuminate\Support\Facades\Route;
 
-Route::middleware(['auth', 'role:admin'])->prefix('dashboard/admin')->name('admin.')->group(function () {
+Route::middleware(['auth'])->prefix('dashboard/admin')->name('admin.')->group(function () {
     // Ruta dashboard de admin 
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 
     // Rutas de usuarios
-    Route::resource('usuarios', UsuarioController::class);
+    Route::resource('usuarios', UsuarioController::class); // ->middleware('permission:usuarios')
     // Formulario independiente para crear usuario
     Route::get('formulario-usuario', function() {
         $areas = \App\Models\Area::all();
@@ -23,32 +24,37 @@ Route::middleware(['auth', 'role:admin'])->prefix('dashboard/admin')->name('admi
     })->name('formulario-usuario');
 
 
-    Route::resource('competicion', CompeticionController::class);
-    Route::patch('competicion/{id}/estado/{state}', [CompeticionController::class, 'updateState'])->name('competicion.updateState');
-    Route::get('competicion/{id}/json', [CompeticionController::class, 'json'])->name('competicion.json');
+    Route::resource('competicion', CompeticionController::class); // ->middleware('permission:competicion')
+    Route::patch('competicion/{id}/estado/{state}', [CompeticionController::class, 'updateState'])->name('competicion.updateState'); // ->middleware('permission:competicion')
+    Route::get('competicion/{id}/json', [CompeticionController::class, 'json'])->name('competicion.json'); // ->middleware('permission:competicion')
 
 
     // Rutas de roles
-    Route::resource('roles', RoleController::class);
-    Route::post('roles/{id}/activate', [RoleController::class, 'activate'])->name('roles.activate');
-    Route::post('roles/{id}/deactivate', [RoleController::class, 'deactivate'])->name('roles.deactivate');
+    Route::resource('roles', RoleController::class); // ->middleware('permission:roles')
+    Route::post('roles/{id}/activate', [RoleController::class, 'activate'])->name('roles.activate'); // ->middleware('permission:roles')
+    Route::post('roles/{id}/deactivate', [RoleController::class, 'deactivate'])->name('roles.deactivate'); // ->middleware('permission:roles')
 
     // Rutas areas
-    Route::resource('areas', AreaController::class);
-    Route::post('areas/bulk-activate', [AreaController::class, 'bulkActivate'])->name('areas.bulk-activate');
-    Route::post('areas/bulk-deactivate', [AreaController::class, 'bulkDeactivate'])->name('areas.bulk-deactivate');
+    Route::resource('areas', AreaController::class); // ->middleware('permission:areas')
+    Route::post('areas/bulk-activate', [AreaController::class, 'bulkActivate'])->name('areas.bulk-activate'); // ->middleware('permission:areas')
+    Route::post('areas/bulk-deactivate', [AreaController::class, 'bulkDeactivate'])->name('areas.bulk-deactivate'); // ->middleware('permission:areas')
     
+        // Ruta para crear etapa (etapas.create)
+        Route::get('etapas/create', [EtapaController::class, 'create'])->name('etapas.create');
     // Ruta para la página de solicitud de inscripción (debe ir ANTES del resource)
     Route::get('inscripcion/solicitud', function() {
         return view('admin.inscripcion.solicitud');
     })->name('inscripcion.solicitud');
     
-    Route::resource('inscripcion', InscripcionController::class);
-    Route::resource('etapas', EtapaController::class);
-    Route::patch('etapas/{id}/habilitar', [EtapaController::class, 'habilitar'])->name('etapas.habilitar');
+    Route::resource('inscripcion', InscripcionController::class); // ->middleware('permission:inscripcion')
+    Route::resource('phases', EtapaController::class)->names('phases'); // ->middleware('permission:fases')
+    Route::patch('phases/{id}/habilitar', [EtapaController::class, 'habilitar'])->name('phases.habilitar'); // ->middleware('permission:fases')
 
     // Ruta para guardar estudiantes
     Route::post('inscripcion/guardar-estudiantes', [InscripcionController::class, 'guardarEstudiantes'])->name('inscripcion.guardarEstudiantes');
+
+    // Ruta evaluaciones
+    Route::resource('evaluacion', EvaluacionController::class); // ->middleware('permission:evaluaciones')
 
     // Futuras rutas de áreas (descomentar cuando estén listas)
     // Route::resource('areas', App\Http\Controllers\Admin\AreaController::class);

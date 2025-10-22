@@ -23,7 +23,8 @@ class RoleController extends Controller
 
     public function create()
     {
-        return view('admin.roles.create');
+        $permissions = \App\Models\Permission::all();
+        return view('admin.roles.create', compact('permissions'));
     }
 
     public function store(Request $request)
@@ -31,8 +32,10 @@ class RoleController extends Controller
         $request->validate([
             'name' => 'required|string|max:255|unique:roles,name',
             'description' => 'nullable|string',
+            'permissions' => 'array',
         ]);
-        Role::create($request->only('name', 'description'));
+        $role = Role::create($request->only('name', 'description'));
+        $role->permissions()->sync($request->input('permissions', []));
         return redirect()->route('admin.roles.index')
         ->with([
             'swal_custom' => true,
@@ -45,7 +48,9 @@ class RoleController extends Controller
     public function edit($id)
     {
         $role = Role::findOrFail($id);
-        return view('admin.roles.edit', compact('role'));
+        $permissions = \App\Models\Permission::all();
+        $rolePermissions = $role->permissions->pluck('id')->toArray();
+        return view('admin.roles.edit', compact('role', 'permissions', 'rolePermissions'));
     }
 
     public function update(Request $request, $id)
@@ -54,8 +59,10 @@ class RoleController extends Controller
         $request->validate([
             'name' => 'required|string|max:255|unique:roles,name,' . $role->id,
             'description' => 'nullable|string',
+            'permissions' => 'array',
         ]);
         $role->update($request->only('name', 'description'));
+        $role->permissions()->sync($request->input('permissions', []));
         return redirect()->route('admin.roles.index')
         ->with([
             'swal_custom' => true,

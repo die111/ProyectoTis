@@ -45,4 +45,14 @@ class Competicion extends Model
             ->withPivot('start_date', 'end_date')
             ->withTimestamps();
     }
+
+    public function inscriptions()
+    {
+        return $this->hasMany(Inscription::class, 'competition_id');
+    }
+
+    public function medals()
+    {
+        return $this->hasMany(Medal::class, 'competition_id');
+    }
 }
