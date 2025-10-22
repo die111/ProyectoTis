@@ -14,16 +14,25 @@ return new class extends Migration
         Schema::create('users', function (Blueprint $table) {
             $table->id();
             $table->string('name');
+            $table->string('last_name_father')->nullable();
+            $table->string('last_name_mother')->nullable();
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
-            $table->enum('role', ['admin', 'responsable_area', 'evaluador', 'coordinador'])
-                  ->default('evaluador');
-            $table->string('area')->nullable(); // responsables y evaluadores
+            $table->foreignId('role_id')->constrained('roles')->onDelete('cascade');
+            $table->foreignId('area_id')->constrained()->onDelete('cascade');
+            $table->string('user_code')->unique();
+            $table->string('school')->nullable();
+            $table->string('level')->nullable();
             $table->boolean('is_active')->default(true);
+            $table->string('profile_photo')->nullable();
             $table->rememberToken();
             $table->timestamps();
             $table->softDeletes(); 
+            $table->string('ci')->unique()->nullable();
+            $table->string('address')->nullable();
+            $table->string('telephone_number')->nullable();
+            $table->date('date_of_birth')->nullable();
         });
 
         Schema::create('password_reset_tokens', function (Blueprint $table) {
@@ -36,7 +45,7 @@ return new class extends Migration
             $table->string('id')->primary();
             $table->foreignId('user_id')->nullable()->index();
             $table->string('ip_address', 45)->nullable();
-            $table->text('user_agent')->nullable();
+            $table->text('user_agent')->nullable(); 
             $table->longText('payload');
             $table->integer('last_activity')->index();
         });

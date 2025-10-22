@@ -25,8 +25,9 @@ class RoleMiddleware
                 ->withErrors(['email' => 'Tu cuenta está inactiva. Contacta al administrador.']);
         }
 
-        if (!in_array($user->role, $roles)) {
-            return match($user->role) {
+        $roleName = $user->role ? $user->role->name : null;
+        if (!in_array($roleName, $roles)) {
+            return match($roleName) {
                 'admin' => redirect()->route('admin.dashboard'),
                 'responsable_area' => redirect()->route('responsable.dashboard'),
                 'evaluador' => redirect()->route('evaluador.dashboard'),

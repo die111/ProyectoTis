@@ -5,18 +5,29 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class User extends Authenticatable
 {
-    use HasFactory, Notifiable;
+    use HasFactory, Notifiable, SoftDeletes;
 
     protected $fillable = [
         'name',
         'email',
         'password',
-        'role',
-        'area',
+        'role_id',
         'is_active',
+        'last_name_father',
+        'last_name_mother',
+        'area_id',
+        'user_code',
+        'school',
+        'level',
+        'profile_photo',
+        'ci',
+        'address',
+        'telephone_number',
+        'date_of_birth',
     ];
 
     protected $hidden = [
@@ -33,42 +44,15 @@ class User extends Authenticatable
         ];
     }
 
-    // Métodos para verificar roles
-    public function isAdmin(): bool
+    // Relación muchos a uno con Role
+    public function role()
     {
-        return $this->role === 'admin';
+        return $this->belongsTo(Role::class, 'role_id');
     }
 
-    public function isResponsableArea(): bool
+    // Relación muchos a uno con Area
+    public function area()
     {
-        return $this->role === 'responsable_area';
-    }
-
-    public function isEvaluador(): bool
-    {
-        return $this->role === 'evaluador';
-    }
-
-    public function isCoordinador(): bool
-    {
-        return $this->role === 'coordinador';
-    }
-
-    // Método para verificar si puede acceder a un área específica
-    public function canAccessArea(string $area): bool
-    {
-        return $this->isAdmin() || $this->area === $area;
-    }
-
-    // Obtener el nombre del rol para mostrar
-    public function getRoleNameAttribute(): string
-    {
-        return match($this->role) {
-            'admin' => 'Administrador',
-            'responsable_area' => 'Responsable de Área',
-            'evaluador' => 'Evaluador',
-            'coordinador' => 'Coordinador',
-            default => 'Usuario'
-        };
+        return $this->belongsTo(Area::class, 'area_id');
     }
 }

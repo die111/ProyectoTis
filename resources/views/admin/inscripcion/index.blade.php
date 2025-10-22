@@ -1,0 +1,233 @@
+@extends('layouts.app')
+@section('title', 'Inscripción · Admin')
+
+@section('content')
+  <div class="max-w-6xl mx-auto">
+    <h2 class="text-2xl font-semibold text-gray-800 mb-2 text-center">Registrar Estudiante</h2>
+    <p class="text-sm text-gray-500 mb-6">Datos con * son importantes</p>
+
+    <!-- Upload CSV (muestra nombre del archivo) -->
+    <div class="upload-inline mb-6">
+      <label for="csvUpload" class="upload-label">Subir CSV*:</label>
+
+      <div id="fakeFile" class="fake-file" title="Seleccionar archivo CSV">
+        <span id="fileName" class="file-name">Ningún archivo seleccionado</span>
+        <!-- icono upload -->
+        <svg class="ico ico-18 upload-ico" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M12 16V4M12 4l-4 4m4-4 4 4M4 20h16" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+
+      <input id="csvUpload" type="file" accept=".csv" class="hidden-file"/>
+
+      <button id="btnUpload"
+              class="px-4 py-2 rounded-md bg-[#091c47] text-white text-sm font-medium hover:bg-[#0c3e92]"
+              disabled>
+        Subir
+      </button>
+    </div>
+
+    <!-- BUSCADOR -->
+    <div class="flex items-center justify-center gap-3 mb-4">
+      <div class="search-pill">
+        <input id="txtSearch" type="text" placeholder="Estudiante" aria-label="Buscar estudiante">
+        <button id="btnSearchIcon" class="search-icon" type="button" aria-label="Buscar">
+          <svg class="ico ico-18" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M21 21l-4.35-4.35M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15z"
+                  stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+      </div>
+      <button id="btnSearch" class="px-4 py-2 rounded-full bg-[#091c47] text-white text-sm font-medium hover:bg-[#0c3e92]">Buscar</button>
+    </div>
+
+    <!-- TABLA (solo lectura) -->
+    <div class="table-shell">
+      <div class="table-inner">
+        <div id="tblWrap" class="tbl-wrap">
+          <table class="min-w-full bg-white insc-table">
+            <thead class="thead-sticky">
+              <tr>
+                <th class="px-3 py-3 text-left">Nombre</th>
+                <th class="px-3 py-3 text-left">Apellido Paterno</th>
+                <th class="px-3 py-3 text-left">Apellido Materno</th>
+                <th class="px-3 py-3 text-left">Email</th>
+                <th class="px-3 py-3 text-left">Contraseña</th>
+                <th class="px-3 py-3 text-left">Rol</th>
+                <th class="px-3 py-3 text-left">Área</th>
+                <th class="px-3 py-3 text-left">Código de usuario</th>
+              </tr>
+            </thead>
+            <tbody id="tbodyEstudiantes" class="text-sm text-gray-700"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Acciones -->
+    <div class="flex items-center gap-3 justify-center mt-6">
+      <button id="btnAdd" class="btn-pill" title="Añadir estudiante">
+        <svg class="ico ico-18" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span>Añadir</span>
+      </button>
+
+      <button id="btnDelete" class="btn-pill">
+        <svg class="ico ico-18" viewBox="0 0 24 24"><path d="M9 6h6M10 6v12m4-12v12M5 6h14l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6z" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span>Eliminar</span>
+      </button>
+
+      <button id="btnExport" class="btn-pill">
+        <svg class="ico ico-18" viewBox="0 0 24 24"><path d="M12 3v12m0 0l-4-4m4 4 4-4M4 21h16" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span>Guardar y Exportar</span>
+      </button>
+    </div>
+  </div>
+
+  {{-- MODAL AÑADIR (centrado, header sticky, scroll interno) --}}
+  <div id="modalAdd" class="md-modal" aria-hidden="true">
+    <div class="md-backdrop" data-close></div>
+
+    <div class="md-panel">
+      <section id="registration-form" class="registration-section">
+        <div class="registration-modal">
+          <header class="modal-header">
+            <div class="modal-title-wrapper">
+              <h1>Registrar Estudiante</h1>
+            </div>
+            <button class="close-button" data-close aria-label="Cerrar modal">
+              <svg width="24" height="24" viewBox="0 0 24 24" class="text-white" style="stroke:#fff;fill:none;stroke-width:2">
+                <path d="M6 6l12 12M18 6l-12 12" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
+          </header>
+
+          <main class="modal-body">
+            <div class="notice-section">
+              <p>Los campos con * son obligatorios</p>
+              <hr class="divider">
+            </div>
+
+            <form id="frmAdd" class="registration-form" onsubmit="return false;">
+              <div class="form-grid">
+                <div class="form-column">
+                  <div class="input-group">
+                    <label for="m_id">ID*:</label>
+                    <input type="text" id="m_id" name="m_id" placeholder="A001 (opcional)" data-autofocus>
+                  </div>
+                  <div class="input-group">
+                    <label for="m_nombre">Nombre*:</label>
+                    <input type="text" id="m_nombre" name="m_nombre" placeholder="Nombre" required>
+                  </div>
+                  <div class="input-group">
+                    <label for="m_paterno">Apellido Paterno*:</label>
+                    <input type="text" id="m_paterno" name="m_paterno" placeholder="Apellido paterno" required>
+                  </div>
+                  <div class="input-group">
+                    <label for="m_materno">Apellido Materno*:</label>
+                    <input type="text" id="m_materno" name="m_materno" placeholder="Apellido materno" required>
+                  </div>
+                  <div class="input-group">
+                    <label for="m_area">Área*:</label>
+                    <input type="text" id="m_area" name="m_area" placeholder="Física, Química..." required>
+                  </div>
+                  <div class="input-group">
+                    <label for="m_tutor">Tutor*:</label>
+                    <input type="text" id="m_tutor" name="m_tutor" placeholder="Nombre del tutor">
+                  </div>
+                  <div class="input-group">
+                    <label for="m_colegio">Colegio*:</label>
+                    <input type="text" id="m_colegio" name="m_colegio" placeholder="Colegio">
+                  </div>
+                  <div class="input-group">
+                    <label for="m_fnac">Fecha de nacimiento:</label>
+                    <input type="text" id="m_fnac" name="m_fnac" placeholder="dd/mm/aaaa">
+                  </div>
+                  <div class="input-group">
+                    <label for="m_direccion">Dirección:</label>
+                    <input type="text" id="m_direccion" name="m_direccion" placeholder="Dirección">
+                  </div>
+                  <div class="input-group">
+                    <label for="m_email">Correo*:</label>
+                    <input type="email" id="m_email" name="m_email" placeholder="correo@dominio.com">
+                  </div>
+                </div>
+
+                <div class="form-column">
+                  <!-- SUBIR FOTO -->
+                  <div class="profile-card">
+                    <div id="photoDrop" class="profile-drop" tabindex="0" aria-label="Zona para subir foto de perfil">
+                      <svg class="avatar-ico" viewBox="0 0 24 24" aria-hidden="true">
+                        <circle cx="12" cy="8" r="3.5"></circle>
+                        <path d="M4 19a8 8 0 0 1 16 0" />
+                      </svg>
+                      <img id="photoPreview" alt="Previsualización" hidden>
+                      <p class="drop-text">
+                        Arrastra una imagen aquí o
+                        <button type="button" id="btnPickPhoto" class="link-btn">sube una</button>
+                      </p>
+                      <input id="m_foto" type="file" accept="image/*" class="hidden-file">
+                    </div>
+                    <div class="profile-caption">
+                      <span class="caption-text">Foto de perfil</span>
+                      <div class="profile-actions">
+                        <button type="button" class="upload-button" id="btnPickPhoto2" aria-label="Subir foto">
+                          <svg width="21" height="21" viewBox="0 0 24 24" style="stroke:#111;fill:none;stroke-width:2">
+                            <path d="M12 16V4M12 4l-4 4m4-4 4 4M4 20h16" stroke-linecap="round" stroke-linejoin="round"/>
+                          </svg>
+                        </button>
+                        <button type="button" class="remove-button" id="btnRemovePhoto" aria-label="Quitar foto" title="Quitar foto">
+                          <svg width="20" height="20" viewBox="0 0 24 24" style="stroke:#991b1b;fill:none;stroke-width:2">
+                            <path d="M3 6h18M7 6v12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V6M9 6V4h6v2" stroke-linecap="round" stroke-linejoin="round"/>
+                          </svg>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="input-group">
+                    <label for="m_nivel">Nivel*:</label>
+                    <input type="text" id="m_nivel" name="m_nivel" placeholder="Tercero">
+                  </div>
+                  <div class="input-group">
+                    <label for="m_categoria">Categoría:</label>
+                    <input type="text" id="m_categoria" name="m_categoria" placeholder="Individual">
+                  </div>
+                  <div class="input-group">
+                    <label for="m_tipo_col">Tipo de Colegio:</label>
+                    <input type="text" id="m_tipo_col" name="m_tipo_col" placeholder="Fiscal">
+                  </div>
+                  <div class="input-group">
+                    <label for="m_ci">Cédula de identidad*:</label>
+                    <input type="text" id="m_ci" name="m_ci" placeholder="1234567">
+                  </div>
+                  <div class="input-group">
+                    <label for="m_depmun">Departamento - Municipio*:</label>
+                    <input type="text" id="m_depmun" name="m_depmun" placeholder="Cochabamba - Cercado">
+                  </div>
+                  <div class="input-group">
+                    <label for="m_tel">Teléfono - Celular*:</label>
+                    <input type="tel" id="m_tel" name="m_tel" placeholder="7xxxxxxx">
+                  </div>
+                </div>
+              </div>
+
+              <div class="form-actions">
+                <button type="button" class="cancel-btn" data-close>Cancelar</button>
+                <button type="submit" class="submit-btn">Registrar</button>
+              </div>
+            </form>
+          </main>
+        </div>
+      </section>
+    </div>
+  </div>
+@endsection
+
+@push('styles')
+<link rel="stylesheet" href="{{ asset('css/inscripcion.css') }}">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+@endpush
+
+@push('scripts')
+<script src="{{ asset('js/inscripcion.js') }}"></script>
+@endpush

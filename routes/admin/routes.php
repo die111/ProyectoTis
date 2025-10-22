@@ -1,7 +1,12 @@
 <?php
 
+use App\Http\Controllers\Admin\AreaController;
 use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\Admin\CompeticionController;
+use App\Http\Controllers\Admin\EtapaController;
+use App\Http\Controllers\Admin\InscripcionController;
+use App\Http\Controllers\Admin\RoleController;
+use App\Http\Controllers\Admin\UsuarioController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'role:admin'])->prefix('dashboard/admin')->name('admin.')->group(function () {
@@ -9,20 +14,41 @@ Route::middleware(['auth', 'role:admin'])->prefix('dashboard/admin')->name('admi
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 
     // Rutas de usuarios
-    Route::resource('users', UserController::class);
+    Route::resource('usuarios', UsuarioController::class);
+    // Formulario independiente para crear usuario
+    Route::get('formulario-usuario', function() {
+        $areas = \App\Models\Area::all();
+        $roles = \App\Models\Role::where('is_active', true)->get();
+        return view('admin.usuarios.formulario-usuario', compact('areas', 'roles'));
+    })->name('formulario-usuario');
 
-    // Rutas temporales (redirigen al dashboard)
-    Route::get('areas', function () {
-        return redirect()->route('admin.dashboard');
-    })->name('areas.index');
+
+    Route::resource('competicion', CompeticionController::class);
+    Route::patch('competicion/{id}/estado/{state}', [CompeticionController::class, 'updateState'])->name('competicion.updateState');
+    Route::get('competicion/{id}/json', [CompeticionController::class, 'json'])->name('competicion.json');
+
+
+    // Rutas de roles
+    Route::resource('roles', RoleController::class);
+    Route::post('roles/{id}/activate', [RoleController::class, 'activate'])->name('roles.activate');
+    Route::post('roles/{id}/deactivate', [RoleController::class, 'deactivate'])->name('roles.deactivate');
+
+    // Rutas areas
+    Route::resource('areas', AreaController::class);
+    Route::post('areas/bulk-activate', [AreaController::class, 'bulkActivate'])->name('areas.bulk-activate');
+    Route::post('areas/bulk-deactivate', [AreaController::class, 'bulkDeactivate'])->name('areas.bulk-deactivate');
     
-    Route::get('olimpistas', function () {
-        return redirect()->route('admin.dashboard');
-    })->name('olimpistas.index');
+    // Ruta para la página de solicitud de inscripción (debe ir ANTES del resource)
+    Route::get('inscripcion/solicitud', function() {
+        return view('admin.inscripcion.solicitud');
+    })->name('inscripcion.solicitud');
     
-    Route::get('reportes', function () {
-        return redirect()->route('admin.dashboard');
-    })->name('reportes.index');
+    Route::resource('inscripcion', InscripcionController::class);
+    Route::resource('etapas', EtapaController::class);
+    Route::patch('etapas/{id}/habilitar', [EtapaController::class, 'habilitar'])->name('etapas.habilitar');
+
+    // Ruta para guardar estudiantes
+    Route::post('inscripcion/guardar-estudiantes', [InscripcionController::class, 'guardarEstudiantes'])->name('inscripcion.guardarEstudiantes');
 
     // Futuras rutas de áreas (descomentar cuando estén listas)
     // Route::resource('areas', App\Http\Controllers\Admin\AreaController::class);
