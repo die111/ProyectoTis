@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use Faker\Provider\ar_EG\Person;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
@@ -17,6 +18,7 @@ class DatabaseSeeder extends Seeder
             PhaseSeeder::class,
             UserSeeder::class,
             LevelSeeder::class,
+            PermissionSeeder::class,
         ]);
     }
 }

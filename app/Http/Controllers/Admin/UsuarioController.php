@@ -8,6 +8,7 @@ use App\Models\Area;
 use App\Models\Role;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class UsuarioController extends Controller
 {
@@ -67,7 +68,8 @@ class UsuarioController extends Controller
 
     public function store(Request $request)
     {
-        $validated = $request->validate([
+    Log::info('Datos recibidos para crear usuario', $request->all());
+    $validated = $request->validate([
             'name' => 'required|string|max:255',
             'last_name_father' => 'required|string|max:255',
             'last_name_mother' => 'nullable|string|max:255',
@@ -86,7 +88,8 @@ class UsuarioController extends Controller
         $validated['password'] = bcrypt($validated['password']);
         $validated['is_active'] = true;
 
-        User::create($validated);
+    $user = User::create($validated);
+    Log::info('Usuario creado', $user->toArray());
 
         return redirect()->route('admin.usuarios.index')
             ->with([

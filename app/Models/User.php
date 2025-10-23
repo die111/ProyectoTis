@@ -55,4 +55,14 @@ class User extends Authenticatable
     {
         return $this->belongsTo(Area::class, 'area_id');
     }
+
+    public function inscriptions()
+    {
+        return $this->hasMany(Inscription::class);
+    }
+
+    public function evaluationsAsEvaluator()
+    {
+        return $this->hasMany(Evaluation::class, 'evaluator_id');
+    }
 }

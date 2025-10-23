@@ -7,7 +7,7 @@
 <!--  CABECERA / ACCIONES   -->
 <div class="content-header">
     <h1 class="content-title">Fases</h1>
-    <a href="{{ route('admin.etapas.create') }}" class="create-btn btn-pressable">
+    <a href="{{ route('admin.phases.create') }}" class="create-btn btn-pressable">
         <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
             <path fill="currentColor" d="M11 11V5h2v6h6v2h-6v6h-2v-6H5v-2z"/>
         </svg>
@@ -16,7 +16,7 @@
 </div>
 
 <!--  BUSCADOR (filtra por nombre o descripción) -->
-<form id="searchForm" class="search-panel" action="{{ route('admin.etapas.index') }}" method="GET">
+<form id="searchForm" class="search-panel" action="{{ route('admin.phases.index') }}" method="GET">
     <div class="search-input-wrapper">
         <input id="searchInput" name="search" type="text" value="{{ $query ?? '' }}" placeholder="Buscar por nombre o descripción..." aria-label="Buscar etapa"/>
         <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true">
@@ -46,15 +46,15 @@
                 <td class="py-3 px-2 text-gray-700 align-middle">{{ $phase->description ?? '—' }}</td>
                 <td class="py-2 px-2 align-middle">
                     <div class="flex flex-wrap gap-2 justify-center">
-                        <a href="{{ route('admin.etapas.edit', $phase->id) }}" class="btn btn-primary btn-pressable px-3 py-1 text-sm">Editar</a>
+                        <a href="{{ route('admin.phases.edit', $phase->id) }}" class="btn btn-primary btn-pressable px-3 py-1 text-sm">Editar</a>
                         @if($phase->is_active)
-                            <form action="{{ route('admin.etapas.destroy', $phase->id) }}" method="POST" style="display:inline-block;" class="swal-delete">
+                            <form action="{{ route('admin.phases.destroy', $phase->id) }}" method="POST" style="display:inline-block;" class="swal-delete">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" class="btn btn-secondary btn-pressable px-3 py-1 text-sm">Desactivar</button>
                             </form>
                         @else
-                            <form action="{{ route('admin.etapas.habilitar', $phase->id) }}" method="POST" style="display:inline-block;">
+                            <form action="{{ route('admin.phases.habilitar', $phase->id) }}" method="POST" style="display:inline-block;">
                                 @csrf
                                 @method('PATCH')
                                 <button type="submit" class="btn btn-primary btn-pressable px-3 py-1 text-sm">Habilitar</button>
