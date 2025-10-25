@@ -8,6 +8,7 @@ use App\Models\Competicion;
 use App\Models\Area;
 use App\Models\Phase;
 use App\Models\Level;
+use App\Models\Categoria;
 
 
 
@@ -37,7 +38,8 @@ class CompeticionController extends Controller
         $levelsCatalog = Level::all();
         $areasCatalog = Area::all();
         $fasesCatalog = Phase::all();
-        return view('admin.competicion.create', compact('levelsCatalog', 'areasCatalog', 'fasesCatalog'));
+        $categoriasCatalog = Categoria::all();
+        return view('admin.competicion.create', compact('levelsCatalog', 'areasCatalog', 'fasesCatalog', 'categoriasCatalog'));
     }
     public function json($id)
     {
@@ -60,7 +62,7 @@ class CompeticionController extends Controller
             'description' => 'nullable|string',
             'fechaInicio' => 'required|date',
             'fechaFin' => 'required|date|after_or_equal:fechaInicio',
-            'level_ids' => 'required|array',
+            'level_ids' => 'nullable|array',
             'level_ids.*' => 'exists:levels,id',
             'area_ids' => 'required|array',
             'area_ids.*' => 'exists:areas,id',
@@ -68,6 +70,7 @@ class CompeticionController extends Controller
             'phases.*.phase_id' => 'required|exists:phases,id',
             'phases.*.start_date' => 'required|date|after_or_equal:fechaInicio',
             'phases.*.end_date' => 'required|date|before_or_equal:fechaFin|after_or_equal:phases.*.start_date',
+            'phases.*.clasificados' => 'nullable|integer|min:1',
         ]);
 
         $competicion = Competicion::create([
@@ -79,15 +82,16 @@ class CompeticionController extends Controller
         ]);
 
         // Attach levels and areas (polymorphic)
-        $competicion->levels()->sync($request->level_ids);
+        $competicion->levels()->sync($request->level_ids ?? []);
         $competicion->areas()->sync($request->area_ids);
 
-        // Attach phases with dates
+        // Attach phases with dates and clasificados
         $phaseData = [];
         foreach ($request->phases as $phase) {
             $phaseData[$phase['phase_id']] = [
                 'start_date' => $phase['start_date'],
                 'end_date' => $phase['end_date'],
+                'clasificados' => $phase['clasificados'] ?? null,
             ];
         }
         $competicion->phases()->sync($phaseData);
@@ -147,6 +151,7 @@ class CompeticionController extends Controller
                     $phaseData[$phase['phase_id']] = [
                         'start_date' => $phase['start_date'],
                         'end_date' => $phase['end_date'],
+                        'clasificados' => $phase['clasificados'] ?? null,
                     ];
                 }
             }

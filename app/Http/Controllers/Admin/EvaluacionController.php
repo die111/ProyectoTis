@@ -27,7 +27,11 @@ class EvaluacionController extends \App\Http\Controllers\Controller
 
     public function index()
     {
-        return view('admin.evaluacion.index');
+        $competiciones = Competicion::with(['area', 'phases'])
+            ->orderBy('fechaInicio', 'desc')
+            ->get();
+            
+        return view('admin.evaluacion.index', compact('competiciones'));
     }
     /**
      * Cargar inscripciones desde CSV
@@ -419,6 +423,67 @@ class EvaluacionController extends \App\Http\Controllers\Controller
     {
         $nivel = \App\Models\Level::where('nombre', $nombreNivel)->first();
         return $nivel ? $nivel->id : null;
+    }
+
+    /**
+     * Mostrar las fases de una competición específica
+     */
+    public function showFases(Competicion $competicion)
+    {
+        // Cargar las fases de la competición
+        $fases = $competicion->phases()->get();
+        
+        return view('admin.evaluacion.fases', compact('competicion', 'fases'));
+    }
+    
+    /**
+     * Gestionar estudiantes de una fase específica en una competición específica
+     */
+    public function gestionarEstudiantes(Competicion $competicion, $faseId)
+    {
+        $fase = \App\Models\Phase::findOrFail($faseId);
+        
+        // Verificar que la fase esté asociada a la competición
+        $faseEnCompeticion = $competicion->phases()->where('phase_id', $faseId)->first();
+        if (!$faseEnCompeticion) {
+            abort(404, 'La fase no está asociada a esta competición');
+        }
+        
+        // Obtener todas las categorías y áreas para los filtros
+        $categorias = \App\Models\Categoria::where('is_active', true)->get();
+        $areas = \App\Models\Area::where('is_active', true)->get();
+        
+        // Construir query para estudiantes con filtros
+        $query = \App\Models\Inscription::with(['user', 'area', 'level']);
+        
+        // Filtrar por la competición específica
+        $query->where('competition_id', $competicion->id);
+        
+        // Aplicar filtros si existen
+        if (request('categoria')) {
+            // Por ahora omitimos el filtro por categoría hasta que se establezca la relación
+            // $query->whereHas('level', function($q) {
+            //     $q->where('categoria_id', request('categoria'));
+            // });
+        }
+        
+        if (request('area')) {
+            $query->where('area_id', request('area'));
+        }
+        
+        if (request('search')) {
+            $search = request('search');
+            $query->whereHas('user', function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('last_name_father', 'like', "%{$search}%")
+                  ->orWhere('last_name_mother', 'like', "%{$search}%")
+                  ->orWhere('school', 'like', "%{$search}%");
+            });
+        }
+        
+        $estudiantes = $query->paginate(10);
+        
+        return view('admin.evaluacion.estudiantes', compact('fase', 'competicion', 'categorias', 'areas', 'estudiantes'));
     }
 
     // Métodos auxiliares

@@ -55,6 +55,12 @@ Route::middleware(['auth'])->prefix('dashboard/admin')->name('admin.')->group(fu
 
     // Ruta evaluaciones
     Route::resource('evaluacion', EvaluacionController::class); // ->middleware('permission:evaluaciones')
+    
+    // Ruta para mostrar las fases de una competición específica
+    Route::get('evaluacion/{competicion}/fases', [EvaluacionController::class, 'showFases'])->name('evaluacion.fases');
+    
+    // Ruta para gestionar estudiantes de una fase específica en una competición específica
+    Route::get('evaluacion/{competicion}/fase/{fase}/estudiantes', [EvaluacionController::class, 'gestionarEstudiantes'])->name('evaluacion.fase.estudiantes');
 
     // Futuras rutas de áreas (descomentar cuando estén listas)
     // Route::resource('areas', App\Http\Controllers\Admin\AreaController::class);

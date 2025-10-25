@@ -15,8 +15,9 @@ return new class extends Migration
             $table->id();
             $table->foreignId('competition_id')->constrained('competicions')->onDelete('cascade');
             $table->foreignId('phase_id')->constrained('phases')->onDelete('cascade');
+            $table->integer('clasificados')->nullable();
             $table->date('start_date')->nullable();
-            $table->date('end_date')->nullable();
+            $table->date('end_date')->nullable();            
             $table->timestamps();
         });
     }

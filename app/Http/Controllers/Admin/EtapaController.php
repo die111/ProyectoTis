@@ -36,7 +36,7 @@ class EtapaController extends Controller
             'clasificados' => 'required|integer|min:1',
         ]);
         Phase::create($request->all());
-        return redirect()->route('admin.etapas.index')->with([
+        return redirect()->route('admin.phases.index')->with([
             'swal_custom' => true,
             'swal_title' => '¡Éxito!',
             'swal_icon' => 'success',
@@ -60,7 +60,7 @@ class EtapaController extends Controller
         $phase = Phase::findOrFail($id);
         $phase->update($request->all());
        
-         return redirect()->route('admin.etapas.index')->with([
+         return redirect()->route('admin.phases.index')->with([
             'swal_custom' => true,
             'swal_title' => '¡Éxito!',
             'swal_icon' => 'success',
@@ -73,7 +73,7 @@ class EtapaController extends Controller
         $phase = Phase::findOrFail($id);
         $phase->is_active = false;
         $phase->save();
-        return redirect()->route('admin.etapas.index')
+        return redirect()->route('admin.phases.index')
             ->with([
             'swal_custom' => true,
             'swal_title' => '¡Éxito!',
@@ -86,7 +86,7 @@ class EtapaController extends Controller
         $phase = Phase::findOrFail($id);
         $phase->is_active = true;
         $phase->save();
-        return redirect()->route('admin.etapas.index')
+        return redirect()->route('admin.phases.index')
             ->with([
             'swal_custom' => true,
             'swal_title' => '¡Éxito!',

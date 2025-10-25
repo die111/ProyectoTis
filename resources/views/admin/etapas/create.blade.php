@@ -11,7 +11,7 @@
         </a>
     </div>
     <div class="bg-white shadow rounded-lg p-6 max-w-lg mx-auto">
-        <form action="{{ route('admin.etapas.store') }}" method="POST">
+        <form action="{{ route('admin.phases.store') }}" method="POST">
             @csrf
             <div class="mb-4">
                 <label for="name" class="block text-gray-700 font-semibold mb-2">Nombre</label>
@@ -29,7 +29,7 @@
                 @error('clasificados')<span class="text-red-500 text-sm">{{ $message }}</span>@enderror
             </div>
             <div class="flex justify-end gap-2">
-                <a href="{{ route('admin.etapas.index') }}" class="bg-gray-300 text-black px-4 py-2 rounded hover:bg-gray-400 transition">Cancelar</a>
+                <a href="{{ route('admin.phases.index') }}" class="bg-gray-300 text-black px-4 py-2 rounded hover:bg-gray-400 transition">Cancelar</a>
                 <button type="submit" class="bg-[#091c47] text-white px-4 py-2 rounded hover:bg-blue-700 transition">Guardar</button>
             </div>
         </form>
