@@ -211,14 +211,18 @@ function competitionForm() {
         },
 
         addPhase() {
-            if (!this.startDate || !this.endDate) return;
+            // Determinar qué fechas usar para crear la nueva fase
+            const timelineStartDate = (typeof this.evaluacionInicio !== 'undefined' && this.evaluacionInicio) ? this.evaluacionInicio : this.startDate;
+            const timelineEndDate = (typeof this.evaluacionFin !== 'undefined' && this.evaluacionFin) ? this.evaluacionFin : this.endDate;
+            
+            if (!timelineStartDate || !timelineEndDate) return;
 
             const newPhase = {
                 id: 'phase-' + Date.now(),
                 name: 'Fase ' + (this.phases.length + 1),
                 phase_id: '',
-                start_date: this.startDate,
-                end_date: this.calculateDefaultEndDate(),
+                start_date: timelineStartDate,
+                end_date: this.calculateDefaultEndDate(timelineStartDate),
                 clasificados: '',
                 errors: []
             };
@@ -228,9 +232,10 @@ function competitionForm() {
             this.editingPhase = newPhase.id;
         },
 
-        calculateDefaultEndDate() {
-            if (!this.startDate) return '';
-            const start = new Date(this.startDate);
+        calculateDefaultEndDate(startDate = null) {
+            const baseDate = startDate || (typeof this.evaluacionInicio !== 'undefined' && this.evaluacionInicio) ? this.evaluacionInicio : this.startDate;
+            if (!baseDate) return '';
+            const start = new Date(baseDate);
             start.setDate(start.getDate() + 7);
             return start.toISOString().split('T')[0];
         },
@@ -253,18 +258,24 @@ function competitionForm() {
                 return;
             }
 
-            const startDate = new Date(this.startDate);
-            const endDate = new Date(this.endDate);
+            // Determinar qué fechas usar para la validación
+            const timelineStartDate = (typeof this.evaluacionInicio !== 'undefined' && this.evaluacionInicio) ? this.evaluacionInicio : this.startDate;
+            const timelineEndDate = (typeof this.evaluacionFin !== 'undefined' && this.evaluacionFin) ? this.evaluacionFin : this.endDate;
+
+            const startDate = new Date(timelineStartDate);
+            const endDate = new Date(timelineEndDate);
             const phaseStart = new Date(phase.start_date);
             const phaseEnd = new Date(phase.end_date);
 
-            // Validar que esté dentro del rango de la competencia
+            // Validar que esté dentro del rango del timeline (evaluación o competencia)
             if (phaseStart < startDate || phaseStart > endDate) {
-                phase.errors.push('La fecha de inicio está fuera del rango de la competencia');
+                const rangeType = (typeof this.evaluacionInicio !== 'undefined' && this.evaluacionInicio) ? 'evaluación' : 'competencia';
+                phase.errors.push(`La fecha de inicio está fuera del rango de ${rangeType}`);
             }
 
             if (phaseEnd < startDate || phaseEnd > endDate) {
-                phase.errors.push('La fecha de fin está fuera del rango de la competencia');
+                const rangeType = (typeof this.evaluacionInicio !== 'undefined' && this.evaluacionInicio) ? 'evaluación' : 'competencia';
+                phase.errors.push(`La fecha de fin está fuera del rango de ${rangeType}`);
             }
 
             // Validar que la fecha de fin sea posterior a la de inicio
@@ -297,15 +308,19 @@ function competitionForm() {
         },
 
         getPhasePosition(phase) {
-            if (!this.startDate || !this.endDate || !phase.start_date || !phase.end_date) {
+            // Determinar qué fechas usar para el cálculo del timeline
+            const timelineStartDate = (typeof this.evaluacionInicio !== 'undefined' && this.evaluacionInicio) ? this.evaluacionInicio : this.startDate;
+            const timelineEndDate = (typeof this.evaluacionFin !== 'undefined' && this.evaluacionFin) ? this.evaluacionFin : this.endDate;
+            
+            if (!timelineStartDate || !timelineEndDate || !phase.start_date || !phase.end_date) {
                 return {
                     left: '0%',
                     width: '0%'
                 };
             }
 
-            const totalDays = this.getTotalDays();
-            const start = new Date(this.startDate);
+            const totalDays = this.getTotalDaysForTimeline(timelineStartDate, timelineEndDate);
+            const start = new Date(timelineStartDate);
             const phaseStart = new Date(phase.start_date);
             const phaseEnd = new Date(phase.end_date);
 
@@ -319,6 +334,13 @@ function competitionForm() {
                 left: `${Math.max(0, left)}%`,
                 width: `${Math.min(100, width)}%`
             };
+        },
+
+        getTotalDaysForTimeline(startDate, endDate) {
+            if (!startDate || !endDate) return 0;
+            const start = new Date(startDate);
+            const end = new Date(endDate);
+            return Math.max(1, (end - start) / (1000 * 60 * 60 * 24) + 1);
         },
 
         getTotalDays() {

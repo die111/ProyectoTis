@@ -15,6 +15,12 @@ return new class extends Migration
             $table->id();
             $table->string('nombre');
             $table->text('descripcion')->nullable();
+            $table->boolean('primero')->default(false);
+            $table->boolean('segundo')->default(false);
+            $table->boolean('tercero')->default(false);
+            $table->boolean('cuarto')->default(false);
+            $table->boolean('quinto')->default(false);
+            $table->boolean('sexto')->default(false);
             $table->boolean('is_active')->default(true);
             $table->timestamps();
         });

@@ -26,34 +26,35 @@
   <!-- Grid de tarjetas -->
   <section id="grid" class="grid grid-cols-1 gap-6 md:grid-cols-2">
     @forelse($competiciones as $index => $competicion)
+      @php
+        $colors = ['bg-red-600', 'bg-blue-600', 'bg-green-600', 'bg-purple-600', 'bg-yellow-600', 'bg-pink-600'];
+        $svgColors = ['#ef4444', '#2563eb', '#16a34a', '#9333ea', '#eab308', '#ec4899'];
+        $colorIndex = $index % count($colors);
+        
+        $estadoTexto = '';
+        $estadoColor = '';
+        $btnTexto = 'Ver';
+        $btnAction = '';
+        
+        switch($competicion->state) {
+          case 'activa':
+            $estadoTexto = 'En Proceso';
+            $btnTexto = 'Gestionar';
+            break;
+          case 'finalizada':
+            $estadoTexto = 'Finalizada';
+            $btnTexto = 'Ver Resultados';
+            break;
+          case 'pendiente':
+          default:
+            $estadoTexto = 'Pendiente';
+            $btnTexto = 'Iniciar';
+            break;
+        }
+      @endphp
+      
       <!-- Competición {{ $competicion->name }} -->
-      <article class="phase-card rounded-2xl bg-white shadow ring-1 ring-slate-200 overflow-hidden" data-phase="{{ strtolower($competicion->name) }}">
-        @php
-          $colors = ['bg-red-600', 'bg-blue-600', 'bg-green-600', 'bg-purple-600', 'bg-yellow-600', 'bg-pink-600'];
-          $svgColors = ['#ef4444', '#2563eb', '#16a34a', '#9333ea', '#eab308', '#ec4899'];
-          $colorIndex = $index % count($colors);
-          
-          $estadoTexto = '';
-          $estadoColor = '';
-          $btnTexto = 'Ver';
-          $btnAction = '';
-          
-          switch($competicion->state) {
-            case 'activa':
-              $estadoTexto = 'En Proceso';
-              $btnTexto = 'Gestionar';
-              break;
-            case 'finalizada':
-              $estadoTexto = 'Finalizada';
-              $btnTexto = 'Ver Resultados';
-              break;
-            case 'pendiente':
-            default:
-              $estadoTexto = 'Pendiente';
-              $btnTexto = 'Iniciar';
-              break;
-          }
-        @endphp
+      <article class="phase-card rounded-2xl bg-white shadow ring-2 ring-{{ str_replace('bg-', '', $colors[$colorIndex]) }} overflow-hidden transition-all duration-200 hover:shadow-lg hover:scale-[1.02] hover:ring-4 cursor-pointer" data-phase="{{ strtolower($competicion->name) }}">
         
         <div class="h-1.5 {{ $colors[$colorIndex] }}"></div>
         <div class="brush relative px-8 pt-6">

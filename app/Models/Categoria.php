@@ -10,5 +10,15 @@ class Categoria extends Model
     use HasFactory;
 
     protected $table = 'categorias';
-    protected $fillable = ['nombre', 'descripcion', 'is_active'];
+    protected $fillable = [
+        'nombre', 
+        'descripcion', 
+        'primero', 
+        'segundo', 
+        'tercero', 
+        'cuarto', 
+        'quinto', 
+        'sexto', 
+        'is_active'
+    ];
 }

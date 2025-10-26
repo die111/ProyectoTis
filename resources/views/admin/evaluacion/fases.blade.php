@@ -55,37 +55,38 @@
   <!-- Grid de tarjetas de fases -->
   <section id="grid" class="grid grid-cols-1 gap-6 md:grid-cols-2">
     @forelse($fases as $index => $fase)
-      <!-- Fase {{ $fase->name }} -->
-      <article class="phase-card rounded-2xl bg-white shadow ring-1 ring-slate-200 overflow-hidden" data-phase="{{ strtolower($fase->name) }}">
-        @php
-          $colors = ['bg-red-600', 'bg-blue-600', 'bg-green-600', 'bg-purple-600', 'bg-yellow-600', 'bg-pink-600'];
-          $svgColors = ['#ef4444', '#2563eb', '#16a34a', '#9333ea', '#eab308', '#ec4899'];
-          $colorIndex = $index % count($colors);
-          
-          // Por ahora, simplificamos la lógica para que siempre muestre "Gestionar"
-          $estadoTexto = 'Disponible';
-          $btnTexto = 'Gestionar';
-          
-          // Determinar estado basado en las fechas del pivot (comentado por ahora)
-          $fechaInicio = $fase->pivot->start_date ?? null;
-          $fechaFin = $fase->pivot->end_date ?? null;
-          $ahora = now();
-          
-          // Mostrar fechas si están disponibles
-          if ($fechaInicio && $fechaFin) {
-            if ($ahora < $fechaInicio) {
-              $estadoTexto = 'Pendiente';
-            } elseif ($ahora >= $fechaInicio && $ahora <= $fechaFin) {
-              $estadoTexto = 'En Proceso';
-            } else {
-              $estadoTexto = 'Finalizada';
-            }
-          } elseif ($fechaInicio || $fechaFin) {
-            $estadoTexto = 'Parcialmente Configurada';
+      @php
+        $colors = ['bg-red-600', 'bg-blue-600', 'bg-green-600', 'bg-purple-600', 'bg-yellow-600', 'bg-pink-600'];
+        $svgColors = ['#ef4444', '#2563eb', '#16a34a', '#9333ea', '#eab308', '#ec4899'];
+        $colorIndex = $index % count($colors);
+        
+        // Por ahora, simplificamos la lógica para que siempre muestre "Gestionar"
+        $estadoTexto = 'Disponible';
+        $btnTexto = 'Gestionar';
+        
+        // Determinar estado basado en las fechas del pivot (comentado por ahora)
+        $fechaInicio = $fase->pivot->start_date ?? null;
+        $fechaFin = $fase->pivot->end_date ?? null;
+        $ahora = now();
+        
+        // Mostrar fechas si están disponibles
+        if ($fechaInicio && $fechaFin) {
+          if ($ahora < $fechaInicio) {
+            $estadoTexto = 'Pendiente';
+          } elseif ($ahora >= $fechaInicio && $ahora <= $fechaFin) {
+            $estadoTexto = 'En Proceso';
           } else {
-            $estadoTexto = 'Sin Fechas Configuradas';
+            $estadoTexto = 'Finalizada';
           }
-        @endphp
+        } elseif ($fechaInicio || $fechaFin) {
+          $estadoTexto = 'Parcialmente Configurada';
+        } else {
+          $estadoTexto = 'Sin Fechas Configuradas';
+        }
+      @endphp
+      
+      <!-- Fase {{ $fase->name }} -->
+      <article class="phase-card rounded-2xl bg-white shadow ring-2 ring-{{ str_replace('bg-', '', $colors[$colorIndex]) }} overflow-hidden transition-all duration-200 hover:shadow-lg hover:scale-[1.02] hover:ring-4 cursor-pointer" data-phase="{{ strtolower($fase->name) }}">
         
         <div class="h-1.5 {{ $colors[$colorIndex] }}"></div>
         <div class="brush relative px-8 pt-6">

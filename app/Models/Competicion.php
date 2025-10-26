@@ -19,11 +19,23 @@ class Competicion extends Model
         'description',
         'fechaInicio',
         'fechaFin',
+        'inscripcion_inicio',
+        'inscripcion_fin',
+        'evaluacion_inicio',
+        'evaluacion_fin',
+        'premiacion_inicio',
+        'premiacion_fin',
         'state'
     ];
     protected $casts = [
         'fechaInicio' => 'datetime',
         'fechaFin' => 'datetime',
+        'inscripcion_inicio' => 'date',
+        'inscripcion_fin' => 'date',
+        'evaluacion_inicio' => 'date',
+        'evaluacion_fin' => 'date',
+        'premiacion_inicio' => 'date',
+        'premiacion_fin' => 'date',
     ];
 
     // Relación polimórfica con niveles

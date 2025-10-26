@@ -1,10 +1,10 @@
 <!-- Timeline Visualization -->
-<div x-show="startDate && endDate" class="border-t border-gray-200 pt-6">
+<div x-show="(typeof evaluacionInicio !== 'undefined' && evaluacionInicio && evaluacionFin) || (startDate && endDate)" class="border-t border-gray-200 pt-6">
     <div class="flex items-center justify-between mb-6">
         <h3 class="text-lg font-semibold text-gray-900">Timeline de Fases</h3>
         <button type="button" @click="addPhase"
             class="btn btn-primary inline-flex items-center px-4 py-2 text-sm font-medium rounded-md"
-            :disabled="!startDate || !endDate">
+            :disabled="!((typeof evaluacionInicio !== 'undefined' && evaluacionInicio && evaluacionFin) || (startDate && endDate))">
             <i class="fas fa-plus mr-2"></i>
             Agregar Fase
         </button>
@@ -29,8 +29,8 @@
 
         <!-- Etiquetas del timeline -->
         <div class="flex justify-between text-xs text-gray-500 mt-1">
-            <span x-text="startDate ? formatDate(startDate) : ''"></span>
-            <span x-text="endDate ? formatDate(endDate) : ''"></span>
+            <span x-text="(typeof evaluacionInicio !== 'undefined' && evaluacionInicio) ? formatDate(evaluacionInicio) : (startDate ? formatDate(startDate) : '')"></span>
+            <span x-text="(typeof evaluacionFin !== 'undefined' && evaluacionFin) ? formatDate(evaluacionFin) : (endDate ? formatDate(endDate) : '')"></span>
         </div>
     </div>
 
@@ -77,7 +77,8 @@
                                 </label>
                                 <input type="date" x-model="phase.start_date"
                                     @change="updatePhaseValidation(phase)"
-                                    :min="startDate" :max="endDate"
+                                    :min="(typeof evaluacionInicio !== 'undefined' && evaluacionInicio) ? evaluacionInicio : startDate" 
+                                    :max="(typeof evaluacionFin !== 'undefined' && evaluacionFin) ? evaluacionFin : endDate"
                                     class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                     :class="{ 'border-red-500': phase.errors.length }"
                                     required>
@@ -88,8 +89,8 @@
                                 </label>
                                 <input type="date" x-model="phase.end_date"
                                     @change="updatePhaseValidation(phase)"
-                                    :min="phase.start_date || startDate"
-                                    :max="endDate"
+                                    :min="phase.start_date || ((typeof evaluacionInicio !== 'undefined' && evaluacionInicio) ? evaluacionInicio : startDate)"
+                                    :max="(typeof evaluacionFin !== 'undefined' && evaluacionFin) ? evaluacionFin : endDate"
                                     class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                     :class="{ 'border-red-500': phase.errors.length }"
                                     required>

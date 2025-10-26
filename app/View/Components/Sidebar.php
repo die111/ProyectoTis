@@ -86,6 +86,12 @@ class Sidebar extends Component
                 'icon' => 'fas fa-th-large',
                 'active' => $this->isRouteActive(['admin.areas.*'])
             ],
+            'categorias' => [
+                'name' => 'Gestión de Categorías',
+                'route' => 'admin.categorias.index',
+                'icon' => 'fas fa-tags',
+                'active' => $this->isRouteActive(['admin.categorias.*'])
+            ],
             'evaluaciones' => [
                 'name' => 'Gestión de Evaluaciones',
                 'route' => 'admin.evaluacion.index',

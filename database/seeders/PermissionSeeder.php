@@ -17,6 +17,7 @@ class PermissionSeeder extends Seeder
             ['name' => 'inscripcion', 'description' => 'Gestionar inscripciones'],
             ['name' => 'fases', 'description' => 'Gestionar fases'],
             ['name' => 'areas', 'description' => 'Gestionar áreas'],
+            ['name' => 'categorias', 'description' => 'Gestionar categorías'],
             ['name' => 'evaluaciones', 'description' => 'Gestionar evaluaciones'],
         ];
         foreach ($permissions as $perm) {

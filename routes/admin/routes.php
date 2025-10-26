@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\InscripcionController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\UsuarioController;
 use App\Http\Controllers\Admin\EvaluacionController;
+use App\Http\Controllers\Admin\CategoriaController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth'])->prefix('dashboard/admin')->name('admin.')->group(function () {
@@ -39,6 +40,11 @@ Route::middleware(['auth'])->prefix('dashboard/admin')->name('admin.')->group(fu
     Route::post('areas/bulk-activate', [AreaController::class, 'bulkActivate'])->name('areas.bulk-activate'); // ->middleware('permission:areas')
     Route::post('areas/bulk-deactivate', [AreaController::class, 'bulkDeactivate'])->name('areas.bulk-deactivate'); // ->middleware('permission:areas')
     
+    // Rutas categorías
+    Route::resource('categorias', CategoriaController::class); // ->middleware('permission:categorias')
+    Route::patch('categorias/{categoria}/activate', [CategoriaController::class, 'activate'])->name('categorias.activate');
+    Route::patch('categorias/{categoria}/deactivate', [CategoriaController::class, 'deactivate'])->name('categorias.deactivate');
+
         // Ruta para crear etapa (etapas.create)
         Route::get('etapas/create', [EtapaController::class, 'create'])->name('etapas.create');
     // Ruta para la página de solicitud de inscripción (debe ir ANTES del resource)

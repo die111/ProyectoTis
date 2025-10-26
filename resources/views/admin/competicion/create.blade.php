@@ -66,12 +66,125 @@
                             Seleccionar Rango de Fechas de la Competencia
                         </h2>
                     </div>
-                    <div class="p-6">
+                    <div class="p-6" x-data='{
+                        evaluacionInicio: "",
+                        evaluacionFin: ""
+                    }'>
                         <!-- Calendario Visual -->
                         @include('components.calendar-date-range-picker')
 
+                        <!-- Campos de Fechas Adicionales -->
+                        <div class="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <!-- Campo 1: Registro de Equipos -->
+                            <div class="bg-gray-50 p-4 rounded-lg border border-gray-200" :class="{'opacity-50': !startDate || !endDate}">
+                                <h3 class="text-md font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                                    <i class="fas fa-users text-green-600"></i>
+                                    Etapa de Inscripción
+                                </h3>
+                                <div class="space-y-3">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Fecha de Inicio</label>
+                                        <input type="date" name="inscripcion_inicio" 
+                                            :disabled="!startDate || !endDate"
+                                            :min="startDate"
+                                            :max="endDate"
+                                            class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 text-sm disabled:bg-gray-100 disabled:cursor-not-allowed">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Fecha de Fin</label>
+                                        <input type="date" name="inscripcion_fin" 
+                                            :disabled="!startDate || !endDate"
+                                            :min="startDate"
+                                            :max="endDate"
+                                            class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 text-sm disabled:bg-gray-100 disabled:cursor-not-allowed">
+                                    </div>
+                                </div>
+                                <div x-show="!startDate || !endDate" class="mt-2 text-xs text-amber-600 flex items-center gap-1">
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                    <span>Selecciona primero el rango de fechas de la competencia</span>
+                                </div>
+                            </div>
+
+                            <!-- Campo 2: Evaluación -->
+                            <div class="bg-gray-50 p-4 rounded-lg border border-gray-200" :class="{'opacity-50': !startDate || !endDate}">
+                                <h3 class="text-md font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                                    <i class="fas fa-clipboard-check text-blue-600"></i>
+                                    Etapa de Evaluación
+                                </h3>
+                                <div class="space-y-3">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Fecha de Inicio</label>
+                                        <input type="date" name="evaluacion_inicio" 
+                                            :disabled="!startDate || !endDate"
+                                            :min="startDate"
+                                            :max="endDate"
+                                            x-model="evaluacionInicio"
+                                            class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm disabled:bg-gray-100 disabled:cursor-not-allowed">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Fecha de Fin</label>
+                                        <input type="date" name="evaluacion_fin" 
+                                            :disabled="!startDate || !endDate"
+                                            :min="startDate"
+                                            :max="endDate"
+                                            x-model="evaluacionFin"
+                                            class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm disabled:bg-gray-100 disabled:cursor-not-allowed">
+                                    </div>
+                                </div>
+                                <div x-show="!startDate || !endDate" class="mt-2 text-xs text-amber-600 flex items-center gap-1">
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                    <span>Selecciona primero el rango de fechas de la competencia</span>
+                                </div>
+                            </div>
+
+                            <!-- Campo 3: Resultados -->
+                            <div class="bg-gray-50 p-4 rounded-lg border border-gray-200" :class="{'opacity-50': !startDate || !endDate}">
+                                <h3 class="text-md font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                                    <i class="fas fa-trophy text-yellow-600"></i>
+                                    Etapa de premiación
+                                </h3>
+                                <div class="space-y-3">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Fecha de Inicio</label>
+                                        <input type="date" name="premiacion_inicio" 
+                                            :disabled="!startDate || !endDate"
+                                            :min="startDate"
+                                            :max="endDate"
+                                            class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 text-sm disabled:bg-gray-100 disabled:cursor-not-allowed">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Fecha de Fin</label>
+                                        <input type="date" name="premiacion_fin" 
+                                            :disabled="!startDate || !endDate"
+                                            :min="startDate"
+                                            :max="endDate"
+                                            class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 text-sm disabled:bg-gray-100 disabled:cursor-not-allowed">
+                                    </div>
+                                </div>
+                                <div x-show="!startDate || !endDate" class="mt-2 text-xs text-amber-600 flex items-center gap-1">
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                    <span>Selecciona primero el rango de fechas de la competencia</span>
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- Timeline Visualization -->
-                        @include('components.phases-timeline')
+                        <div class="mt-8">
+                            <div x-show="evaluacionInicio && evaluacionFin" class="transition-all duration-300">
+                                @include('components.phases-timeline')
+                            </div>
+                            <div x-show="!evaluacionInicio || !evaluacionFin" class="bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
+                                <div class="text-gray-500">
+                                    <i class="fas fa-calendar-times text-3xl mb-3 block"></i>
+                                    <h3 class="text-lg font-medium mb-2">Timeline de Fases no disponible</h3>
+                                    <p class="text-sm">Selecciona las fechas de inicio y fin de la <strong>Etapa de Evaluación</strong> para visualizar el timeline de fases.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Campos ocultos para las fechas de evaluación del timeline -->
+                        <input type="hidden" name="timeline_start_date" :value="evaluacionInicio">
+                        <input type="hidden" name="timeline_end_date" :value="evaluacionFin">
                     </div>
                 </div>
 
