@@ -128,7 +128,7 @@
 /* ===== Buscador ===== */
 .search-panel{display:flex;gap:16px;margin-bottom:16px;justify-content:center;align-items:center;flex-wrap:wrap}
 .search-input-wrapper{position:relative;width:360px;max-width:92vw}
-.search-input-wrapper input{width:100%;height:40px;background:#c4c4c4;border:1px solid #0b0b0b;border-radius:10px;padding:0 40px 0 12px;font-size:13px;color:var(--text-dark);font-weight:600}
+.search-input-wrapper input{width:100%;height:40px;background:rgba(226, 232, 240, 0.7);border: none;border-radius:10px;padding:0 40px 0 12px;font-size:13px;color:var(--text-dark);font-weight:600;}
 .search-input-wrapper input::placeholder{color:rgba(58,70,81,.5);font-weight:400}
 .search-icon{position:absolute;right:12px;top:50%;transform:translateY(-50%);width:20px;height:20px;color:rgba(58,70,81,.5);stroke:currentColor;stroke-width:2;fill:none;pointer-events:none}
 .search-btn{height:40px;padding:0 14px;border-radius:30px;background:var(--primary-dark-blue);color:#fff;font-family:'Roboto',sans-serif;font-weight:500;font-size:13px;letter-spacing:1.25px}
@@ -145,7 +145,8 @@
 }
 table{border-collapse:separate;border-spacing:0;width:100%;background:var(--table-bg);}
 .grid-headers th{background:var(--table-header-bg);color:#fff;padding:14px 8px;text-align:center;font-family:'Quicksand',sans-serif;font-weight:700;font-size:14px;white-space:nowrap;}
-td,th{vertical-align:middle;}
+td {text-align: left;}
+th {vertical-align: middle;}
 tbody tr{transition:background 0.15s;}
 tbody tr:nth-child(even){background:var(--table-row-alt-bg);}
 tbody tr:nth-child(odd){background:var(--white);}

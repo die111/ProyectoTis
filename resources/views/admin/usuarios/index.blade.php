@@ -1,224 +1,252 @@
 @extends('layouts.app')
 @section('title', 'Dashboard Administrador')
+
+@push('styles')
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+<style>
+/* ===== Variables de color ===== */
+:root{
+  --primary-dark-blue:#091c47;
+  --table-header-bg:rgba(58,70,81,.5);
+  --table-row-alt-bg:#d7dde4;
+  --table-bg:#eef0f3;
+  --text-dark:#3a4651;
+  --white:#fff;
+  --gray-200:#e5e7eb;
+  --gray-500:#9aa0a6;
+}
+
+/* ===== Layout general ===== */
+body {
+    font-family: 'Roboto', sans-serif;
+    background-color: #f8fafc;
+}
+
+/* ===== Tarjetas ===== */
+.card {
+    background: var(--white);
+    border-radius: 12px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+    transition: all 0.2s ease;
+}
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0,0,0,0.08);
+}
+
+/* ===== Buscador ===== */
+.search-panel{
+    display:flex;
+    gap:16px;
+    flex-wrap:wrap;
+    justify-content:center;
+    margin-bottom:16px;
+}
+.search-panel input, .search-panel select{
+    width: 200px;
+    background: rgba(226, 232, 240, 0.7);
+    border: none;
+    border-radius:10px;
+    padding:8px 12px;
+    font-size:13px;
+    color: var(--text-dark);
+    font-weight:600;
+}
+.search-panel input::placeholder{color:rgba(58,70,81,.5);font-weight:400}
+.search-btn{
+    background: var(--primary-dark-blue);
+    color: #fff;
+    border:none;
+    border-radius:30px;
+    padding:8px 16px;
+    font-size:13px;
+    font-weight:500;
+}
+.search-btn:hover{filter:brightness(1.05)}
+.search-btn:active{transform:translateY(1px) scale(.99);filter:brightness(.95)}
+
+/* ===== Tabla card ===== */
+.table-card{
+    width:100%;
+    max-width:100vw;
+    margin:0 auto 16px auto;
+    background: var(--table-bg);
+    border-radius:10px;
+    overflow-x:auto;
+    border:1px solid #cfd6df;
+}
+table{
+    border-collapse:separate;
+    border-spacing:0;
+    width:100%;
+    background:var(--table-bg);
+}
+.grid-headers th{
+    background: var(--table-header-bg);
+    color:#fff;
+    padding:14px 8px;
+    text-align:center;
+    font-family:'Quicksand',sans-serif;
+    font-weight:700;
+    font-size:14px;
+    white-space:nowrap;
+}
+td {
+    text-align: left;
+    padding:10px 12px;
+    color: var(--text-dark);
+    vertical-align: middle;
+}
+tbody tr{
+    transition:background 0.15s;
+}
+tbody tr:nth-child(even){background: var(--table-row-alt-bg);}
+tbody tr:nth-child(odd){background: var(--white);}
+tbody tr:hover{background:#dbeafe;} /* Azul muy claro hover */
+
+/* ===== Estado (badge) ===== */
+.status-badge{
+    display:inline-block;
+    padding:4px 10px;
+    border-radius:12px;
+    font-weight:600;
+    font-size:12px;
+}
+.status-active{
+    background: rgba(34,197,94,0.2);
+    color:#15803d;
+}
+.status-inactive{
+    background: rgba(239,68,68,0.2);
+    color:#b91c1c;
+}
+
+/* ===== Botones tabla ===== */
+.btn-pressable{
+    transition:transform .05s ease,filter .15s ease;
+    box-shadow:0 1px 0 rgba(0,0,0,.12);
+}
+.btn-pressable:hover{filter:brightness(1.05)}
+.btn-pressable:active{transform:translateY(1px) scale(.99);filter:brightness(.95)}
+
+.btn-primary{background:var(--primary-dark-blue);color:#fff}
+.btn-secondary{background:#f1f3f4;color:#111;border:1px solid var(--gray-200)}
+</style>
+@endpush
+
 @section('content')
-    @push('styles')        
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
-
-    @endpush
-
-
-
-    <div class="max-w-7xl mx-auto py-4">
-
-        {{-- Header: título + botones a la derecha --}}
-        <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
-            <h3 class="text-xl font-semibold">Usuarios</h3>
-
-            <div class="flex gap-2 mb-4">
-                <a href="{{ route('admin.formulario-usuario') }}"
-                    class="inline-flex items-center gap-2 rounded-full px-4 py-2 font-semibold text-white hover:opacity-95"
-                    style="background:#091C47">
-                    <i class="bi bi-person-plus"></i> Crear Usuario
-                </a>
-            </div>
-        </div>
-
-        {{-- Tarjetas (1 col móvil, 2 tablet, 2 desktop) --}}
-        <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
-            {{-- Usuarios Activos --}}
-            <a href="?role=activos" class="block group">
-                <div class="bg-white rounded-lg shadow-md p-4 flex flex-col justify-between relative h-32 transition-all duration-200 hover:ring-4 hover:ring-cyan-500" id="card-activo">
-                    <div class="flex items-center justify-center gap-3 h-full">
-                        <i class="bi bi-person-lines-fill text-3xl"></i>
-                        <div class="flex flex-col items-center">
-                            <span class="font-semibold">Usuarios Activos</span>
-                            <span class="text-lg">{{ $usuarios_activos_count ?? 0 }}</span>
-                        </div>
-                    </div>
-                    <div class="absolute bottom-0 left-0 right-0 h-2 bg-cyan-500 rounded-b-lg"></div>
-                </div>
-            </a>
-
-            {{-- Usuarios Inactivos --}}
-            <a href="?role=inactivos" class="block group">
-                <div class="bg-white rounded-lg shadow-md p-4 flex flex-col justify-between relative h-32 transition-all duration-200 hover:ring-4 hover:ring-gray-500" id="card-inactivo">
-                    <div class="flex items-center justify-center gap-3 h-full">
-                        <i class="bi bi-person-dash-fill text-3xl"></i>
-                        <div class="flex flex-col items-center">
-                            <span class="font-semibold">Usuarios Inactivos</span>
-                            <span class="text-lg">{{ $usuarios_inactivos_count ?? 0 }}</span>
-                        </div>
-                    </div>
-                    <div class="absolute bottom-0 left-0 right-0 h-2 bg-gray-500 rounded-b-lg"></div>
-                </div>
-            </a>
-        </div>
-
+<div class="max-w-7xl mx-auto py-4">
+    {{-- Header --}}
+    <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+        <h3 class="text-xl font-semibold">Usuarios</h3>
+        <a href="{{ route('admin.formulario-usuario') }}" class="inline-flex items-center gap-2 rounded-full px-4 py-2 font-semibold text-white hover:opacity-95" style="background:var(--primary-dark-blue)">
+            <i class="bi bi-person-plus"></i> Crear Usuario
+        </a>
     </div>
 
-
-    <section class="min-h-[80vh] w-full bg-slate-400/70">
-        <div class="mx-auto max-w-6xl px-6 py-10">
-
-            {{-- Filtro superior --}}
-            <div class="flex flex-col items-center gap-6">
-                {{-- Buscador --}}
-                <form action="{{ route('admin.usuarios.index') }}" method="GET" class="flex w-full max-w-4xl items-center gap-3" id="searchForm">
-                    <div class="relative flex-1">
-                        <span class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2">
-                            <svg class="h-5 w-5 text-slate-500" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                aria-hidden="true">
-                                <circle cx="11" cy="11" r="7" stroke-width="2" />
-                                <path d="M20 20l-3.5-3.5" stroke-width="2" stroke-linecap="round" />
-                            </svg>
-                        </span>
-                        <input type="text" name="q" value="{{ request('q') }}" placeholder="Buscar Usuario"
-                            class="w-full rounded-lg border border-slate-300 bg-white/95 pl-10 pr-4 py-2.5 text-slate-800 placeholder-slate-400 shadow-sm focus:border-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-500/20" />
+    {{-- Cards --}}
+    <div class="grid grid-cols-1 xl:grid-cols-2 gap-4 mb-8">
+        <a href="?role=activos" class="block group">
+            <div class="card p-4 flex flex-col justify-between h-32 relative" id="card-activo">
+                <div class="flex items-center justify-center gap-3 h-full">
+                    <i class="bi bi-person-lines-fill text-3xl"></i>
+                    <div class="flex flex-col items-center">
+                        <span class="font-semibold">Usuarios Activos</span>
+                        <span class="text-lg">{{ $usuarios_activos_count ?? 0 }}</span>
                     </div>
-                    <select id="role_id" name="role_id" class="appearance-none w-56 rounded-lg border border-slate-300 bg-white/95 px-4 py-2.5 pr-10 text-slate-800 shadow-sm focus:border-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-500/20">
-                        <option value="" selected>Todos los Roles</option>
-                        @foreach($roles as $role)
-                            <option value="{{ $role->id }}" {{ request('role_id') == $role->id ? 'selected' : '' }}>
-                                {{ $role->name == 'olimpista' ? 'Estudiante' : ucfirst(str_replace('_', ' ', $role->name)) }}
-                            </option>
-                        @endforeach
-                    </select>
-                    <select id="area" name="area" class="appearance-none w-56 rounded-lg border border-slate-300 bg-white/95 px-4 py-2.5 pr-10 text-slate-800 shadow-sm focus:border-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-500/20">
-                        <option value="" selected>Todas las Áreas</option>
-                        @foreach($areas as $area)
-                            <option value="{{ $area->id }}" {{ request('area') == $area->id ? 'selected' : '' }}>{{ $area->name }}</option>
-                        @endforeach
-                    </select>
-                    <button type="submit"
-                        class="rounded-full bg-[#091C47] px-5 py-2.5 text-sm font-semibold text-white shadow-sm hover:brightness-110 active:translate-y-[1px]">
-                        Buscar
-                    </button>
-                </form>
-            </div>
-
-            {{-- Tabla --}}
-            <div class="mt-10 overflow-hidden rounded-lg shadow-sm ring-1 ring-slate-300/60">
-                <table class="min-w-full divide-y divide-slate-200">
-                    <thead class="bg-slate-600">
-                        <tr class="text-left text-xs font-semibold uppercase tracking-wider text-white">
-                            <th scope="col" class="px-6 py-4">Nombre</th>
-                            <th scope="col" class="px-6 py-4">Apellido Paterno</th>
-                            <th scope="col" class="px-6 py-4">Apellido Materno</th>
-                            <th scope="col" class="px-6 py-4">Rol</th>
-                            <th scope="col" class="px-6 py-4">Nivel</th>
-                            <th scope="col" class="px-6 py-4">Estado</th>
-                            <th scope="col" class="px-6 py-4 text-right">Acciones</th>
-                        </tr>
-                    </thead>
-
-                    <tbody class="divide-y divide-slate-200 bg-white/95">
-                        @if($users->isEmpty())
-                            <tr>
-                                <td colspan="7" class="px-6 py-8 text-center text-slate-400 text-lg">No hay usuarios registrados.
-                                </td>
-                            </tr>
-                        @else
-                            @foreach($users as $user)
-                                <tr class="text-sm text-slate-800 hover:bg-slate-50">
-                                    <td class="px-6 py-3">{{ $user->name }}</td>
-                                    <td class="px-6 py-3">{{ $user->last_name_father }}</td>
-                                    <td class="px-6 py-3">{{ $user->last_name_mother }}</td>
-                                    <td class="px-6 py-3">{{ $user->role ? $user->role->name : '-' }}</td>
-                                    <td class="px-6 py-3">{{ $user->level ?? '-' }}</td>
-                                    <td class="px-6 py-3">
-                                        @if($user->is_active)
-                                            <span class="inline-block px-3 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">Activo</span>
-                                        @else
-                                            <span class="inline-block px-3 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800">Inactivo</span>
-                                        @endif
-                                    </td>
-                                    <td class="px-6 py-3">
-                                        <div class="flex items-center justify-end gap-2">
-                                            <form action="{{ route('admin.usuarios.destroy', $user->id) }}" method="POST" style="display:inline" class="deactivate-user-form">
-                                                @csrf
-                                                @method('DELETE')
-                                                @if($user->is_active)
-                                                    <button type="submit" class="px-2 py-1 text-xs font-medium text-white bg-red-600 hover:bg-red-700 rounded-full transition-colors duration-200" title="Desactivar">
-                                                        Desactivar
-                                                    </button>
-                                                @else
-                                                    <button type="submit" class="px-2 py-1 text-xs font-medium text-white bg-green-700 hover:brightness-110 rounded-full transition-colors duration-200" title="Activar">
-                                                        Activar
-                                                    </button>
-                                                @endif
-                                            </form>
-                                            <a href="{{ route('admin.usuarios.edit', $user->id) }}?return={{ urlencode(request()->fullUrl()) }}" class="px-2 py-1 text-xs font-medium text-white bg-[#091C47] hover:brightness-110 rounded-full transition-colors duration-200" title="Editar">
-                                                Editar
-                                            </a>
-                                        </div>
-                                    </td>
-                                </tr>
-                            @endforeach
-                        @endif
-                    </tbody>
-                </table>
-                {{-- Paginación --}}
-                <div class="px-6 py-4 bg-white/95">
-                    {{ $users->links() }}
                 </div>
+                <div class="absolute bottom-0 left-0 right-0 h-2 bg-cyan-500 rounded-b-lg"></div>
             </div>
+        </a>
+        <a href="?role=inactivos" class="block group">
+            <div class="card p-4 flex flex-col justify-between h-32 relative" id="card-inactivo">
+                <div class="flex items-center justify-center gap-3 h-full">
+                    <i class="bi bi-person-dash-fill text-3xl"></i>
+                    <div class="flex flex-col items-center">
+                        <span class="font-semibold">Usuarios Inactivos</span>
+                        <span class="text-lg">{{ $usuarios_inactivos_count ?? 0 }}</span>
+                    </div>
+                </div>
+                <div class="absolute bottom-0 left-0 right-0 h-2 bg-gray-500 rounded-b-lg"></div>
+            </div>
+        </a>
+    </div>
+
+    {{-- Tabla Usuarios --}}
+    <section class="table-card overflow-x-auto">
+        <form id="searchForm" action="{{ route('admin.usuarios.index') }}" method="GET" class="search-panel p-4">
+            <input type="text" name="q" placeholder="Buscar Usuario" value="{{ request('q') }}">
+            <select id="role_id" name="role_id">
+                <option value="">Todos los Roles</option>
+                @foreach($roles as $role)
+                    <option value="{{ $role->id }}" {{ request('role_id') == $role->id ? 'selected' : '' }}>
+                        {{ $role->name == 'olimpista' ? 'Estudiante' : ucfirst(str_replace('_', ' ', $role->name)) }}
+                    </option>
+                @endforeach
+            </select>
+            <select id="area" name="area">
+                <option value="">Todas las Áreas</option>
+                @foreach($areas as $area)
+                    <option value="{{ $area->id }}" {{ request('area') == $area->id ? 'selected' : '' }}>
+                        {{ $area->name }}
+                    </option>
+                @endforeach
+            </select>
+            <button type="submit" class="search-btn btn-pressable">Buscar</button>
+        </form>
+
+        <table class="w-full min-w-[600px] text-center align-middle">
+            <thead class="grid-headers">
+                <tr>
+                    <th>Nombre</th>
+                    <th>Apellido Paterno</th>
+                    <th>Apellido Materno</th>
+                    <th>Rol</th>
+                    <th>Nivel</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach($users as $i => $user)
+                <tr class="{{ $i % 2 === 0 ? '' : 'bg-[#d7dde4]' }} hover:bg-blue-50 transition-colors">
+                    <td class="py-3 px-2 font-semibold text-gray-800 align-middle">{{ $user->name }}</td>
+                    <td class="py-3 px-2 text-gray-900 align-middle">{{ $user->last_name_father }}</td>
+                    <td class="py-3 px-2 text-gray-700 align-middle">{{ $user->last_name_mother }}</td>
+                    <td class="py-3 px-2 text-gray-800 align-middle">{{ $user->role ? $user->role->name : '-' }}</td>
+                    <td class="py-3 px-2 text-gray-800 align-middle">{{ $user->level ?? '-' }}</td>
+                    <td class="py-3 px-2 align-middle">
+                        @if($user->is_active)
+                            <span class="status-badge status-active">Activo</span>
+                        @else
+                            <span class="status-badge status-inactive">Inactivo</span>
+                        @endif
+                    </td>
+                    <td class="py-2 px-2 align-middle">
+                        <div class="flex flex-wrap gap-2 justify-center">
+                            <a href="{{ route('admin.usuarios.edit', $user->id) }}" class="btn btn-primary btn-pressable px-3 py-1 text-sm">Editar</a>
+                            @if($user->is_active)
+                                <form action="{{ route('admin.usuarios.destroy', $user->id) }}" method="POST" style="display:inline-block;">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="btn btn-secondary btn-pressable px-3 py-1 text-sm">Desactivar</button>
+                                </form>
+                            @else
+                                <form action="{{ route('admin.usuarios.activate', $user->id) }}" method="POST" style="display:inline-block;">
+                                    @csrf
+                                    <button type="submit" class="btn btn-primary btn-pressable px-3 py-1 text-sm">Activar</button>
+                                </form>
+                            @endif
+                        </div>
+                    </td>
+                </tr>
+                @endforeach
+            </tbody>
+        </table>
+
+        <div class="table-footer">
+            {{ $users->links() }}
         </div>
     </section>
-
-    @if(session('role'))
-        <script>
-            document.addEventListener('DOMContentLoaded', function() {
-                const role = '{{ session('role') }}';
-                if(role === 'activos') {
-                    document.getElementById('card-activo').classList.add('ring-4', 'ring-cyan-500');
-                } else if(role === 'inactivos') {
-                    document.getElementById('card-inactivo').classList.add('ring-4', 'ring-gray-500');
-                }
-            });
-        </script>
-    @endif
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const params = new URLSearchParams(window.location.search);
-            const role = params.get('role');
-            if(role === 'activos') {
-                document.getElementById('card-activo').classList.add('ring-4', 'ring-cyan-500');
-            } else if(role === 'inactivos') {
-                document.getElementById('card-inactivo').classList.add('ring-4', 'ring-gray-500');
-            }
-            // Búsqueda automática al cambiar área o rol
-            document.getElementById('area').addEventListener('change', function() {
-                document.getElementById('searchForm').submit();
-            });
-            document.getElementById('role_id').addEventListener('change', function() {
-                document.getElementById('searchForm').submit();
-            });
-        });
-    </script>
-
-    {{-- Notificación de éxito tipo modal flotante centrada --}}
-    @if(session('success'))
-        <div id="success-modal-overlay" class="fixed inset-0 z-50 flex items-center justify-center bg-black/30" onclick="document.getElementById('success-modal-overlay').remove()">
-            <div class="bg-white rounded-2xl shadow-2xl px-10 py-10 flex flex-col items-center max-w-md w-full animate-fade-in-modal relative" onclick="event.stopPropagation()">
-                <svg xmlns="http://www.w3.org/2000/svg" class="mb-6" width="100" height="100" viewBox="0 0 100 100" fill="none">
-                    <circle cx="50" cy="50" r="42" stroke="#091C47" stroke-width="6" fill="white"/>
-                    <path d="M32 52L46 66L68 38" stroke="#091C47" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-                <div class="text-center text-2xl font-normal text-black mb-8" style="font-family: 'Montserrat', Arial, sans-serif;">
-                    {{ session('success') }}
-                </div>
-                <button onclick="document.getElementById('success-modal-overlay').remove()" class="px-6 py-2 rounded-xl bg-[#091C47] text-white text-base font-medium hover:brightness-110 transition-all">Ok</button>
-            </div>
-        </div>
-        <style>
-            @keyframes fade-in-modal { from { opacity: 0; transform: scale(0.95);} to { opacity: 1; transform: scale(1);} }
-            .animate-fade-in-modal { animation: fade-in-modal 0.3s; }
-        </style>
-        <script>
-            setTimeout(function() {
-                var modal = document.getElementById('success-modal-overlay');
-                if(modal) modal.remove();
-            }, 3500);
-        </script>
-    @endif
+</div>
 @endsection

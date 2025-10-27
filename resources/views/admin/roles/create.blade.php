@@ -30,7 +30,7 @@
         </div>
         <div class="flex justify-center gap-4 mt-8">
             <a href="{{ route('admin.roles.index') }}" class="px-6 py-2 rounded bg-gray-300 text-gray-700 font-semibold hover:bg-gray-400">Cancelar</a>
-            <button type="submit" class="px-6 py-2 rounded bg-[#091c47] text-white font-semibold hover:bg-[#122a5c]">Crear Rol</button>
+            <button type="submit" class="px-6 py-2 rounded bg-[#0C204A] text-white font-semibold hover:bg-[#143057]">Crear Rol</button>
         </div>
     </form>
 </div>

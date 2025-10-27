@@ -13,7 +13,6 @@
                 <h2 class="text-xl font-semibold text-gray-900">Bienvenido, {{ Auth::user()->name }}</h2>
                 <p class="text-gray-600 mt-1">{{ ucfirst(str_replace('_', ' ', Auth::user()->role->name)) }}</p>
                 @if(Auth::user()->area)
-                    <p class="text-sm text-gray-500 mt-1">Área: {{ Auth::user()->area->name }}</p>
                 @endif
             </div>
             <div class="text-sm text-gray-500">
@@ -34,7 +33,7 @@
                     </div>
                 </div>
                 <div class="ml-4">
-                    <p class="text-sm font-medium text-gray-600">Total Olimpistas</p>
+                    <p class="text-sm font-medium text-gray-600">Total Estudiantes</p>
                     <p class="text-3xl font-bold text-gray-900">{{ number_format($stats['total_olimpistas']) }}</p>
                 </div>
             </div>
@@ -101,7 +100,7 @@
                     <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center mr-3 group-hover:bg-green-200">
                         <i class="fas fa-user-graduate text-green-500"></i>
                     </div>
-                    <span class="font-medium text-gray-700 group-hover:text-green-600">Registrar Olimpista</span>
+                    <span class="font-medium text-gray-700 group-hover:text-green-600">Registrar Estudiantes</span>
                 </a>
                 
                 <a href="#" class="flex items-center p-4 rounded-lg border-2 border-dashed border-gray-200 hover:border-purple-300 hover:bg-purple-50 transition-all duration-200 group">
