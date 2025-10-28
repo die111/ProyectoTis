@@ -13,12 +13,12 @@ return new class extends Migration
             $table->foreignId('competition_id')->constrained('competicions')->onDelete('cascade');
             $table->foreignId('user_id')->constrained()->onDelete('cascade'); // estudiante
             $table->foreignId('area_id')->constrained()->onDelete('cascade');
-            $table->foreignId('level_id')->constrained('levels')->onDelete('cascade');
+            $table->foreignId('categoria_id')->constrained('categorias')->onDelete('cascade');
+            $table->string('fase');
             $table->enum('estado', ['pendiente', 'confirmada', 'rechazada'])->default('pendiente');
-            $table->boolean('es_grupal')->default(false); // Para grupales o individuales
-            $table->string('grupo_nombre')->nullable(); // Nombre del grupo si es grupal
             $table->text('observaciones')->nullable();
             $table->boolean('is_active')->default(true);
+            $table->string('grupo_nombre')->nullable(); // Nombre del grupo si es grupal
             $table->timestamps();
             
             // Un olimpista no puede inscribirse dos veces en la misma área y competencia

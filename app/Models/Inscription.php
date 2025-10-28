@@ -41,4 +41,16 @@ class Inscription extends Model
     {
         return $this->belongsTo(Level::class);
     }
+
+    // Relación con la categoría
+    public function categoria()
+    {
+        return $this->belongsTo(\App\Models\Categoria::class, 'categoria_id');
+    }
+
+    // Relación con las evaluaciones
+    public function evaluations()
+    {
+        return $this->hasMany(Evaluation::class, 'inscription_id');
+    }
 }

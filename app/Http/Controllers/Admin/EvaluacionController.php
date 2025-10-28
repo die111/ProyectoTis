@@ -14,6 +14,7 @@ use App\Models\{
 };
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Http\Request;
 
 class EvaluacionController extends \App\Http\Controllers\Controller
 {
@@ -458,6 +459,18 @@ class EvaluacionController extends \App\Http\Controllers\Controller
         
         // Filtrar por la competición específica
         $query->where('competition_id', $competicion->id);
+        // Filtrar por fase igual a 1
+        $query->where('fase', 1);
+        
+        // Filtrar por estudiantes activos por defecto, a menos que se especifique lo contrario
+        if (request('estado_activo') === 'inactivo') {
+            $query->where('is_active', false);
+        } elseif (request('estado_activo') === 'todos') {
+            // No aplicar filtro, mostrar todos
+        } else {
+            // Por defecto, solo mostrar activos
+            $query->where('is_active', true);
+        }
         
         // Aplicar filtros si existen
         if (request('categoria')) {
@@ -503,5 +516,160 @@ class EvaluacionController extends \App\Http\Controllers\Controller
     {
         // Determinar si es etapa de clasificación
         return true; // Implementar según tu lógica
+    }
+
+    public function calificar(Competicion $competicion, $faseId)
+    {
+        $fase = $competicion->phases()->findOrFail($faseId);
+        
+        // Obtener o crear Stage real para la fase-competición
+        $stageId = $this->getOrCreateStageId($competicion, $fase);
+        
+        // Obtener todas las categorías y áreas para los filtros
+        $categorias = \App\Models\Categoria::where('is_active', true)->get();
+        $areas = \App\Models\Area::where('is_active', true)->get();
+        
+        // Construir query para estudiantes con filtros
+        $query = Inscription::with(['user', 'area', 'level']);
+        
+        // Filtrar por la competición específica
+        $query->where('competition_id', $competicion->id);
+        // Filtrar por fase igual a 1
+        $query->where('fase', 1);
+        
+        // Filtrar por estudiantes activos por defecto, a menos que se especifique lo contrario
+        if (request('estado_activo') === 'inactivo') {
+            $query->where('is_active', false);
+        } elseif (request('estado_activo') === 'todos') {
+            // No aplicar filtro, mostrar todos
+        } else {
+            // Por defecto, solo mostrar activos
+            $query->where('is_active', true);
+        }
+        
+        // Aplicar filtros si existen
+        if (request('categoria')) {
+            // Por ahora omitimos el filtro por categoría hasta que se establezca la relación
+            // $query->whereHas('level', function($q) {
+            //     $q->where('categoria_id', request('categoria'));
+            // });
+        }
+        
+        if (request('area')) {
+            $query->where('area_id', request('area'));
+        }
+        
+        if (request('search')) {
+            $search = request('search');
+            $query->whereHas('user', function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('last_name_father', 'like', "%{$search}%")
+                  ->orWhere('last_name_mother', 'like', "%{$search}%")
+                  ->orWhere('school', 'like', "%{$search}%")
+                  ->orWhere('ci', 'like', "%{$search}%");
+            });
+        }
+
+        // Cargar estudiantes con sus evaluaciones existentes usando el stage real
+        $estudiantes = $query->with(['evaluations' => function($q) use ($stageId) {
+            $q->where('stage_id', $stageId);
+        }])->get();
+
+        return view('admin.evaluacion.calificar', compact('competicion', 'fase', 'estudiantes', 'areas', 'categorias'));
+    }
+
+    public function guardarCalificaciones(Request $request, Competicion $competicion, $faseId)
+    {
+        $request->validate([
+            'calificaciones' => 'required|array',
+            'calificaciones.*.puntaje' => 'required|numeric|min:0|max:100',
+            'calificaciones.*.observaciones' => 'nullable|string|max:1000'
+        ]);
+
+        $fase = $competicion->phases()->findOrFail($faseId);
+        // Obtener o crear Stage real para la fase-competición
+        $stageId = $this->getOrCreateStageId($competicion, $fase);
+        $evaluadorId = \Illuminate\Support\Facades\Auth::id(); // ID del usuario autenticado como evaluador
+        $calificacionesGuardadas = 0;
+
+        try {
+            DB::beginTransaction();
+
+            foreach ($request->calificaciones as $inscripcionId => $datos) {
+                // Verificar que la inscripción existe y pertenece a la competición
+                $inscripcion = Inscription::where('id', $inscripcionId)
+                    ->where('competition_id', $competicion->id)
+                    ->first();
+
+                if ($inscripcion && $datos['puntaje'] !== null && $datos['puntaje'] !== '') {
+                    // Crear o actualizar la evaluación con el stage correcto
+                    Evaluation::updateOrCreate(
+                        [
+                            'inscription_id' => $inscripcionId,
+                            'stage_id' => $stageId,
+                        ],
+                        [
+                            'evaluator_id' => $evaluadorId,
+                            'nota' => $datos['puntaje'],
+                            'observaciones_evaluador' => $datos['observaciones'] ?? null,
+                            'estado' => $this->determinarEstado($datos['puntaje']),
+                            'is_active' => true,
+                        ]
+                    );
+
+                    $calificacionesGuardadas++;
+                }
+            }
+
+            DB::commit();
+
+            return redirect()->back()->with('success', "Se guardaron {$calificacionesGuardadas} calificaciones exitosamente.");
+
+        } catch (\Exception $e) {
+            DB::rollback();
+            return redirect()->back()->with('error', 'Error al guardar las calificaciones: ' . $e->getMessage());
+        }
+    }
+
+    private function determinarEstado($nota)
+    {
+        // Lógica para determinar el estado basado en la nota
+        if ($nota >= 70) {
+            return 'clasificado';
+        } elseif ($nota >= 60) {
+            return 'no_clasificado';
+        } else {
+            return 'desclasificado';
+        }
+    }
+
+    /**
+     * Obtiene o crea un registro en 'stages' para la combinación competición-fase
+     * y retorna su ID para ser usado como foreign key en evaluations.stage_id
+     */
+    private function getOrCreateStageId(Competicion $competicion, \App\Models\Phase $fase): int
+    {
+        // Buscar por competición y nombre de fase
+        $stage = DB::table('stages')
+            ->where('id_competition', $competicion->id)
+            ->where('nombre', $fase->name)
+            ->first();
+
+        if ($stage) {
+            return (int) $stage->id;
+        }
+
+        // Usar fechas del pivot si existen, de lo contrario asignar por defecto
+        $fechaInicio = $fase->pivot->start_date ?? now();
+        $fechaFin = $fase->pivot->end_date ?? now()->copy()->addDays(7);
+
+        return (int) DB::table('stages')->insertGetId([
+            'nombre' => $fase->name,
+            'fechaInicio' => $fechaInicio,
+            'fechaFin' => $fechaFin,
+            'id_competition' => $competicion->id,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
     }
 }

@@ -17,6 +17,7 @@ class RoleSeeder extends Seeder
             ['name' => 'responsable_area', 'description' => 'Responsable de gestionar y administrar un area especifica del sistema', 'created_at' => now(), 'updated_at' => now()],
             ['name' => 'evaluador', 'description' => 'Usuario encargado de evaluar y calificar participantes en las competencias', 'created_at' => now(), 'updated_at' => now()],
             ['name' => 'coordinador', 'description' => 'Cordinador de eventos y actividades dentro del sistema', 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'estudiante', 'description' => 'Participante inscrito en las competencias', 'created_at' => now(), 'updated_at' => now()],
         ]);
     }
 }

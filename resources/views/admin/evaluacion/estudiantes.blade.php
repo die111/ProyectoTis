@@ -43,7 +43,7 @@
   <!-- Filtros -->
   <section class="mb-6">
     <form method="GET" action="{{ route('admin.evaluacion.fase.estudiantes', [$competicion->id, $fase->id]) }}" class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
         <!-- Combo box de Categorías -->
         <div>
           <label for="categoria" class="block text-sm font-medium text-gray-700 mb-2">Categoría</label>
@@ -69,6 +69,16 @@
             @endforeach
           </select>
         </div>
+
+        <!-- Combo box de Estado Activo -->
+        <div>
+          <label for="estado_activo" class="block text-sm font-medium text-gray-700 mb-2">Estado de Registro</label>
+          <select name="estado_activo" id="estado_activo" class="w-full rounded-md border border-gray-300 bg-white py-2 px-3 text-sm shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500">
+            <option value="activo" {{ request('estado_activo', 'activo') == 'activo' ? 'selected' : '' }}>Solo Activos</option>
+            <option value="inactivo" {{ request('estado_activo') == 'inactivo' ? 'selected' : '' }}>Solo Inactivos</option>
+            <option value="todos" {{ request('estado_activo') == 'todos' ? 'selected' : '' }}>Todos los Estados</option>
+          </select>
+        </div>
       </div>
 
       <!-- Botón Filtrar -->
@@ -76,7 +86,7 @@
         <button type="submit" class="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
           Filtrar
         </button>
-        @if(request()->hasAny(['categoria', 'area', 'search']))
+        @if(request()->hasAny(['categoria', 'area', 'search', 'estado_activo']))
           <a href="{{ route('admin.evaluacion.fase.estudiantes', [$competicion->id, $fase->id]) }}" class="ml-3 rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
             Limpiar Filtros
           </a>
@@ -87,7 +97,7 @@
 
   <!-- Buscador -->
   <section class="mb-6">
-    <form method="GET" action="{{ route('admin.evaluacion.fase.estudiantes', [$competicion->id, $fase->id]) }}" class="flex items-center gap-3">
+    <form method="GET" action="{{ route('admin.evaluacion.fase.estudiantes', [$competicion->id, $fase->id]) }}" class="flex items-center gap-3 justify-center">
       <!-- Mantener filtros actuales -->
       @if(request('categoria'))
         <input type="hidden" name="categoria" value="{{ request('categoria') }}">
@@ -95,8 +105,10 @@
       @if(request('area'))
         <input type="hidden" name="area" value="{{ request('area') }}">
       @endif
-      
-      <div class="relative flex-1 max-w-md">
+      @if(request('estado_activo'))
+        <input type="hidden" name="estado_activo" value="{{ request('estado_activo') }}">
+      @endif
+      <div class="relative flex-1 max-w-md w-full flex justify-center">
         <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="h-5 w-5 text-gray-400">
             <path fill-rule="evenodd" d="M10 2a8 8 0 105.293 14.293l3.707 3.707a1 1 0 001.414-1.414l-3.707-3.707A8 8 0 0010 2zm-6 8a6 6 0 1110.392 3.906.997.997 0 00-.116.116A6 6 0 014 10z" clip-rule="evenodd" />
@@ -104,7 +116,7 @@
         </span>
         <input type="text" name="search" value="{{ request('search') }}" placeholder="Buscar por nombre, apellido o unidad educativa..." class="w-full rounded-md border border-gray-300 bg-white py-2 pl-10 pr-4 text-sm placeholder:text-gray-400 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500" />
       </div>
-      <button type="submit" class="rounded-md bg-gray-700 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2">
+      <button type="submit" class="rounded-md px-4 py-2 text-sm font-medium text-white shadow-sm hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2" style="background-color: #091C47;">
         Buscar
       </button>
     </form>
@@ -112,11 +124,16 @@
 
   <!-- Tabla de Estudiantes -->
   <section class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-    <div class="px-6 py-4 border-b border-gray-200">
-      <h3 class="text-lg font-medium text-gray-900">Lista de Estudiantes</h3>
-      <p class="mt-1 text-sm text-gray-500">
-        Mostrando {{ $estudiantes->count() }} de {{ $estudiantes->total() }} estudiantes
-      </p>
+    <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+      <div>
+        <h3 class="text-lg font-medium text-gray-900">Lista de Estudiantes</h3>
+        <p class="mt-1 text-sm text-gray-500">
+          Mostrando {{ $estudiantes->count() }} de {{ $estudiantes->total() }} estudiantes
+        </p>
+      </div>
+      <a href="{{ route('admin.evaluacion.calificar', [$competicion->id, $fase->id]) }}" class="rounded-md px-6 py-2 text-sm font-medium text-white shadow-sm hover:opacity-90" style="background-color: #091C47;">
+        Iniciar Calificación
+      </a>
     </div>
 
     @if($estudiantes->count() > 0)
@@ -134,16 +151,10 @@
                 Área
               </th>
               <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Nivel
-              </th>
-              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Email
+                Categoría
               </th>
               <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Estado
-              </th>
-              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Acciones
               </th>
             </tr>
           </thead>
@@ -176,16 +187,12 @@
                   {{ $estudiante->area->name ?? 'No asignada' }}
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  {{ $estudiante->level->nombre ?? 'No asignado' }}
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  {{ $estudiante->user->email ?? 'No disponible' }}
+                  {{ $estudiante->categoria->nombre ?? 'No asignada' }}
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap">
                   @php
                     $estadoClass = 'bg-gray-100 text-gray-800';
                     $estadoTexto = 'Pendiente';
-                    
                     switch($estudiante->estado) {
                       case 'confirmada':
                         $estadoClass = 'bg-green-100 text-green-800';
@@ -205,19 +212,6 @@
                   <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full {{ $estadoClass }}">
                     {{ $estadoTexto }}
                   </span>
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                  <div class="flex space-x-2">
-                    <button class="text-indigo-600 hover:text-indigo-900" onclick="verEstudiante({{ $estudiante->id }})">
-                      Ver
-                    </button>
-                    <button class="text-green-600 hover:text-green-900" onclick="evaluarEstudiante({{ $estudiante->id }})">
-                      Evaluar
-                    </button>
-                    <button class="text-red-600 hover:text-red-900" onclick="eliminarEstudiante({{ $estudiante->id }})">
-                      Eliminar
-                    </button>
-                  </div>
                 </td>
               </tr>
             @endforeach
@@ -243,32 +237,16 @@
 
 <!-- Scripts -->
 <script>
-  function verEstudiante(estudianteId) {
-    console.log(`Ver estudiante ${estudianteId}`);
-    // Implementar lógica para ver detalles del estudiante
-    alert(`Ver detalles del estudiante ${estudianteId}`);
-  }
-
-  function evaluarEstudiante(estudianteId) {
-    console.log(`Evaluar estudiante ${estudianteId}`);
-    // Implementar lógica para evaluar al estudiante
-    alert(`Evaluar estudiante ${estudianteId}`);
-  }
-
-  function eliminarEstudiante(estudianteId) {
-    if (confirm('¿Estás seguro de que quieres eliminar este estudiante de la competición?')) {
-      console.log(`Eliminar estudiante ${estudianteId}`);
-      // Implementar lógica para eliminar al estudiante
-      alert(`Estudiante ${estudianteId} eliminado`);
-    }
-  }
-
   // Auto-submit del formulario cuando cambian los selects
   document.getElementById('categoria').addEventListener('change', function() {
     this.form.submit();
   });
 
   document.getElementById('area').addEventListener('change', function() {
+    this.form.submit();
+  });
+
+  document.getElementById('estado_activo').addEventListener('change', function() {
     this.form.submit();
   });
 </script>

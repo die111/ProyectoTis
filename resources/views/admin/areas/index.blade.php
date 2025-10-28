@@ -8,14 +8,18 @@
                 }">
 
         {{-- Barra de título --}}
-        <div class="mx-[5%] mb-6 flex items-center justify-between rounded bg-slate-200/70 px-4 py-3">
-            <h1 class="text-2xl font-semibold text-slate-700">Áreas</h1>
+        <div class="mx-[5%] mb-6 flex items-center justify-center px-4 py-3">
+            <h1 class="text-2xl font-semibold text-slate-700 text-center w-full">Áreas</h1>
 
             {{-- Botón Crear --}}
-            <button @click="openCrear = true"
-                class="inline-flex items-center gap-2 rounded-full bg-[#0C204A] px-4 py-2 text-sm font-semibold text-white shadow hover:brightness-110">
-                Crear Área
-            </button>
+            <a href="#" @click.prevent="openCrear = true"
+                class="create-btn btn-pressable"
+                style="display: flex; align-items: center; gap: 10px; background: #091c47; color: #fff; padding: 10px 18px; border-radius: 15px; font-family: 'Ubuntu',sans-serif; font-size: 16px; position: absolute; right: 2rem;">
+                <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
+                  <path fill="currentColor" d="M11 11V5h2v6h6v2h-6v6h-2v-6H5v-2z"/>
+                </svg>
+                <span>Crear Área</span>
+            </a>
 
             {{-- Modales --}}
             @include('components.modals.crear-area', ['state' => 'openCrear'])
@@ -41,7 +45,7 @@
         <div class="mx-auto w-full max-w-5xl rounded bg-slate-100 p-6">
             <div class="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
                 <table class="min-w-full divide-y divide-slate-200">
-                    <thead class="bg-slate-600">
+                    <thead style="background-color: #949BA2;">
                         <tr class="text-left text-xs font-semibold uppercase tracking-wider text-white">
                             <th class="px-6 py-4">Nombre de Área</th>
                             <th class="px-6 py-4">Descripción</th>
@@ -51,7 +55,8 @@
                     </thead>
                     <tbody class="divide-y divide-slate-200 bg-white/95">
                         @forelse($areas as $area)
-                            <tr class="text-sm text-slate-800 hover:bg-slate-50 cursor-pointer area-row"
+                            <tr class="text-sm text-slate-800 hover:bg-slate-50 cursor-pointer area-row {{ $loop->even ? 'bg-white' : '' }}"
+                                style="{{ $loop->odd ? 'background-color: #D7DDE4;' : '' }}"
                                 data-route="{{ route('admin.areas.destroy', $area->id) }}" data-id="{{ $area->id }}"
                                 data-name="{{ $area->name }}" data-description="{{ $area->description }}"
                                 data-active="{{ $area->is_active }}" onclick="selectRow(this)">
