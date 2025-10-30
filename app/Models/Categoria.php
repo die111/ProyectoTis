@@ -21,4 +21,9 @@ class Categoria extends Model
         'sexto', 
         'is_active'
     ];
+
+    public function competiciones()
+    {
+        return $this->morphToMany(Competicion::class, 'competitionable');
+    }
 }

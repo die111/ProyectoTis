@@ -18,14 +18,14 @@
 
   <!-- Información de la competición y fase -->
   <section class="mb-8 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg p-4 border border-green-200">
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm">
+    <div class="grid grid-cols-1 md:grid-cols-5 gap-4 text-sm">
       <div>
         <span class="font-semibold text-green-800">Competición:</span>
         <span class="text-green-700">{{ $competicion->name }}</span>
       </div>
       <div>
         <span class="font-semibold text-green-800">Fase:</span>
-        <span class="text-green-700">{{ $fase->name }}</span>
+        <span class="text-green-700">{{ $fase->name }} (Nivel {{ $numeroFase }})</span>
       </div>
       <div>
         <span class="font-semibold text-green-800">Estado:</span>
@@ -34,6 +34,10 @@
       <div>
         <span class="font-semibold text-green-800">Total Estudiantes:</span>
         <span class="text-green-700">{{ $estudiantes->count() }}</span>
+      </div>
+      <div>
+        <span class="font-semibold text-green-800">Nivel de Fase:</span>
+        <span class="text-green-700">{{ $numeroFase }}</span>
       </div>
     </div>
   </section>
@@ -103,7 +107,24 @@
           <thead class="bg-gray-50">
             <tr>
               <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Estudiante
+                <a href="{{ route('admin.evaluacion.calificar', array_merge(request()->all(), ['sort_by' => 'nombre', 'sort_order' => (request('sort_by') === 'nombre' && request('sort_order') === 'asc') ? 'desc' : 'asc'], [$competicion->id, $fase->id])) }}" class="flex items-center hover:text-gray-700">
+                  Estudiante
+                  @if(request('sort_by') === 'nombre')
+                    @if(request('sort_order') === 'asc')
+                      <svg class="ml-1 h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M5.293 9.707a1 1 0 010-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 01-1.414 1.414L11 7.414V15a1 1 0 11-2 0V7.414L6.707 9.707a1 1 0 01-1.414 0z"/>
+                      </svg>
+                    @else
+                      <svg class="ml-1 h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M14.707 10.293a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L9 12.586V5a1 1 0 012 0v7.586l2.293-2.293a1 1 0 011.414 0z"/>
+                      </svg>
+                    @endif
+                  @else
+                    <svg class="ml-1 h-4 w-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M5 12a1 1 0 102 0V6.414l1.293 1.293a1 1 0 001.414-1.414l-3-3a1 1 0 00-1.414 0l-3 3a1 1 0 001.414 1.414L5 6.414V12zM15 8a1 1 0 10-2 0v5.586l-1.293-1.293a1 1 0 00-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L15 13.586V8z"/>
+                    </svg>
+                  @endif
+                </a>
               </th>
               <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Área
@@ -115,7 +136,24 @@
                 CI
               </th>
               <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Puntaje (0-100)
+                <a href="{{ route('admin.evaluacion.calificar', array_merge(request()->all(), ['sort_by' => 'nota', 'sort_order' => (request('sort_by') === 'nota' && request('sort_order') === 'desc') ? 'asc' : 'desc'], [$competicion->id, $fase->id])) }}" class="flex items-center justify-center hover:text-gray-700">
+                  Puntaje (0-100)
+                  @if(request('sort_by') === 'nota')
+                    @if(request('sort_order') === 'desc')
+                      <svg class="ml-1 h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M14.707 10.293a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L9 12.586V5a1 1 0 012 0v7.586l2.293-2.293a1 1 0 011.414 0z"/>
+                      </svg>
+                    @else
+                      <svg class="ml-1 h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M5.293 9.707a1 1 0 010-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 01-1.414 1.414L11 7.414V15a1 1 0 11-2 0V7.414L6.707 9.707a1 1 0 01-1.414 0z"/>
+                      </svg>
+                    @endif
+                  @else
+                    <svg class="ml-1 h-4 w-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M5 12a1 1 0 102 0V6.414l1.293 1.293a1 1 0 001.414-1.414l-3-3a1 1 0 00-1.414 0l-3 3a1 1 0 001.414 1.414L5 6.414V12zM15 8a1 1 0 10-2 0v5.586l-1.293-1.293a1 1 0 00-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L15 13.586V8z"/>
+                    </svg>
+                  @endif
+                </a>
               </th>
               <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Observaciones
@@ -185,40 +223,29 @@
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-center">
                   @php
-                    if ($evaluacion) {
-                      switch($evaluacion->estado) {
-                        case 'clasificado':
-                          $estadoCalifClass = 'bg-green-100 text-green-800';
-                          $estadoCalifTexto = 'Clasificado';
-                          break;
-                        case 'no_clasificado':
-                          $estadoCalifClass = 'bg-blue-100 text-blue-800';
-                          $estadoCalifTexto = 'No Clasificado';
-                          break;
-                        case 'desclasificado':
-                          $estadoCalifClass = 'bg-red-100 text-red-800';
-                          $estadoCalifTexto = 'Desclasificado';
-                          break;
-                        default:
-                          $estadoCalifClass = 'bg-yellow-100 text-yellow-800';
-                          $estadoCalifTexto = 'Sin Calificar';
-                          break;
-                      }
+                    // Determinar si está calificado basándose en si tiene una nota
+                    $estaCalificado = $evaluacion && $evaluacion->nota !== null;
+                    
+                    if ($estaCalificado) {
+                      $estadoCalifClass = 'bg-green-100 text-green-800';
+                      $estadoCalifTexto = 'Calificado';
                     } else {
-                      $estadoCalifClass = 'bg-yellow-100 text-yellow-800';
-                      $estadoCalifTexto = 'Sin Calificar';
+                      $estadoCalifClass = 'bg-red-100 text-red-800';
+                      $estadoCalifTexto = 'No calificado';
                     }
                   @endphp
                   <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full {{ $estadoCalifClass }}">
                     {{ $estadoCalifTexto }}
                   </span>
-                  <!-- Formulario por fila -->
-                  <form id="calif-{{ $estudiante->id }}" method="POST" action="{{ route('admin.evaluacion.guardar-calificaciones', [$competicion->id, $fase->id]) }}" class="mt-2 inline-block">
-                    @csrf
-                    <button type="submit" class="rounded-md px-3 py-1.5 text-xs font-medium text-white shadow-sm hover:opacity-90" style="background-color: #091C47;">
-                      Calificar
-                    </button>
-                  </form>
+                  <!-- Formulario por fila - solo mostrar si no está calificado -->
+                  @if(!$estaCalificado)
+                    <form id="calif-{{ $estudiante->id }}" method="POST" action="{{ route('admin.evaluacion.guardar-calificaciones', [$competicion->id, $fase->id]) }}" class="mt-2 inline-block">
+                      @csrf
+                      <button type="submit" class="rounded-md px-3 py-1.5 text-xs font-medium text-white shadow-sm hover:opacity-90" style="background-color: #091C47;">
+                        Calificar
+                      </button>
+                    </form>
+                  @endif
                 </td>
               </tr>
             @endforeach
@@ -241,32 +268,6 @@
     <h4 class="text-lg font-medium text-gray-900 mb-4">Acciones Adicionales</h4>
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
       <div class="bg-white rounded-lg p-4 border border-gray-200">
-        <h5 class="font-medium text-gray-900 mb-2">Clasificar estudiantes</h5>
-        <p class="text-sm text-gray-600 mb-3">Permite clasificar estudiantes manualmente</p>
-        <select id="clasificacion-select" class="w-full mb-3 rounded-md border border-gray-300 bg-white py-2 px-3 text-sm shadow-sm focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500">
-          <option value="" selected disabled>Selecciona una opción</option>
-          <option value="cupo">Clasificar por cupo</option>
-          <option value="notas_altas">Clasificar notas altas</option>
-        </select>
-        
-        <!-- Campo para cupo (texto) -->
-        <div id="campo-cupo" class="mb-3 hidden">
-          <label for="cupo-input" class="block text-sm font-medium text-gray-700 mb-1">Cupo disponible</label>
-          <input type="text" id="cupo-input" placeholder="Ej: 50 estudiantes" class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500">
-        </div>
-        
-        <!-- Campo para notas altas (número) -->
-        <div id="campo-notas" class="mb-3 hidden">
-          <label for="nota-minima-input" class="block text-sm font-medium text-gray-700 mb-1">Nota mínima</label>
-          <input type="number" id="nota-minima-input" placeholder="70" min="0" max="100" step="0.1" class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500">
-        </div>
-        
-        <button type="button" class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50">
-          Clasificar
-        </button>
-      </div>
-      
-      <div class="bg-white rounded-lg p-4 border border-gray-200">
         <h5 class="font-medium text-gray-900 mb-2">Generar Reporte</h5>
         <p class="text-sm text-gray-600 mb-3">Exportar reporte de calificaciones</p>
         <button type="button" class="w-full rounded-md bg-blue-600 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700">
@@ -276,10 +277,24 @@
       
       <div class="bg-white rounded-lg p-4 border border-gray-200">
         <h5 class="font-medium text-gray-900 mb-2">Finalizar Fase</h5>
-        <p class="text-sm text-gray-600 mb-3">Cerrar la fase y procesar resultados</p>
-        <button type="button" class="w-full rounded-md bg-red-600 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-red-700">
-          Finalizar Fase
-        </button>
+        <p class="text-sm text-gray-600 mb-1">Cerrar la fase y procesar resultados</p>
+        @php
+          $notaMinima = $fase->pivot->classification_nota_minima ?? null;
+          $cupo = $fase->pivot->classification_cupo ?? null;
+        @endphp
+        @if($notaMinima !== null)
+          <p class="text-xs text-emerald-700 mb-3">Criterio: Nota mínima >= {{ rtrim(rtrim(number_format($notaMinima, 2, '.', ''), '0'), '.') }}</p>
+        @elseif($cupo !== null)
+          <p class="text-xs text-emerald-700 mb-3">Criterio: Top {{ $cupo }} mejores (incluye empates)</p>
+        @else
+          <p class="text-xs text-amber-700 mb-3">Criterio: No configurado en esta fase</p>
+        @endif
+        <form method="POST" action="{{ route('admin.evaluacion.finalizar-fase', [$competicion->id, $fase->id]) }}" onsubmit="return confirm('Esta acción clasificará estudiantes a la siguiente fase según el criterio configurado. ¿Deseas continuar?');">
+          @csrf
+          <button type="submit" class="w-full rounded-md bg-red-600 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-red-700">
+            Finalizar Fase
+          </button>
+        </form>
       </div>
     </div>
   </section>
@@ -287,30 +302,13 @@
 
 <!-- Scripts -->
 <script>
-  // Validación de puntajes
+  // Validación de puntajes (clamp 0-100)
   document.querySelectorAll('input[type="number"]').forEach(function(input) {
     input.addEventListener('input', function() {
       const value = parseFloat(this.value);
       if (value < 0) this.value = 0;
       if (value > 100) this.value = 100;
     });
-  });
-
-  // Mostrar/ocultar campos según selección de clasificación
-  document.getElementById('clasificacion-select').addEventListener('change', function() {
-    const campoCupo = document.getElementById('campo-cupo');
-    const campoNotas = document.getElementById('campo-notas');
-    
-    // Ocultar ambos campos primero
-    campoCupo.classList.add('hidden');
-    campoNotas.classList.add('hidden');
-    
-    // Mostrar el campo correspondiente
-    if (this.value === 'cupo') {
-      campoCupo.classList.remove('hidden');
-    } else if (this.value === 'notas_altas') {
-      campoNotas.classList.remove('hidden');
-    }
   });
 </script>
 @endsection

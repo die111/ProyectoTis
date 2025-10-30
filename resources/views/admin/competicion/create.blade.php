@@ -8,6 +8,7 @@
 
 @push('scripts')
     <script src="{{ asset('js/competicion-create.js') }}"></script>
+    <!-- Eliminado: listeners DOM para clasificación; se maneja con Alpine por fase -->
 @endpush
 
 @section('content')
@@ -182,6 +183,39 @@
                             </div>
                         </div>
 
+                        <!-- NUEVO: Clasificar estudiantes por fase -->
+                        <div class="mt-8">
+                            <h3 class="text-md font-semibold text-gray-900 mb-3">Clasificar estudiantes por fase</h3>
+                            <p class="text-sm text-gray-600 mb-4">Configura cómo se clasifican los estudiantes para pasar a la siguiente fase. Aplica a cada fase agregada.</p>
+
+                            <template x-for="(phase, idx) in phases" :key="phase.id">
+                                <div class="bg-gray-50 rounded-lg border border-gray-200 p-4 mb-3">
+                                    <div class="grid grid-cols-1 md:grid-cols-4 gap-3 items-end">
+                                        <div class="md:col-span-1">
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">Fase</label>
+                                            <div class="text-sm text-gray-900" x-text="phase.name"></div>
+                                        </div>
+                                        <div class="md:col-span-1">
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">Tipo</label>
+                                            <select x-model="phase.classification_type" :name="`phases[${idx}][classification][type]`" class="w-full rounded-md border border-gray-300 bg-white py-2 px-3 text-sm shadow-sm focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500">
+                                                <option value="" selected disabled>Selecciona</option>
+                                                <option value="cupo">Por cupo</option>
+                                                <option value="notas_altas">Notas altas</option>
+                                            </select>
+                                        </div>
+                                        <div class="md:col-span-1" x-show="phase.classification_type === 'cupo'">
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">Cupo</label>
+                                            <input type="number" min="1" x-model="phase.classification_cupo" :required="phase.classification_type === 'cupo'" :disabled="phase.classification_type !== 'cupo'" placeholder="Ej: 50" class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500" :name="`phases[${idx}][classification][cupo]`">
+                                        </div>
+                                        <div class="md:col-span-1" x-show="phase.classification_type === 'notas_altas'">
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">Nota mínima</label>
+                                            <input type="number" min="0" max="100" step="0.1" x-model="phase.classification_nota_minima" :required="phase.classification_type === 'notas_altas'" :disabled="phase.classification_type !== 'notas_altas'" placeholder="70" class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500" :name="`phases[${idx}][classification][nota_minima]`">
+                                        </div>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+
                         <!-- Campos ocultos para las fechas de evaluación del timeline -->
                         <input type="hidden" name="timeline_start_date" :value="evaluacionInicio">
                         <input type="hidden" name="timeline_end_date" :value="evaluacionFin">
@@ -206,6 +240,10 @@
                                 .filter(item => item.categoriaId == this.categoriaSeleccionada)
                                 .map(item => item.areaId);
                             return this.areas.filter(area => !areasUsadas.includes(area.id));
+                        },
+                        get categoriasSeleccionadas() {
+                            // categorías únicas a partir de las selecciones
+                            return [...new Set(this.seleccionados.map(i => i.categoriaId))];
                         },
                         agregarSeleccionado() {
                             if (this.categoriaSeleccionada && this.areaSeleccionada) {
@@ -286,8 +324,18 @@
                         </div>
 
                         <!-- Campos ocultos para enviar las áreas seleccionadas -->
-                        <template x-for="(item, index) in seleccionados" :key="index">
+                        <template x-for="(item, index) in seleccionados" :key="`pair-${index}`">
+                            <div>
+                                <input type="hidden" :name="`pairs[${index}][categoria_id]`" :value="item.categoriaId">
+                                <input type="hidden" :name="`pairs[${index}][area_id]`" :value="item.areaId">
+                            </div>
+                        </template>
+                        <!-- Campos ocultos para enviar sólo IDs planos (compatibilidad) -->
+                        <template x-for="(item, index) in seleccionados.filter(i => i.areaId)" :key="`a-${index}`">
                             <input type="hidden" :name="`area_ids[${index}]`" :value="item.areaId">
+                        </template>
+                        <template x-for="(catId, idx) in categoriasSeleccionadas" :key="`cat-${idx}`">
+                            <input type="hidden" name="categoria_ids[]" :value="catId">
                         </template>
                     </div>
                 </div>

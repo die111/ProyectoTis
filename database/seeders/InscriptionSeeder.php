@@ -14,9 +14,11 @@ class InscriptionSeeder extends Seeder
      */
     public function run(): void
     {
+        DB::table('inscriptions')->truncate();
+
         $categoriaIds = DB::table('categorias')->pluck('id')->toArray();
         $areaIds = DB::table('areas')->pluck('id')->toArray();
-        $students = User::whereHas('role', function($q){ $q->where('name', 'estudiante'); })->limit(50)->get();
+        $students = User::whereHas('role', function($q){ $q->where('name', 'estudiante'); })->limit(10)->get();
         $competitionId = 1;
         $faseId = 1;
 

@@ -18,10 +18,14 @@
 
   <!-- Información de la fase -->
   <section class="mb-8 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-4 border border-blue-200">
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 text-sm">
+    <div class="grid grid-cols-1 md:grid-cols-5 gap-4 text-sm">
       <div>
         <span class="font-semibold text-blue-800">Competición:</span>
         <span class="text-blue-700">{{ $competicion->name }}</span>
+      </div>
+      <div>
+        <span class="font-semibold text-blue-800">Fase:</span>
+        <span class="text-blue-700">{{ $fase->name }} (Nivel {{ $numeroFase }})</span>
       </div>
       <div>
         <span class="font-semibold text-blue-800">Estado:</span>

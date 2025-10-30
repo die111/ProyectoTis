@@ -10,9 +10,9 @@ class Inscription extends Model
         'competition_id',
         'user_id',
         'area_id',
-        'level_id',
+        'categoria_id',
+        'fase',
         'estado',
-        'es_grupal',
         'grupo_nombre',
         'observaciones',
         'is_active'

@@ -73,6 +73,15 @@ Route::middleware(['auth'])->prefix('dashboard/admin')->name('admin.')->group(fu
     
     // Ruta para guardar calificaciones
     Route::post('evaluacion/{competicion}/fase/{fase}/calificar', [EvaluacionController::class, 'guardarCalificaciones'])->name('evaluacion.guardar-calificaciones');
+    
+    // Ruta para clasificar por cupo
+    Route::post('evaluacion/{competicion}/fase/{fase}/clasificar-cupo', [EvaluacionController::class, 'clasificarPorCupo'])->name('evaluacion.clasificar-cupo');
+    
+    // Ruta para clasificar por notas altas
+    Route::post('evaluacion/{competicion}/fase/{fase}/clasificar-notas', [EvaluacionController::class, 'clasificarPorNotasAltas'])->name('evaluacion.clasificar-notas');
+    
+    // Ruta para finalizar fase desde la vista de calificación
+    Route::post('evaluacion/{competicion}/fase/{fase}/finalizar', [EvaluacionController::class, 'finalizarFase'])->name('evaluacion.finalizar-fase');
 
     // Futuras rutas de áreas (descomentar cuando estén listas)
     // Route::resource('areas', App\Http\Controllers\Admin\AreaController::class);

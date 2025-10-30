@@ -1,4 +1,4 @@
-    <div class="space-y-6">
+<div class="space-y-6">
     <!-- Filtros -->
     <div class="flex flex-wrap gap-3 mb-6">
         <button data-filter="all"
@@ -132,31 +132,31 @@
                         </div>
                     </div>
 
-                    <!-- Niveles -->
+                    <!-- Categorías -->
                     <div class="flex items-start gap-2">
                         <svg class="h-4 w-4 text-primary mt-0.5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                            <circle cx="9" cy="7" r="4"></circle>
-                            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-                            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                            <path d="M20 6H9"></path>
+                            <path d="M14 6H4"></path>
+                            <path d="M20 12H4"></path>
+                            <path d="M20 18H9"></path>
                         </svg>
                         <div>
-                            <p class="text-xs text-muted-foreground">Niveles</p>
+                            <p class="text-xs text-muted-foreground">Categorías</p>
                             <p class="text-sm text-foreground">
                                 @php
-                                    $levelNames = $competition->levels->pluck('name');
-                                    $firstLevels = $levelNames->take(2);
-                                    $remaining = $levelNames->count() - 2;
+                                    $categoriaNames = $competition->categorias->pluck('nombre');
+                                    $firstCategorias = $categoriaNames->take(2);
+                                    $remainingCategorias = $categoriaNames->count() - 2;
                                 @endphp
-                                @if($firstLevels->count() > 0)
-                                    {{ $firstLevels->implode(', ') }}
-                                    @if($remaining > 0)
-                                        <span class="text-xs text-muted-foreground">+{{ $remaining }} más</span>
+                                @if($firstCategorias->count() > 0)
+                                    {{ $firstCategorias->implode(', ') }}
+                                    @if($remainingCategorias > 0)
+                                        <span class="text-xs text-muted-foreground">+{{ $remainingCategorias }} más</span>
                                     @endif
-                                @elseif($remaining > 0)
-                                    <span class="text-xs text-muted-foreground">+{{ $remaining }} más</span>
+                                @elseif($remainingCategorias > 0)
+                                    <span class="text-xs text-muted-foreground">+{{ $remainingCategorias }} más</span>
                                 @else
-                                    <span class="text-xs text-muted-foreground">Sin niveles registrados</span>
+                                    <span class="text-xs text-muted-foreground">Sin categorías registradas</span>
                                 @endif
                             </p>
                         </div>
@@ -190,6 +190,22 @@
                         </div>
                     </div>
                 </div>
+
+                @if($competition->categoryAreas && $competition->categoryAreas->count())
+                <div class="mt-4">
+                    <p class="text-xs text-muted-foreground mb-1">Categoría × Área</p>
+                    <div class="flex flex-wrap gap-2">
+                        @foreach($competition->categoryAreas as $pair)
+                            <span class="inline-flex items-center px-2 py-1 rounded bg-gray-100 text-gray-800 text-xs border border-gray-200">
+                                <i class="fas fa-tags mr-1 text-gray-500"></i>
+                                {{ optional($pair->categoria)->nombre ?? '—' }}
+                                <span class="mx-1">×</span>
+                                {{ optional($pair->area)->name ?? '—' }}
+                            </span>
+                        @endforeach
+                    </div>
+                </div>
+                @endif
             </div>
         </div>
         @empty

@@ -21,8 +21,8 @@ return new class extends Migration
             $table->string('grupo_nombre')->nullable(); // Nombre del grupo si es grupal
             $table->timestamps();
             
-            // Un olimpista no puede inscribirse dos veces en la misma área y competencia
-            $table->unique(['competition_id', 'user_id', 'area_id']);
+            // Un olimpista no puede inscribirse dos veces en la misma área, competencia y fase
+            $table->unique(['competition_id', 'user_id', 'area_id', 'fase']);
         });
     }
 

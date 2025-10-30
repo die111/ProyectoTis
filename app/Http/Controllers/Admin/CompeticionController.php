@@ -7,8 +7,9 @@ use Illuminate\Http\Request;
 use App\Models\Competicion;
 use App\Models\Area;
 use App\Models\Phase;
-use App\Models\Level;
 use App\Models\Categoria;
+use App\Models\CompetitionCategoryArea;
+use Illuminate\Support\Facades\Validator;
 
 
 
@@ -16,7 +17,7 @@ class CompeticionController extends Controller
 {
     public function show($id)
     {
-        $competicion = Competicion::with(['areas', 'phases', 'levels'])->findOrFail($id);
+        $competicion = Competicion::with(['areas', 'phases', 'categorias'])->findOrFail($id);
         return view('admin.competicion.show', compact('competicion'));
     }
     /**
@@ -35,11 +36,10 @@ class CompeticionController extends Controller
     }
     public function create()
     {
-        $levelsCatalog = Level::all();
         $areasCatalog = Area::all();
         $fasesCatalog = Phase::all();
         $categoriasCatalog = Categoria::all();
-        return view('admin.competicion.create', compact('levelsCatalog', 'areasCatalog', 'fasesCatalog', 'categoriasCatalog'));
+        return view('admin.competicion.create', compact('areasCatalog', 'fasesCatalog', 'categoriasCatalog'));
     }
     public function json($id)
     {
@@ -48,16 +48,16 @@ class CompeticionController extends Controller
     }
     public function index()
     {
-        $competiciones = Competicion::with(['areas', 'phases', 'levels'])->paginate(10);
+        $competiciones = Competicion::with(['areas', 'phases', 'categorias', 'categoryAreas.categoria', 'categoryAreas.area'])->paginate(10);
         $areasCatalog = Area::all();
         $fasesCatalog = Phase::all();
-        $levelsCatalog = Level::all();
-        return view('admin.competicion.index', compact('competiciones', 'areasCatalog', 'fasesCatalog', 'levelsCatalog'));
+        $categoriasCatalog = Categoria::all();
+        return view('admin.competicion.index', compact('competiciones', 'areasCatalog', 'fasesCatalog', 'categoriasCatalog'));
     }
 
     public function store(Request $request)
     {
-        $request->validate([
+        $rules = [
             'name' => 'required|string',
             'description' => 'nullable|string',
             'fechaInicio' => 'required|date',
@@ -68,16 +68,44 @@ class CompeticionController extends Controller
             'evaluacion_fin' => 'nullable|date|after_or_equal:evaluacion_inicio',
             'premiacion_inicio' => 'nullable|date',
             'premiacion_fin' => 'nullable|date|after_or_equal:premiacion_inicio',
-            'level_ids' => 'nullable|array',
-            'level_ids.*' => 'exists:levels,id',
-            'area_ids' => 'required|array',
+            'categoria_ids' => 'nullable|array',
+            'categoria_ids.*' => 'exists:categorias,id',
+            'area_ids' => 'required_without:pairs|array',
             'area_ids.*' => 'exists:areas,id',
+            'pairs' => 'nullable|array',
+            'pairs.*.categoria_id' => 'required_with:pairs|exists:categorias,id',
+            'pairs.*.area_id' => 'required_with:pairs|exists:areas,id',
             'phases' => 'required|array',
             'phases.*.phase_id' => 'required|exists:phases,id',
             'phases.*.start_date' => 'required|date|after_or_equal:fechaInicio',
             'phases.*.end_date' => 'required|date|before_or_equal:fechaFin|after_or_equal:phases.*.start_date',
             'phases.*.clasificados' => 'nullable|integer|min:1',
-        ]);
+            'phases.*.classification.type' => 'nullable|in:cupo,notas_altas',
+            'phases.*.classification.cupo' => 'nullable|integer|min:1',
+            'phases.*.classification.nota_minima' => 'nullable|numeric|min:0|max:100',
+        ];
+
+        $validator = Validator::make($request->all(), $rules);
+        $validator->after(function ($validator) use ($request) {
+            $phases = $request->input('phases', []);
+            foreach ($phases as $idx => $phase) {
+                $type = data_get($phase, 'classification.type');
+                if ($type === 'cupo') {
+                    $cupo = data_get($phase, 'classification.cupo');
+                    if (is_null($cupo) || $cupo === '' || (int)$cupo < 1) {
+                        $validator->errors()->add("phases.$idx.classification.cupo", 'El cupo es requerido y debe ser mayor a 0 cuando el tipo es "Por cupo".');
+                    }
+                } elseif ($type === 'notas_altas') {
+                    $nota = data_get($phase, 'classification.nota_minima');
+                    if ($nota === null || $nota === '' || !is_numeric($nota) || $nota < 0 || $nota > 100) {
+                        $validator->errors()->add("phases.$idx.classification.nota_minima", 'La nota mínima es requerida y debe estar entre 0 y 100 cuando el tipo es "Notas altas".');
+                    }
+                }
+            }
+        });
+        if ($validator->fails()) {
+            return redirect()->back()->withErrors($validator)->withInput();
+        }
 
         $competicion = Competicion::create([
             'name' => $request->name,
@@ -93,17 +121,63 @@ class CompeticionController extends Controller
             'state' => 'activa',
         ]);
 
-        // Attach levels and areas (polymorphic)
-        $competicion->levels()->sync($request->level_ids ?? []);
-        $competicion->areas()->sync($request->area_ids);
+        // Derivar listas finales desde pairs si existen
+        $pairs = collect($request->pairs ?? []);
+        $categoriaIdsFinal = $pairs->pluck('categoria_id')->filter()->unique()->values()->all();
+        $areaIdsFinal = $pairs->pluck('area_id')->filter()->unique()->values()->all();
+        if (empty($categoriaIdsFinal)) { $categoriaIdsFinal = $request->categoria_ids ?? []; }
+        if (empty($areaIdsFinal)) { $areaIdsFinal = $request->area_ids ?? []; }
 
-        // Attach phases with dates and clasificados
+        // Sync polimórfico
+        $competicion->categorias()->sync($categoriaIdsFinal);
+        $competicion->areas()->sync($areaIdsFinal);
+
+        // Guardar pares categoria-area
+        CompetitionCategoryArea::where('competition_id', $competicion->id)->delete();
+        $pairsToInsert = [];
+        if ($pairs->isNotEmpty()) {
+            foreach ($pairs as $p) {
+                if (!empty($p['categoria_id']) && !empty($p['area_id'])) {
+                    $pairsToInsert[] = [
+                        'competition_id' => $competicion->id,
+                        'categoria_id' => $p['categoria_id'],
+                        'area_id' => $p['area_id'],
+                    ];
+                }
+            }
+        } else {
+            // Fallback round-robin
+            $idx = 0; $catCount = max(1, count($categoriaIdsFinal));
+            foreach ($areaIdsFinal as $areaId) {
+                $catId = $categoriaIdsFinal[$idx % $catCount] ?? null;
+                if ($catId) {
+                    $pairsToInsert[] = [
+                        'competition_id' => $competicion->id,
+                        'categoria_id' => $catId,
+                        'area_id' => $areaId,
+                    ];
+                }
+                $idx++;
+            }
+        }
+        if (!empty($pairsToInsert)) {
+            CompetitionCategoryArea::insert($pairsToInsert);
+        }
+
+        // Fases
         $phaseData = [];
         foreach ($request->phases as $phase) {
+            $type = data_get($phase, 'classification.type');
+            $cupo = $type === 'cupo' ? data_get($phase, 'classification.cupo') : null;
+            $notaMin = $type === 'notas_altas' ? data_get($phase, 'classification.nota_minima') : null;
+
             $phaseData[$phase['phase_id']] = [
                 'start_date' => $phase['start_date'],
                 'end_date' => $phase['end_date'],
                 'clasificados' => $phase['clasificados'] ?? null,
+                'classification_type' => $type,
+                'classification_cupo' => $cupo,
+                'classification_nota_minima' => $notaMin,
             ];
         }
         $competicion->phases()->sync($phaseData);
@@ -119,16 +193,16 @@ class CompeticionController extends Controller
 
     public function edit($id)
     {
-        $competicion = Competicion::with(['areas', 'phases', 'levels'])->findOrFail($id);
+        $competicion = Competicion::with(['areas', 'phases', 'categorias'])->findOrFail($id);
         $areasCatalog = Area::all();
-        $levelsCatalog = Level::all();
         $fasesCatalog = Phase::all();
-        return view('admin.competicion.edit', compact('competicion', 'areasCatalog', 'levelsCatalog', 'fasesCatalog'));
+        $categoriasCatalog = Categoria::all();
+        return view('admin.competicion.edit', compact('competicion', 'areasCatalog', 'fasesCatalog', 'categoriasCatalog'));
     }
 
     public function update(Request $request, $id)
     {
-        $request->validate([
+        $rules = [
             'name' => 'required|string',
             'description' => 'nullable|string',
             'fechaInicio' => 'required|date',
@@ -139,12 +213,44 @@ class CompeticionController extends Controller
             'evaluacion_fin' => 'nullable|date|after_or_equal:evaluacion_inicio',
             'premiacion_inicio' => 'nullable|date',
             'premiacion_fin' => 'nullable|date|after_or_equal:premiacion_inicio',
-            'level_ids' => 'nullable|array',
-            'level_ids.*' => 'exists:levels,id',
-            'area_ids' => 'nullable|array',
+            'categoria_ids' => 'nullable|array',
+            'categoria_ids.*' => 'exists:categorias,id',
+            'area_ids' => 'required_without:pairs|array',
             'area_ids.*' => 'exists:areas,id',
-            'phases' => 'nullable|array',
-        ]);
+            'pairs' => 'nullable|array',
+            'pairs.*.categoria_id' => 'required_with:pairs|exists:categorias,id',
+            'pairs.*.area_id' => 'required_with:pairs|exists:areas,id',
+            'phases' => 'required|array',
+            'phases.*.phase_id' => 'required|exists:phases,id',
+            'phases.*.start_date' => 'required|date|after_or_equal:fechaInicio',
+            'phases.*.end_date' => 'required|date|before_or_equal:fechaFin|after_or_equal:phases.*.start_date',
+            'phases.*.clasificados' => 'nullable|integer|min:1',
+            'phases.*.classification.type' => 'nullable|in:cupo,notas_altas',
+            'phases.*.classification.cupo' => 'nullable|integer|min:1',
+            'phases.*.classification.nota_minima' => 'nullable|numeric|min:0|max:100',
+        ];
+
+        $validator = Validator::make($request->all(), $rules);
+        $validator->after(function ($validator) use ($request) {
+            $phases = $request->input('phases', []);
+            foreach ($phases as $idx => $phase) {
+                $type = data_get($phase, 'classification.type');
+                if ($type === 'cupo') {
+                    $cupo = data_get($phase, 'classification.cupo');
+                    if (is_null($cupo) || $cupo === '' || (int)$cupo < 1) {
+                        $validator->errors()->add("phases.$idx.classification.cupo", 'El cupo es requerido y debe ser mayor a 0 cuando el tipo es "Por cupo".');
+                    }
+                } elseif ($type === 'notas_altas') {
+                    $nota = data_get($phase, 'classification.nota_minima');
+                    if ($nota === null || $nota === '' || !is_numeric($nota) || $nota < 0 || $nota > 100) {
+                        $validator->errors()->add("phases.$idx.classification.nota_minima", 'La nota mínima es requerida y debe estar entre 0 y 100 cuando el tipo es "Notas altas".');
+                    }
+                }
+            }
+        });
+        if ($validator->fails()) {
+            return redirect()->back()->withErrors($validator)->withInput();
+        }
 
         $competicion = Competicion::findOrFail($id);
         
@@ -161,24 +267,63 @@ class CompeticionController extends Controller
             'premiacion_fin' => $request->premiacion_fin,
         ]);
 
-        // Update levels and areas (polymorphic)
-        $competicion->levels()->sync($request->level_ids ?? []);
-        $competicion->areas()->sync($request->area_ids ?? []);
+        // Derivar listas finales desde pairs si existen
+        $pairs = collect($request->pairs ?? []);
+        $categoriaIdsFinal = $pairs->pluck('categoria_id')->filter()->unique()->values()->all();
+        $areaIdsFinal = $pairs->pluck('area_id')->filter()->unique()->values()->all();
+        if (empty($categoriaIdsFinal)) { $categoriaIdsFinal = $request->categoria_ids ?? []; }
+        if (empty($areaIdsFinal)) { $areaIdsFinal = $request->area_ids ?? []; }
 
-        // Update phases with dates - solo las que están seleccionadas
-        $phaseData = [];
-        if ($request->has('phases')) {
-            foreach ($request->phases as $phase) {
-                // Solo agregar si está seleccionada y tiene fechas
-                if (isset($phase['selected']) && $phase['selected'] == '1' && 
-                    !empty($phase['start_date']) && !empty($phase['end_date'])) {
-                    $phaseData[$phase['phase_id']] = [
-                        'start_date' => $phase['start_date'],
-                        'end_date' => $phase['end_date'],
-                        'clasificados' => $phase['clasificados'] ?? null,
+        // Sync polimórfico
+        $competicion->categorias()->sync($categoriaIdsFinal);
+        $competicion->areas()->sync($areaIdsFinal);
+
+        // Actualizar pares categoria-area
+        CompetitionCategoryArea::where('competition_id', $competicion->id)->delete();
+        $pairsToInsert = [];
+        if ($pairs->isNotEmpty()) {
+            foreach ($pairs as $p) {
+                if (!empty($p['categoria_id']) && !empty($p['area_id'])) {
+                    $pairsToInsert[] = [
+                        'competition_id' => $competicion->id,
+                        'categoria_id' => $p['categoria_id'],
+                        'area_id' => $p['area_id'],
                     ];
                 }
             }
+        } else {
+            $idx = 0; $catCount = max(1, count($categoriaIdsFinal));
+            foreach ($areaIdsFinal as $areaId) {
+                $catId = $categoriaIdsFinal[$idx % $catCount] ?? null;
+                if ($catId) {
+                    $pairsToInsert[] = [
+                        'competition_id' => $competicion->id,
+                        'categoria_id' => $catId,
+                        'area_id' => $areaId,
+                    ];
+                }
+                $idx++;
+            }
+        }
+        if (!empty($pairsToInsert)) {
+            CompetitionCategoryArea::insert($pairsToInsert);
+        }
+
+        // Fases
+        $phaseData = [];
+        foreach ($request->phases as $phase) {
+            $type = data_get($phase, 'classification.type');
+            $cupo = $type === 'cupo' ? data_get($phase, 'classification.cupo') : null;
+            $notaMin = $type === 'notas_altas' ? data_get($phase, 'classification.nota_minima') : null;
+
+            $phaseData[$phase['phase_id']] = [
+                'start_date' => $phase['start_date'],
+                'end_date' => $phase['end_date'],
+                'clasificados' => $phase['clasificados'] ?? null,
+                'classification_type' => $type,
+                'classification_cupo' => $cupo,
+                'classification_nota_minima' => $notaMin,
+            ];
         }
         $competicion->phases()->sync($phaseData);
 

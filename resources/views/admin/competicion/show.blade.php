@@ -36,9 +36,9 @@
                     </dd>
                 </div>
                 <div>
-                    <dt class="text-xs font-semibold text-muted-foreground uppercase mb-1">Niveles</dt>
+                    <dt class="text-xs font-semibold text-muted-foreground uppercase mb-1">Categorías</dt>
                     <dd class="text-foreground">
-                        {{ $competicion->levels->pluck('nombre')->implode(', ') }}
+                        {{ $competicion->categorias->pluck('nombre')->implode(', ') }}
                     </dd>
                 </div>  
                 <div>

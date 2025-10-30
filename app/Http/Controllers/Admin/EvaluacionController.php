@@ -450,17 +450,30 @@ class EvaluacionController extends \App\Http\Controllers\Controller
             abort(404, 'La fase no está asociada a esta competición');
         }
         
+        // Obtener todas las fases de la competición ordenadas
+        $todasLasFases = $competicion->phases()->orderBy('competition_phase.id')->get();
+        
+        // Determinar el número de fase (1, 2, 3, etc.) basado en el orden
+        $numeroFase = 1;
+        foreach ($todasLasFases as $index => $f) {
+            if ($f->id == $faseId) {
+                $numeroFase = $index + 1;
+                break;
+            }
+        }
+        
         // Obtener todas las categorías y áreas para los filtros
         $categorias = \App\Models\Categoria::where('is_active', true)->get();
         $areas = \App\Models\Area::where('is_active', true)->get();
         
         // Construir query para estudiantes con filtros
-        $query = \App\Models\Inscription::with(['user', 'area', 'level']);
+        $query = \App\Models\Inscription::with(['user', 'area', 'categoria']);
         
         // Filtrar por la competición específica
         $query->where('competition_id', $competicion->id);
-        // Filtrar por fase igual a 1
-        $query->where('fase', 1);
+        
+        // Filtrar por el número de fase correspondiente
+        $query->where('fase', $numeroFase);
         
         // Filtrar por estudiantes activos por defecto, a menos que se especifique lo contrario
         if (request('estado_activo') === 'inactivo') {
@@ -474,10 +487,7 @@ class EvaluacionController extends \App\Http\Controllers\Controller
         
         // Aplicar filtros si existen
         if (request('categoria')) {
-            // Por ahora omitimos el filtro por categoría hasta que se establezca la relación
-            // $query->whereHas('level', function($q) {
-            //     $q->where('categoria_id', request('categoria'));
-            // });
+            $query->where('categoria_id', request('categoria'));
         }
         
         if (request('area')) {
@@ -496,7 +506,7 @@ class EvaluacionController extends \App\Http\Controllers\Controller
         
         $estudiantes = $query->paginate(10);
         
-        return view('admin.evaluacion.estudiantes', compact('fase', 'competicion', 'categorias', 'areas', 'estudiantes'));
+        return view('admin.evaluacion.estudiantes', compact('fase', 'competicion', 'categorias', 'areas', 'estudiantes', 'numeroFase'));
     }
 
     // Métodos auxiliares
@@ -525,17 +535,30 @@ class EvaluacionController extends \App\Http\Controllers\Controller
         // Obtener o crear Stage real para la fase-competición
         $stageId = $this->getOrCreateStageId($competicion, $fase);
         
+        // Obtener todas las fases de la competición ordenadas
+        $todasLasFases = $competicion->phases()->orderBy('competition_phase.id')->get();
+        
+        // Determinar el número de fase (1, 2, 3, etc.) basado en el orden
+        $numeroFase = 1;
+        foreach ($todasLasFases as $index => $f) {
+            if ($f->id == $faseId) {
+                $numeroFase = $index + 1;
+                break;
+            }
+        }
+        
         // Obtener todas las categorías y áreas para los filtros
         $categorias = \App\Models\Categoria::where('is_active', true)->get();
         $areas = \App\Models\Area::where('is_active', true)->get();
         
         // Construir query para estudiantes con filtros
-        $query = Inscription::with(['user', 'area', 'level']);
+        $query = Inscription::with(['user', 'area', 'categoria']);
         
         // Filtrar por la competición específica
         $query->where('competition_id', $competicion->id);
-        // Filtrar por fase igual a 1
-        $query->where('fase', 1);
+        
+        // Filtrar por el número de fase correspondiente
+        $query->where('fase', $numeroFase);
         
         // Filtrar por estudiantes activos por defecto, a menos que se especifique lo contrario
         if (request('estado_activo') === 'inactivo') {
@@ -570,12 +593,37 @@ class EvaluacionController extends \App\Http\Controllers\Controller
             });
         }
 
+        // Aplicar ordenamiento
+        $sortBy = request('sort_by', 'nombre'); // Por defecto ordenar por nombre
+        $sortOrder = request('sort_order', 'asc'); // Por defecto ascendente
+        
         // Cargar estudiantes con sus evaluaciones existentes usando el stage real
         $estudiantes = $query->with(['evaluations' => function($q) use ($stageId) {
             $q->where('stage_id', $stageId);
         }])->get();
+        
+        // Ordenar la colección según el criterio seleccionado
+        if ($sortBy === 'nombre') {
+            $estudiantes = $sortOrder === 'asc' 
+                ? $estudiantes->sortBy(function($estudiante) {
+                    return $estudiante->user->name . ' ' . $estudiante->user->last_name_father;
+                })
+                : $estudiantes->sortByDesc(function($estudiante) {
+                    return $estudiante->user->name . ' ' . $estudiante->user->last_name_father;
+                });
+        } elseif ($sortBy === 'nota') {
+            $estudiantes = $sortOrder === 'desc'
+                ? $estudiantes->sortByDesc(function($estudiante) {
+                    $evaluacion = $estudiante->evaluations->first();
+                    return $evaluacion ? $evaluacion->nota : -1; // -1 para que los sin nota vayan al final
+                })
+                : $estudiantes->sortBy(function($estudiante) {
+                    $evaluacion = $estudiante->evaluations->first();
+                    return $evaluacion ? $evaluacion->nota : 999; // 999 para que los sin nota vayan al final
+                });
+        }
 
-        return view('admin.evaluacion.calificar', compact('competicion', 'fase', 'estudiantes', 'areas', 'categorias'));
+        return view('admin.evaluacion.calificar', compact('competicion', 'fase', 'estudiantes', 'areas', 'categorias', 'numeroFase'));
     }
 
     public function guardarCalificaciones(Request $request, Competicion $competicion, $faseId)
@@ -644,6 +692,164 @@ class EvaluacionController extends \App\Http\Controllers\Controller
     }
 
     /**
+     * Clasificar estudiantes por cupo
+     * Toma las N mejores notas y crea nuevas inscripciones con fase incrementada
+     */
+    public function clasificarPorCupo(Request $request, Competicion $competicion, $faseId)
+    {
+        $request->validate([
+            'cupo' => 'required|integer|min:1',
+        ]);
+
+        $fase = $competicion->phases()->findOrFail($faseId);
+        $cupo = (int) $request->cupo;
+        
+        // Obtener el stage_id real
+        $stageId = $this->getOrCreateStageId($competicion, $fase);
+
+        try {
+            DB::beginTransaction();
+
+            // Obtener las N mejores notas de la fase actual
+            $mejoresEvaluaciones = Evaluation::where('stage_id', $stageId)
+                ->where('is_active', true)
+                ->whereHas('inscription', function($q) use ($competicion) {
+                    $q->where('competition_id', $competicion->id);
+                })
+                ->with('inscription')
+                ->orderBy('nota', 'DESC')
+                ->take($cupo)
+                ->get();
+
+            if ($mejoresEvaluaciones->isEmpty()) {
+                DB::rollback();
+                return redirect()->back()->with('error', 'No se encontraron evaluaciones para clasificar.');
+            }
+
+            $clasificados = 0;
+
+            foreach ($mejoresEvaluaciones as $evaluacion) {
+                $inscripcionOriginal = $evaluacion->inscription;
+                
+                // Calcular la fase siguiente
+                $faseActual = $inscripcionOriginal->fase ?? 1;
+                $faseSiguiente = $faseActual + 1;
+                
+                // Verificar si ya existe una inscripción para la siguiente fase
+                $yaExiste = Inscription::where('user_id', $inscripcionOriginal->user_id)
+                    ->where('competition_id', $competicion->id)
+                    ->where('area_id', $inscripcionOriginal->area_id)
+                    ->where('categoria_id', $inscripcionOriginal->categoria_id)
+                    ->where('fase', $faseSiguiente)
+                    ->exists();
+                
+                if (!$yaExiste) {
+                    // Crear nueva inscripción con fase incrementada
+                    Inscription::create([
+                        'competition_id' => $inscripcionOriginal->competition_id,
+                        'user_id' => $inscripcionOriginal->user_id,
+                        'area_id' => $inscripcionOriginal->area_id,
+                        'categoria_id' => $inscripcionOriginal->categoria_id,
+                        'estado' => 'confirmada',
+                        'is_active' => true,
+                        'fase' => $faseSiguiente,
+                        'grupo_nombre' => $inscripcionOriginal->grupo_nombre,
+                    ]);
+                    
+                    $clasificados++;
+                }
+            }
+
+            DB::commit();
+
+            return redirect()->back()->with('success', "Se clasificaron {$clasificados} estudiantes a la fase {$faseSiguiente}.");
+
+        } catch (\Exception $e) {
+            DB::rollback();
+            return redirect()->back()->with('error', 'Error al clasificar estudiantes: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Clasificar estudiantes por notas altas
+     * Toma todos los estudiantes con nota mayor o igual a la nota mínima
+     */
+    public function clasificarPorNotasAltas(Request $request, Competicion $competicion, $faseId)
+    {
+        $request->validate([
+            'nota_minima' => 'required|numeric|min:0|max:100',
+        ]);
+
+        $fase = $competicion->phases()->findOrFail($faseId);
+        $notaMinima = (float) $request->nota_minima;
+        
+        // Obtener el stage_id real
+        $stageId = $this->getOrCreateStageId($competicion, $fase);
+
+        try {
+            DB::beginTransaction();
+
+            // Obtener todas las evaluaciones con nota mayor o igual a la nota mínima
+            $evaluacionesClasificadas = Evaluation::where('stage_id', $stageId)
+                ->where('is_active', true)
+                ->where('nota', '>=', $notaMinima)
+                ->whereHas('inscription', function($q) use ($competicion) {
+                    $q->where('competition_id', $competicion->id);
+                })
+                ->with('inscription')
+                ->orderBy('nota', 'DESC')
+                ->get();
+
+            if ($evaluacionesClasificadas->isEmpty()) {
+                DB::rollback();
+                return redirect()->back()->with('error', 'No se encontraron estudiantes con nota mayor o igual a ' . $notaMinima);
+            }
+
+            $clasificados = 0;
+
+            foreach ($evaluacionesClasificadas as $evaluacion) {
+                $inscripcionOriginal = $evaluacion->inscription;
+                
+                // Calcular la fase siguiente
+                $faseActual = $inscripcionOriginal->fase ?? 1;
+                $faseSiguiente = $faseActual + 1;
+                
+                // Verificar si ya existe una inscripción para la siguiente fase
+                $yaExiste = Inscription::where('user_id', $inscripcionOriginal->user_id)
+                    ->where('competition_id', $competicion->id)
+                    ->where('area_id', $inscripcionOriginal->area_id)
+                    ->where('categoria_id', $inscripcionOriginal->categoria_id)
+                    ->where('fase', $faseSiguiente)
+                    ->exists();
+                
+                if (!$yaExiste) {
+                    // Crear nueva inscripción con fase incrementada
+                    Inscription::create([
+                        'competition_id' => $inscripcionOriginal->competition_id,
+                        'user_id' => $inscripcionOriginal->user_id,
+                        'area_id' => $inscripcionOriginal->area_id,
+                        'categoria_id' => $inscripcionOriginal->categoria_id,
+                        'estado' => 'confirmada',
+                        'is_active' => true,
+                        'fase' => $faseSiguiente,
+                        'grupo_nombre' => $inscripcionOriginal->grupo_nombre,
+                    ]);
+                    
+                    $clasificados++;
+                }
+            }
+
+            DB::commit();
+
+            return redirect()->back()->with('success', "Se clasificaron {$clasificados} estudiantes con nota >= {$notaMinima} a la fase {$faseSiguiente}.");
+
+        } catch (\Exception $e) {
+            DB::rollback();
+            return redirect()->back()->with('error', 'Error al clasificar estudiantes: ' . $e->getMessage());
+        }
+    }
+
+    /**
      * Obtiene o crea un registro en 'stages' para la combinación competición-fase
      * y retorna su ID para ser usado como foreign key en evaluations.stage_id
      */
@@ -671,5 +877,112 @@ class EvaluacionController extends \App\Http\Controllers\Controller
             'created_at' => now(),
             'updated_at' => now(),
         ]);
+    }
+
+    public function finalizarFase(Request $request, Competicion $competicion, $faseId)
+    {
+        // Buscar fase con datos del pivot (competition_phase)
+        $fase = $competicion->phases()->where('phases.id', $faseId)->firstOrFail();
+        $stageId = $this->getOrCreateStageId($competicion, $fase);
+
+        $tipo = $fase->pivot->classification_type; // 'cupo' | 'notas_altas' | null
+        $notaMinima = $fase->pivot->classification_nota_minima; // puede ser null
+        $cupo = $fase->pivot->classification_cupo; // puede ser null
+
+        if (!$tipo) {
+            return redirect()->back()->with('error', 'No hay un tipo de clasificación configurado para esta fase.');
+        }
+
+        try {
+            DB::beginTransaction();
+
+            $evaluacionesQuery = Evaluation::where('stage_id', $stageId)
+                ->where('is_active', true)
+                ->whereHas('inscription', function($q) use ($competicion) {
+                    $q->where('competition_id', $competicion->id);
+                })
+                ->with('inscription')
+                ->orderBy('nota', 'DESC');
+
+            $evaluaciones = collect();
+
+            if ($tipo === 'notas_altas') {
+                if ($notaMinima === null) {
+                    DB::rollBack();
+                    return redirect()->back()->with('error', 'No se configuró la nota mínima para esta fase.');
+                }
+                $evaluaciones = (clone $evaluacionesQuery)
+                    ->where('nota', '>=', $notaMinima)
+                    ->get();
+            } elseif ($tipo === 'cupo') {
+                if (empty($cupo) || (int)$cupo < 1) {
+                    DB::rollBack();
+                    return redirect()->back()->with('error', 'No se configuró un cupo válido para esta fase.');
+                }
+                // Clasificación por cupo (con manejo de empates)
+                $top = (clone $evaluacionesQuery)->take((int)$cupo)->get();
+                if ($top->isEmpty()) {
+                    DB::rollBack();
+                    return redirect()->back()->with('error', 'No se encontraron evaluaciones para clasificar.');
+                }
+                $evaluaciones = $top;
+                $ultimaNota = optional($top->last())->nota;
+                if ($ultimaNota !== null) {
+                    $empatados = (clone $evaluacionesQuery)
+                        ->where('nota', '=', $ultimaNota)
+                        ->get();
+                    $evaluaciones = $evaluaciones->merge($empatados)
+                        ->unique('inscription_id')
+                        ->values();
+                }
+            }
+
+            if ($evaluaciones->isEmpty()) {
+                DB::rollBack();
+                return redirect()->back()->with('error', 'No hay estudiantes que cumplan los criterios de clasificación.');
+            }
+
+            $clasificados = 0;
+            $faseSiguiente = null;
+
+            foreach ($evaluaciones as $evaluacion) {
+                $inscripcionOriginal = $evaluacion->inscription;
+                $faseActual = $inscripcionOriginal->fase ?? 1;
+                $faseSiguiente = $faseActual + 1;
+
+                $yaExiste = Inscription::where('user_id', $inscripcionOriginal->user_id)
+                    ->where('competition_id', $competicion->id)
+                    ->where('area_id', $inscripcionOriginal->area_id)
+                    ->where('categoria_id', $inscripcionOriginal->categoria_id)
+                    ->where('fase', $faseSiguiente)
+                    ->exists();
+
+                if (!$yaExiste) {
+                    Inscription::create([
+                        'competition_id' => $inscripcionOriginal->competition_id,
+                        'user_id' => $inscripcionOriginal->user_id,
+                        'area_id' => $inscripcionOriginal->area_id,
+                        'categoria_id' => $inscripcionOriginal->categoria_id,
+                        'estado' => 'confirmada',
+                        'is_active' => true,
+                        'fase' => $faseSiguiente,
+                        'grupo_nombre' => $inscripcionOriginal->grupo_nombre,
+                    ]);
+                    $clasificados++;
+                }
+            }
+
+            DB::commit();
+
+            $mensaje = $tipo === 'notas_altas'
+                ? "Clasificados {$clasificados} estudiantes con nota >= {$notaMinima} a la fase {$faseSiguiente}."
+                : "Clasificados {$clasificados} mejores puntajes (incluye empates) a la fase {$faseSiguiente}.";
+
+            return redirect()->back()->with('success', $mensaje);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()->with('error', 'Error al finalizar la fase: ' . $e->getMessage());
+        }
     }
 }
