@@ -11,7 +11,7 @@ return new class extends Migration
         Schema::create('evaluations', function (Blueprint $table) {
             $table->id();
             $table->foreignId('inscription_id')->constrained()->onDelete('cascade');
-            $table->foreignId('stage_id')->constrained('stages')->onDelete('cascade');
+            $table->foreignId('stage_id')->nullable()->constrained('stages')->onDelete('set null');
             $table->foreignId('evaluator_id')->constrained('users')->onDelete('cascade'); // Usuario como evaluador
             $table->decimal('nota', 5, 2); // Nota con decimales
             $table->enum('estado', ['clasificado', 'no_clasificado', 'desclasificado']);
@@ -19,10 +19,6 @@ return new class extends Migration
             $table->boolean('is_active')->default(true);
             $table->timestamps();
             
-            // Un olimpista solo puede ser evaluado una vez por etapa
-            $table->unique(['inscription_id', 'stage_id']);
-            
-            $table->index(['stage_id', 'estado']);
             $table->index(['inscription_id', 'is_active']);
         });
     }

@@ -83,10 +83,13 @@
         } else {
           $estadoTexto = 'Sin Fechas Configuradas';
         }
+
+        // Numeración visible para la tarjeta (1-based)
+        $numeroFase = $index + 1;
       @endphp
       
       <!-- Fase {{ $fase->name }} -->
-      <article class="phase-card rounded-2xl bg-white shadow ring-2 ring-{{ str_replace('bg-', '', $colors[$colorIndex]) }} overflow-hidden transition-all duration-200 hover:shadow-lg hover:scale-[1.02] hover:ring-4 cursor-pointer" data-phase="{{ strtolower($fase->name) }}">
+      <article class="phase-card rounded-2xl bg-white shadow ring-2 ring-{{ str_replace('bg-', '', $colors[$colorIndex]) }} overflow-hidden transition-all duration-200 hover:shadow-lg hover:scale-[1.02] hover:ring-4 cursor-pointer" data-phase="{{ strtolower($numeroFase . ' ' . $fase->name) }}" data-phase-number="{{ $numeroFase }}">
         
         <div class="h-1.5 {{ $colors[$colorIndex] }}"></div>
         <div class="brush relative px-8 pt-6">
@@ -124,6 +127,14 @@
             <circle cx="180" cy="75" r="20" fill="{{ $svgColors[$colorIndex] }}" opacity="0.7"/>
             <circle cx="220" cy="70" r="18" fill="{{ $svgColors[$colorIndex] }}" opacity="0.7"/>
           </svg>
+
+          <!-- Insignia con numeración de la tarjeta -->
+          <div class="absolute left-4 top-3">
+            <span class="inline-flex h-7 w-7 items-center justify-center rounded-full {{ $colors[$colorIndex] }} text-white text-xs font-bold shadow">
+              {{ $numeroFase }}
+            </span>
+          </div>
+
           <div class="pointer-events-none absolute inset-0 flex items-center justify-center px-4">
             <span class="select-none text-lg md:text-xl lg:text-2xl font-extrabold tracking-wide text-white drop-shadow-lg text-center leading-tight max-w-full">
               {{ Str::upper($fase->name) }}
@@ -148,7 +159,7 @@
           
           <div class="pt-2">
             <button class="rounded-full bg-slate-700 px-4 py-1.5 text-white text-sm shadow hover:bg-slate-800" 
-                    onclick="gestionarFase({{ $fase->id }}, '{{ $btnTexto }}')">
+                    onclick="gestionarFase({{ $fase->id }}, {{ $numeroFase }}, '{{ $btnTexto }}')">
               {{ $btnTexto }}
             </button>
           </div>
@@ -198,14 +209,11 @@
   input.addEventListener('input', applyFilter);
 
   // Función para gestionar fase
-  function gestionarFase(faseId, accion) {
-    console.log(`Gestionar fase ${faseId} - Acción: ${accion}`);
-    
-    // Obtener el ID de la competición desde la URL actual
+  function gestionarFase(faseId, faseNumero, accion) {
+    console.log(`Gestionar fase ${faseId} (número ${faseNumero}) - Acción: ${accion}`);
     const competicionId = {{ $competicion->id }};
-    
-    // Redirigir a la gestión de estudiantes con ambos IDs
-    window.location.href = `/dashboard/admin/evaluacion/${competicionId}/fase/${faseId}/estudiantes`;
+    // Usar fase_n para no chocar con el parámetro de ruta {fase}
+    window.location.href = `/dashboard/admin/evaluacion/${competicionId}/fase/${faseId}/estudiantes?fase_n=${faseNumero}`;
   }
 </script>
 @endsection

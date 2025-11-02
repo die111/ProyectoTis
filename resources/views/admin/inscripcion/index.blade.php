@@ -41,6 +41,21 @@
       <button id="btnSearch" class="px-4 py-2 rounded-full bg-[#091c47] text-white text-sm font-medium hover:bg-[#0c3e92]">Buscar</button>
     </div>
 
+    <!-- Combo box de competiciones -->
+    <div class="mb-2 text-center">
+      <span class="text-gray-800 text-base font-medium">Seleccione la competicon para la inscripcion</span>
+    </div>
+    <div class="flex items-center justify-center mb-4">
+      <select id="cmbCompeticiones" class="px-4 py-2 rounded-md border border-gray-300 bg-white text-sm" style="min-width:280px">
+        <option value="" selected disabled>Selecciona una competición</option>
+        @isset($competiciones)
+          @foreach($competiciones as $c)
+            <option value="{{ $c->id }}">{{ $c->name }}</option>
+          @endforeach
+        @endisset
+      </select>
+    </div>
+
     <!-- TABLA (solo lectura) -->
     <div class="table-shell">
       <div class="table-inner">
@@ -52,10 +67,10 @@
                 <th class="px-3 py-3 text-left">Apellido Paterno</th>
                 <th class="px-3 py-3 text-left">Apellido Materno</th>
                 <th class="px-3 py-3 text-left">Email</th>
-                <th class="px-3 py-3 text-left">Contraseña</th>
-                <th class="px-3 py-3 text-left">Rol</th>
                 <th class="px-3 py-3 text-left">Área</th>
+                <th class="px-3 py-3 text-left">Categoría</th>
                 <th class="px-3 py-3 text-left">Código de usuario</th>
+                <th class="px-3 py-3 text-left">Contraseña</th>
               </tr>
             </thead>
             <tbody id="tbodyEstudiantes" class="text-sm text-gray-700"></tbody>
@@ -76,7 +91,7 @@
         <span>Eliminar</span>
       </button>
 
-      <button id="btnExport" class="btn-pill">
+      <button id="btnExport" class="btn-pill bg-gray-400 text-gray-200 cursor-not-allowed" disabled>
         <svg class="ico ico-18" viewBox="0 0 24 24"><path d="M12 3v12m0 0l-4-4m4 4 4-4M4 21h16" stroke-linecap="round" stroke-linejoin="round"/></svg>
         <span>Guardar y Exportar</span>
       </button>

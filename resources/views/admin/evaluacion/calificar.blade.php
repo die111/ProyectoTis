@@ -10,7 +10,7 @@
         <h1 class="text-3xl font-semibold tracking-tight">Calificar Estudiantes</h1>
         <p class="text-sm text-gray-600 mt-2">{{ $fase->name }} - {{ $competicion->name }}</p>
       </div>
-      <a href="{{ route('admin.evaluacion.fase.estudiantes', [$competicion->id, $fase->id]) }}" class="rounded-full bg-gray-500 px-4 py-2 text-white text-sm shadow hover:bg-gray-600">
+      <a href="{{ route('admin.evaluacion.fase.estudiantes', ['competicion' => $competicion->id, 'fase' => $fase->id, 'fase_n' => $numeroFase]) }}" class="rounded-full bg-gray-500 px-4 py-2 text-white text-sm shadow hover:bg-gray-600">
         ← Volver a Estudiantes
       </a>
     </div>
@@ -44,7 +44,8 @@
 
   <!-- Buscador -->
   <section class="mb-6">
-    <form method="GET" action="{{ route('admin.evaluacion.calificar', [$competicion->id, $fase->id]) }}" class="flex items-center gap-3 justify-center">
+    <form method="GET" action="{{ route('admin.evaluacion.calificar', ['competicion' => $competicion->id, 'fase' => $fase->id]) }}" class="flex items-center gap-3 justify-center">
+      <input type="hidden" name="fase_n" value="{{ $numeroFase }}">
       <div class="relative flex-1 max-w-md w-full flex justify-center">
         <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="h-5 w-5 text-gray-400">
@@ -107,7 +108,7 @@
           <thead class="bg-gray-50">
             <tr>
               <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                <a href="{{ route('admin.evaluacion.calificar', array_merge(request()->all(), ['sort_by' => 'nombre', 'sort_order' => (request('sort_by') === 'nombre' && request('sort_order') === 'asc') ? 'desc' : 'asc'], [$competicion->id, $fase->id])) }}" class="flex items-center hover:text-gray-700">
+                <a href="{{ route('admin.evaluacion.calificar', array_merge(['competicion' => $competicion->id, 'fase' => $fase->id], request()->except(['fase']), ['sort_by' => 'nombre', 'sort_order' => (request('sort_by') === 'nombre' && request('sort_order') === 'asc') ? 'desc' : 'asc', 'fase_n' => $numeroFase])) }}" class="flex items-center hover:text-gray-700">
                   Estudiante
                   @if(request('sort_by') === 'nombre')
                     @if(request('sort_order') === 'asc')
@@ -136,7 +137,7 @@
                 CI
               </th>
               <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                <a href="{{ route('admin.evaluacion.calificar', array_merge(request()->all(), ['sort_by' => 'nota', 'sort_order' => (request('sort_by') === 'nota' && request('sort_order') === 'desc') ? 'asc' : 'desc'], [$competicion->id, $fase->id])) }}" class="flex items-center justify-center hover:text-gray-700">
+                <a href="{{ route('admin.evaluacion.calificar', array_merge(['competicion' => $competicion->id, 'fase' => $fase->id], request()->except(['fase']), ['sort_by' => 'nota', 'sort_order' => (request('sort_by') === 'nota' && request('sort_order') === 'desc') ? 'asc' : 'desc', 'fase_n' => $numeroFase])) }}" class="flex items-center justify-center hover:text-gray-700">
                   Puntaje (0-100)
                   @if(request('sort_by') === 'nota')
                     @if(request('sort_order') === 'desc')
@@ -239,7 +240,7 @@
                   </span>
                   <!-- Formulario por fila - solo mostrar si no está calificado -->
                   @if(!$estaCalificado)
-                    <form id="calif-{{ $estudiante->id }}" method="POST" action="{{ route('admin.evaluacion.guardar-calificaciones', [$competicion->id, $fase->id]) }}" class="mt-2 inline-block">
+                    <form id="calif-{{ $estudiante->id }}" method="POST" action="{{ route('admin.evaluacion.guardar-calificaciones', ['competicion' => $competicion->id, 'fase' => $fase->id]) }}" class="mt-2 inline-block">
                       @csrf
                       <button type="submit" class="rounded-md px-3 py-1.5 text-xs font-medium text-white shadow-sm hover:opacity-90" style="background-color: #091C47;">
                         Calificar
@@ -289,8 +290,9 @@
         @else
           <p class="text-xs text-amber-700 mb-3">Criterio: No configurado en esta fase</p>
         @endif
-        <form method="POST" action="{{ route('admin.evaluacion.finalizar-fase', [$competicion->id, $fase->id]) }}" onsubmit="return confirm('Esta acción clasificará estudiantes a la siguiente fase según el criterio configurado. ¿Deseas continuar?');">
+        <form method="POST" action="{{ route('admin.evaluacion.finalizar-fase', ['competicion' => $competicion->id, 'fase' => $fase->id]) }}?fase_n={{ $numeroFase }}" onsubmit="return confirm('Esta acción clasificará estudiantes a la siguiente fase según el criterio configurado. ¿Deseas continuar?');">
           @csrf
+          <input type="hidden" name="fase_n" value="{{ $numeroFase }}">
           <button type="submit" class="w-full rounded-md bg-red-600 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-red-700">
             Finalizar Fase
           </button>

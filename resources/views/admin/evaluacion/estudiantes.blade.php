@@ -46,7 +46,9 @@
 
   <!-- Filtros -->
   <section class="mb-6">
-    <form method="GET" action="{{ route('admin.evaluacion.fase.estudiantes', [$competicion->id, $fase->id]) }}" class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+    <form method="GET" action="{{ route('admin.evaluacion.fase.estudiantes', ['competicion' => $competicion->id, 'fase' => $fase->id]) }}" class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+      <!-- Preservar número de fase -->
+      <input type="hidden" name="fase_n" value="{{ $numeroFase }}">
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
         <!-- Combo box de Categorías -->
         <div>
@@ -91,7 +93,7 @@
           Filtrar
         </button>
         @if(request()->hasAny(['categoria', 'area', 'search', 'estado_activo']))
-          <a href="{{ route('admin.evaluacion.fase.estudiantes', [$competicion->id, $fase->id]) }}" class="ml-3 rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
+          <a href="{{ route('admin.evaluacion.fase.estudiantes', ['competicion' => $competicion->id, 'fase' => $fase->id, 'fase_n' => $numeroFase]) }}" class="ml-3 rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
             Limpiar Filtros
           </a>
         @endif
@@ -101,7 +103,7 @@
 
   <!-- Buscador -->
   <section class="mb-6">
-    <form method="GET" action="{{ route('admin.evaluacion.fase.estudiantes', [$competicion->id, $fase->id]) }}" class="flex items-center gap-3 justify-center">
+    <form method="GET" action="{{ route('admin.evaluacion.fase.estudiantes', ['competicion' => $competicion->id, 'fase' => $fase->id]) }}" class="flex items-center gap-3 justify-center">
       <!-- Mantener filtros actuales -->
       @if(request('categoria'))
         <input type="hidden" name="categoria" value="{{ request('categoria') }}">
@@ -112,6 +114,8 @@
       @if(request('estado_activo'))
         <input type="hidden" name="estado_activo" value="{{ request('estado_activo') }}">
       @endif
+      <!-- Preservar número de fase -->
+      <input type="hidden" name="fase_n" value="{{ $numeroFase }}">
       <div class="relative flex-1 max-w-md w-full flex justify-center">
         <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="h-5 w-5 text-gray-400">
@@ -135,7 +139,7 @@
           Mostrando {{ $estudiantes->count() }} de {{ $estudiantes->total() }} estudiantes
         </p>
       </div>
-      <a href="{{ route('admin.evaluacion.calificar', [$competicion->id, $fase->id]) }}" class="rounded-md px-6 py-2 text-sm font-medium text-white shadow-sm hover:opacity-90" style="background-color: #091C47;">
+      <a href="{{ route('admin.evaluacion.calificar', ['competicion' => $competicion->id, 'fase' => $fase->id, 'fase_n' => $numeroFase]) }}" class="rounded-md px-6 py-2 text-sm font-medium text-white shadow-sm hover:opacity-90" style="background-color: #091C47;">
         Iniciar Calificación
       </a>
     </div>
