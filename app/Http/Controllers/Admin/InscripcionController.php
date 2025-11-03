@@ -12,6 +12,8 @@ use App\Models\Inscription;
 use App\Models\Categoria;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
+use App\Notifications\FrontNotification;
+use Illuminate\Support\Facades\Notification;
 
 class InscripcionController extends Controller
 {
@@ -116,6 +118,91 @@ class InscripcionController extends Controller
         return $bestPct >= 70.0 ? $bestId : null;
     }
 
+    public function solicitud()
+    {
+        // Obtener todas las inscripciones con sus relaciones
+        $inscripciones = Inscription::with(['user', 'competition', 'area', 'level'])
+            ->where('fase', '1')
+            ->orderBy('created_at', 'desc')
+            ->get();
+        
+        return view('admin.inscripcion.solicitud', compact('inscripciones'));
+    }
+
+    public function actualizarEstado(Request $request, $id)
+    {
+        try {
+            $request->validate([
+                'estado' => 'required|in:confirmada,rechazada,pendiente',
+                'observaciones' => 'nullable|string'
+            ]);
+
+            $inscripcion = Inscription::findOrFail($id);
+            $estadoAnterior = $inscripcion->estado;
+            
+            // Actualizar el estado
+            $inscripcion->estado = $request->estado;
+            if ($request->observaciones) {
+                $inscripcion->observaciones = $request->observaciones;
+            }
+            $inscripcion->save();
+
+            // Enviar notificación al estudiante
+            $mensaje = $this->generarMensajeNotificacion($request->estado, $inscripcion);
+            
+            $inscripcion->user->notify(new FrontNotification(
+                $mensaje['titulo'],
+                $mensaje['mensaje'],
+                $mensaje['tipo'],
+                route('estudiante.inscripcion.index')
+            ));
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Estado actualizado exitosamente'
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Error al actualizar estado de inscripción: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al actualizar el estado: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    private function generarMensajeNotificacion($estado, $inscripcion)
+    {
+        $competencia = $inscripcion->competition->name;
+        
+        switch ($estado) {
+            case 'confirmada':
+                return [
+                    'titulo' => '¡Inscripción Aprobada!',
+                    'mensaje' => "Tu inscripción a la competencia '{$competencia}' ha sido aprobada.",
+                    'tipo' => 'success'
+                ];
+            case 'rechazada':
+                return [
+                    'titulo' => 'Inscripción Rechazada',
+                    'mensaje' => "Tu inscripción a la competencia '{$competencia}' ha sido rechazada. Revisa las observaciones.",
+                    'tipo' => 'error'
+                ];
+            case 'pendiente':
+                return [
+                    'titulo' => 'Inscripción en Revisión',
+                    'mensaje' => "Tu inscripción a la competencia '{$competencia}' está siendo revisada.",
+                    'tipo' => 'info'
+                ];
+            default:
+                return [
+                    'titulo' => 'Actualización de Inscripción',
+                    'mensaje' => "El estado de tu inscripción a '{$competencia}' ha sido actualizado.",
+                    'tipo' => 'info'
+                ];
+        }
+    }
+
     public function guardarEstudiantes(Request $request)
     {
         try {
@@ -150,9 +237,27 @@ class InscripcionController extends Controller
                 $areaList[] = [ 'id' => $a->id, 'norm' => $norm ];
             }
 
+            $skippedNoEmail = 0;
             foreach ($estudiantes as $est) {
+                // Normalizar y proteger accesos a claves del CSV
+                $name = $est['name'] ?? '';
+                $lastNameFather = $est['last_name_father'] ?? '';
+                $lastNameMother = $est['last_name_mother'] ?? '';
+                $ci = $est['ci'] ?? null;
+                $email = $est['email'] ?? null;
+                $password = $est['password'] ?? null;
+                $userCode = $est['user_code'] ?? null;
+                $isActive = $est['is_active'] ?? true;
+
+                // Si no hay email no podemos crear usuario (email es identificador)
+                if (empty($email)) {
+                    $skippedNoEmail++;
+                    Log::warning('Fila de estudiantes omitida por faltar email: ' . json_encode($est));
+                    continue;
+                }
+
                 // Verificar si usuario existe por email
-                $existingUser = User::where('email', $est['email'])->first();
+                $existingUser = User::where('email', $email)->first();
 
                 // Mapear área
                 $areaId = $this->resolveAreaId($est['area_id'] ?? null, $areaMap, $areaList);
@@ -163,17 +268,19 @@ class InscripcionController extends Controller
 
                 // Crear o reutilizar usuario
                 if (!$existingUser) {
+                    // Si no viene password, generar una password aleatoria segura
+                    $plainPassword = $password ?? Str::random(10);
                     $user = User::create([
-                        'name' => $est['name'],
-                        'last_name_father' => $est['last_name_father'],
-                        'last_name_mother' => $est['last_name_moothe'],
-                        'ci' => $est['ci'] ?? null,
-                        'email' => $est['email'],
-                        'password' => bcrypt($est['password']),
-                        'role_id' => $studentRoleId, // SIEMPRE Estudiante
+                        'name' => $name,
+                        'last_name_father' => $lastNameFather,
+                        'last_name_mother' => $lastNameMother,
+                        'ci' => $ci,
+                        'email' => $email,
+                        'password' => bcrypt($plainPassword),
+                        'role_id' => $studentRoleId, // Rol Estudiante
                         'area_id' => $areaId,
-                        'user_code' => $est['user_code'],
-                        'is_active' => $est['is_active'] ?? true,
+                        'user_code' => $userCode,
+                        'is_active' => $isActive,
                     ]);
                     $createdUsers++;
                 } else {
@@ -200,7 +307,7 @@ class InscripcionController extends Controller
                         'area_id' => $areaId,
                         'categoria_id' => $categoriaId,
                         'fase' => 1,
-                        'estado' => 'pendiente',
+                        'estado' => 'confirmada',
                         'is_active' => true,
                     ]);
                     $createdInscriptions++;
@@ -211,6 +318,7 @@ class InscripcionController extends Controller
             if ($skippedUsersDuplicate > 0) $message .= ", usuarios existentes: $skippedUsersDuplicate";
             $message .= ", inscripciones creadas: $createdInscriptions";
             if ($skippedInscriptionsDuplicate > 0) $message .= ", inscripciones existentes: $skippedInscriptionsDuplicate";
+            if ($skippedNoEmail > 0) $message .= ", filas sin email: $skippedNoEmail";
             
             return response()->json(['success' => true, 'message' => $message]);
         } catch (\Exception $e) {

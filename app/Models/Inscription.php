@@ -30,6 +30,12 @@ class Inscription extends Model
         return $this->belongsTo(Competicion::class, 'competition_id');
     }
 
+    // Funcion competition 
+    public function competition()
+    {
+        return $this->belongsTo(Competicion::class, 'competition_id');
+    }
+
     // Relación con el área
     public function area()
     {

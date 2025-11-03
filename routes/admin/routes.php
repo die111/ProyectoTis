@@ -18,7 +18,7 @@ Route::middleware(['auth'])->prefix('dashboard/admin')->name('admin.')->group(fu
     // Rutas de usuarios
     Route::resource('usuarios', UsuarioController::class); // ->middleware('permission:usuarios')
     // Formulario independiente para crear usuario
-    Route::get('formulario-usuario', function() {
+    Route::get('formulario-usuario', function () {
         $areas = \App\Models\Area::all();
         $roles = \App\Models\Role::where('is_active', true)->get();
         return view('admin.usuarios.formulario-usuario', compact('areas', 'roles'));
@@ -39,14 +39,14 @@ Route::middleware(['auth'])->prefix('dashboard/admin')->name('admin.')->group(fu
     Route::resource('areas', AreaController::class); // ->middleware('permission:areas')
     Route::post('areas/bulk-activate', [AreaController::class, 'bulkActivate'])->name('areas.bulk-activate'); // ->middleware('permission:areas')
     Route::post('areas/bulk-deactivate', [AreaController::class, 'bulkDeactivate'])->name('areas.bulk-deactivate'); // ->middleware('permission:areas')
-    
+
     // Rutas categorías
     Route::resource('categorias', CategoriaController::class); // ->middleware('permission:categorias')
     Route::patch('categorias/{categoria}/activate', [CategoriaController::class, 'activate'])->name('categorias.activate');
     Route::patch('categorias/{categoria}/deactivate', [CategoriaController::class, 'deactivate'])->name('categorias.deactivate');
 
-        // Ruta para crear etapa (etapas.create)
-        Route::get('etapas/create', [EtapaController::class, 'create'])->name('etapas.create');
+    // Ruta para crear etapa (etapas.create)
+    Route::get('etapas/create', [EtapaController::class, 'create'])->name('etapas.create');
     // Ruta para la página de solicitud de inscripción (debe ir ANTES del resource)
     Route::get('inscripcion/solicitud', [InscripcionController::class, 'solicitud'])->name('inscripcion.solicitud');
     Route::post('inscripcion/solicitud/{id}/estado', [InscripcionController::class, 'actualizarEstado'])->name('inscripcion.actualizarEstado');
@@ -54,7 +54,7 @@ Route::middleware(['auth'])->prefix('dashboard/admin')->name('admin.')->group(fu
     // Endpoints JSON de inscripción (deben ir antes del resource para evitar colisión con {inscripcion})
     Route::get('inscripcion/get-areas', [InscripcionController::class, 'getAreas'])->name('inscripcion.getAreas');
     Route::get('inscripcion/get-competiciones', [InscripcionController::class, 'getCompeticiones'])->name('inscripcion.getCompeticiones');
-    
+
     Route::resource('inscripcion', InscripcionController::class); // ->middleware('permission:inscripcion')
     Route::resource('phases', EtapaController::class)->names('phases'); // ->middleware('permission:fases')
     Route::patch('phases/{id}/habilitar', [EtapaController::class, 'habilitar'])->name('phases.habilitar'); // ->middleware('permission:fases')
@@ -64,25 +64,25 @@ Route::middleware(['auth'])->prefix('dashboard/admin')->name('admin.')->group(fu
 
     // Ruta evaluaciones
     Route::resource('evaluacion', EvaluacionController::class); // ->middleware('permission:evaluaciones')
-    
+
     // Ruta para mostrar las fases de una competición específica
     Route::get('evaluacion/{competicion}/fases', [EvaluacionController::class, 'showFases'])->name('evaluacion.fases');
-    
+
     // Ruta para gestionar estudiantes de una fase específica en una competición específica
     Route::get('evaluacion/{competicion}/fase/{fase}/estudiantes', [EvaluacionController::class, 'gestionarEstudiantes'])->name('evaluacion.fase.estudiantes');
-    
+
     // Ruta para calificar estudiantes de una fase específica
     Route::get('evaluacion/{competicion}/fase/{fase}/calificar', [EvaluacionController::class, 'calificar'])->name('evaluacion.calificar');
-    
+
     // Ruta para guardar calificaciones
     Route::post('evaluacion/{competicion}/fase/{fase}/calificar', [EvaluacionController::class, 'guardarCalificaciones'])->name('evaluacion.guardar-calificaciones');
-    
+
     // Ruta para clasificar por cupo
     Route::post('evaluacion/{competicion}/fase/{fase}/clasificar-cupo', [EvaluacionController::class, 'clasificarPorCupo'])->name('evaluacion.clasificar-cupo');
-    
+
     // Ruta para clasificar por notas altas
     Route::post('evaluacion/{competicion}/fase/{fase}/clasificar-notas', [EvaluacionController::class, 'clasificarPorNotasAltas'])->name('evaluacion.clasificar-notas');
-    
+
     // Ruta para finalizar fase desde la vista de calificación
     Route::post('evaluacion/{competicion}/fase/{fase}/finalizar', [EvaluacionController::class, 'finalizarFase'])->name('evaluacion.finalizar-fase');
 

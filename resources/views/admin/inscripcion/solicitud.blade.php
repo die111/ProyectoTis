@@ -63,20 +63,20 @@
                                         <div class="flex items-center">
                                             <div>
                                                 <div class="text-sm font-medium text-gray-900">
-                                                    {{ $inscripcion->user->name }} {{ $inscripcion->user->last_name_father }}
+                                                    {{ optional($inscripcion->user)->name ?? '—' }} {{ optional($inscripcion->user)->last_name_father ?? '' }}
                                                 </div>
-                                                <div class="text-sm text-gray-500">{{ $inscripcion->user->email }}</div>
+                                                <div class="text-sm text-gray-500">{{ optional($inscripcion->user)->email ?? '—' }}</div>
                                             </div>
                                         </div>
                                     </td>
                                     <td class="px-6 py-4">
-                                        <div class="text-sm text-gray-900">{{ $inscripcion->competition->name }}</div>
+                                        <div class="text-sm text-gray-900">{{ optional($inscripcion->competition)->name ?? '—' }}</div>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
-                                        <div class="text-sm text-gray-900">{{ $inscripcion->area->name }}</div>
+                                        <div class="text-sm text-gray-900">{{ optional($inscripcion->area)->name ?? '—' }}</div>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
-                                        <div class="text-sm text-gray-900">{{ $inscripcion->level->name }}</div>
+                                        <div class="text-sm text-gray-900">{{ optional($inscripcion->level)->name ?? '—' }}</div>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         @if($inscripcion->es_grupal)
@@ -208,23 +208,23 @@
             <div class="grid grid-cols-2 gap-4">
                 <div>
                     <p class="text-sm font-semibold text-gray-700">Estudiante:</p>
-                    <p class="text-sm text-gray-900">${inscripcion.user.name} ${inscripcion.user.last_name_father}</p>
+                    <p class="text-sm text-gray-900">${inscripcion.user ? (inscripcion.user.name + ' ' + (inscripcion.user.last_name_father || '')) : '—'}</p>
                 </div>
                 <div>
                     <p class="text-sm font-semibold text-gray-700">Email:</p>
-                    <p class="text-sm text-gray-900">${inscripcion.user.email}</p>
+                    <p class="text-sm text-gray-900">${inscripcion.user ? inscripcion.user.email : '—'}</p>
                 </div>
                 <div>
                     <p class="text-sm font-semibold text-gray-700">Competencia:</p>
-                    <p class="text-sm text-gray-900">${inscripcion.competition.name}</p>
+                    <p class="text-sm text-gray-900">${inscripcion.competition ? inscripcion.competition.name : '—'}</p>
                 </div>
                 <div>
                     <p class="text-sm font-semibold text-gray-700">Área:</p>
-                    <p class="text-sm text-gray-900">${inscripcion.area.name}</p>
+                    <p class="text-sm text-gray-900">${inscripcion.area ? inscripcion.area.name : '—'}</p>
                 </div>
                 <div>
                     <p class="text-sm font-semibold text-gray-700">Nivel:</p>
-                    <p class="text-sm text-gray-900">${inscripcion.level.name}</p>
+                    <p class="text-sm text-gray-900">${inscripcion.level ? inscripcion.level.name : '—'}</p>
                 </div>
                 <div>
                     <p class="text-sm font-semibold text-gray-700">Tipo:</p>

@@ -112,7 +112,7 @@
                                     <div class="text-sm text-gray-900">{{ $inscripcion->area->name }}</div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="text-sm text-gray-900">{{ $inscripcion->level->name }}</div>
+                                    <div class="text-sm text-gray-900">{{ $inscripcion->competicion->nombre }}</div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     @if($inscripcion->estado === 'pendiente')

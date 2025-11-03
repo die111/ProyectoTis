@@ -3,11 +3,16 @@
 namespace App\Http\Controllers\Estudiante;
 
 use App\Http\Controllers\Controller;
+use App\Models\Area;
 use Illuminate\Http\Request;
 use App\Models\Competicion;
 use App\Models\Inscription;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use App\Models\CompetitionCategoryArea;
+use App\Models\Level;
+use App\Models\Categoria;
 
 class InscripcionController extends Controller
 {
@@ -68,8 +73,8 @@ class InscripcionController extends Controller
         }
 
         $user = Auth::user();
-        $areas = \App\Models\Area::where('is_active', true)->get();
-        $levels = \App\Models\Level::all();
+        $areas = Area::where('is_active', true)->get();
+        $levels = Level::all();
 
         return view('estudiante.inscripcion.create', compact('competencia', 'areas', 'levels', 'user'));
     }
@@ -118,11 +123,43 @@ class InscripcionController extends Controller
                 return redirect()->back()->with('error', 'Ya estás inscrito en esta competencia y área.');
             }
             
+            // Determinar categoria_id asociada a la competencia y área
+            $pair = CompetitionCategoryArea::where('competition_id', $competicion->id)
+                ->where('area_id', $request->area_id)
+                ->first();
+
+            if (!$pair) {
+                $msg = 'No hay categorías configuradas para la combinación competencia/área seleccionada. Se asignará una categoría por defecto. Contacta al administrador para revisar.';
+                Log::warning($msg . ' competition_id=' . $competicion->id . ' area_id=' . $request->area_id . ' user_id=' . $user->id);
+                // Añadir mensaje de sesión para usuarios web
+                if (! $request->expectsJson()) {
+                    session()->flash('warning', $msg);
+                }
+
+                // Buscar una categoría activa primero, luego la primera disponible
+                $fallbackCategoria = Categoria::where('is_active', true)->first() ?? Categoria::first();
+                if (! $fallbackCategoria) {
+                    // Crear categoría por defecto
+                    $fallbackCategoria = Categoria::create([
+                        'nombre' => 'Sin categoría',
+                        'descripcion' => 'Categoría generada automáticamente al inscribir sin configuración',
+                        'is_active' => false,
+                    ]);
+                }
+                $categoriaId = $fallbackCategoria->id;
+            } else {
+                $categoriaId = $pair->categoria_id;
+            }
+
+            $fase = 1;
+
             // Crear la inscripción
             $inscripcion = Inscription::create([
                 'user_id' => $user->id,
                 'competition_id' => $competicion->id,
                 'area_id' => $request->area_id,
+                'categoria_id' => $categoriaId,
+                'fase' => $fase,
                 'level_id' => $request->level_id,
                 'estado' => 'pendiente',
                 'es_grupal' => $request->es_grupal ?? false,
