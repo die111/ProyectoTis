@@ -16,6 +16,7 @@ class DashboardController extends Controller
 
     public function index(): View
     {
+        /** @var \App\Models\User|null $user */
         $user = Auth::user();
         $role = $user->role ? $user->role->name : null;
         return match($role) {
@@ -42,6 +43,7 @@ class DashboardController extends Controller
 
     private function responsableDashboard(): View
     {
+        /** @var \App\Models\User|null $user */
         $user = Auth::user();
         
         // Estadísticas específicas del área
@@ -59,6 +61,7 @@ class DashboardController extends Controller
 
     private function evaluadorDashboard(): View
     {
+        /** @var \App\Models\User|null $user */
         $user = Auth::user();
         
         // Estadísticas del evaluador

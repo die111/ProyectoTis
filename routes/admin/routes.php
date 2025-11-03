@@ -42,9 +42,8 @@ Route::middleware(['auth'])->prefix('dashboard/admin')->name('admin.')->group(fu
         // Ruta para crear etapa (etapas.create)
         Route::get('etapas/create', [EtapaController::class, 'create'])->name('etapas.create');
     // Ruta para la página de solicitud de inscripción (debe ir ANTES del resource)
-    Route::get('inscripcion/solicitud', function() {
-        return view('admin.inscripcion.solicitud');
-    })->name('inscripcion.solicitud');
+    Route::get('inscripcion/solicitud', [InscripcionController::class, 'solicitud'])->name('inscripcion.solicitud');
+    Route::post('inscripcion/solicitud/{id}/estado', [InscripcionController::class, 'actualizarEstado'])->name('inscripcion.actualizarEstado');
     
     Route::resource('inscripcion', InscripcionController::class); // ->middleware('permission:inscripcion')
     Route::resource('phases', EtapaController::class)->names('phases'); // ->middleware('permission:fases')

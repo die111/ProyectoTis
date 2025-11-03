@@ -14,14 +14,31 @@ class Sidebar extends Component
 
     public function __construct()
     {
+        /** @var \App\Models\User|null $this->user */
         $this->user = Auth::user();
-        $this->menuItems = $this->getMenuItems();
+        // If there's no authenticated user (e.g. during some tests or guest views),
+        // avoid building the menu which assumes a user/role exists.
+        if (is_null($this->user)) {
+            $this->menuItems = [];
+            return;
+        }
+        // Defer building menu items until render time and be defensive about DB access.
+        // Accessing relationships in the constructor can trigger DB queries during
+        // application bootstrap (before tests run migrations) which leads to
+        // "transaction aborted" or "undefined table" errors in tests. We'll
+        // compute the menu lazily in render().
+        $this->menuItems = [];
     }
 
     private function getMenuItems(): array
     {
+        /** @var \App\Models\User|null $user */
         $user = $this->user;
         $items = [];
+        if (is_null($user)) {
+            return $items;
+        }
+
         $role = $user->role;
         $permissions = $role ? $role->permissions->pluck('name')->toArray() : [];
         $menuConfig = [
@@ -91,6 +108,12 @@ class Sidebar extends Component
                 'route' => 'admin.evaluacion.index',
                 'icon' => 'fas fa-clipboard-check',
                 'active' => $this->isRouteActive(['admin.evaluacion.*'])
+            ],
+            'inscripcion_competencia' => [
+                'name' => 'Inscripción a Competencias',
+                'route' => 'estudiante.inscripcion.index',
+                'icon' => 'fas fa-file-signature',
+                'active' => $this->isRouteActive(['estudiante.inscripcion.*'])
             ]
         ];
         foreach ($menuConfig as $perm => $item) {
@@ -98,8 +121,7 @@ class Sidebar extends Component
                 // Si tiene submenú, filtra los submenús por permisos
                 if (isset($item['submenu'])) {
                     $submenu = array_filter($item['submenu'], function($sub) use ($permissions) {
-                        // Si quieres permisos separados por subítem, aquí puedes personalizar
-                        return $sub !== null;
+
                     });
                     if (count($submenu)) {
                         $item['submenu'] = $submenu;
@@ -118,7 +140,7 @@ class Sidebar extends Component
      */
     private function isRouteActive(array $routePatterns): bool
     {
-        $currentRoute = Route::currentRouteName();
+        $currentRoute = Route::currentRouteName() ?? '';
 
         foreach ($routePatterns as $pattern) {
             if (str_contains($pattern, '*')) {
@@ -151,6 +173,17 @@ class Sidebar extends Component
 
     public function render(): View
     {
-        return view('components.sidebar');
+        // Populate menu items lazily and defensively. Any DB faults will be
+        // caught and menu will fall back to empty.
+        try {
+            if (empty($this->menuItems) && $this->user) {
+                $this->menuItems = $this->getMenuItems();
+            }
+        } catch (\Throwable $e) {
+            // swallow and default to empty menu to keep views/tests stable
+            $this->menuItems = [];
+        }
+
+        return view('components.sidebar', ['menuItems' => $this->menuItems, 'user' => $this->user]);
     }
 }

@@ -17,7 +17,8 @@ class RoleMiddleware
             return redirect()->route('login');
         }
 
-        $user = Auth::user();
+    /** @var \App\Models\User|null $user */
+    $user = Auth::user();
 
         if (!$user->is_active) {
             Auth::logout();
