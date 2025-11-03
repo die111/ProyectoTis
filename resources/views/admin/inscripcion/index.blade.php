@@ -66,6 +66,7 @@
                 <th class="px-3 py-3 text-left">Nombre</th>
                 <th class="px-3 py-3 text-left">Apellido Paterno</th>
                 <th class="px-3 py-3 text-left">Apellido Materno</th>
+                <th class="px-3 py-3 text-left">C.I</th>
                 <th class="px-3 py-3 text-left">Email</th>
                 <th class="px-3 py-3 text-left">Área</th>
                 <th class="px-3 py-3 text-left">Categoría</th>

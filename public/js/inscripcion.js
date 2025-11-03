@@ -106,11 +106,12 @@ function nuevaFila(data = {}) {
   tr.setAttribute('data-selectable', '1');
   tr.className = 'border-b last:border-b-0';
 
-  // Orden en tabla/CSV: nombre, ap_paterno, ap_materno, email, area, categoria, codigo_usuario, password
+  // Orden en tabla/CSV: nombre, ap_paterno, ap_materno, ci, email, area, categoria, codigo_usuario, password
   [
     'nombre',
     'ap_paterno',
     'ap_materno',
+    'ci',
     'email',
     'area',
     'categoria',
@@ -165,21 +166,22 @@ function cargarCSV(csvText){
   let startIndex = 0;
   if (filas.length) {
     const headerGuess = parseLine(filas[0]).join(' ').toLowerCase();
-    if (/nombre|paterno|materno|email|contraseña|password|rol|area|codigo|categor/i.test(headerGuess)) startIndex = 1;
+    if (/nombre|paterno|materno|ci|email|contraseña|password|rol|area|codigo|categor/i.test(headerGuess)) startIndex = 1;
   }
 
   for (let i=startIndex;i<filas.length;i++){
     const cols = parseLine(filas[i]).map(c => (c || '').trim());
-    // Orden esperado del CSV: nombre(0), ap_paterno(1), ap_materno(2), email(3), area(4), categoria(5), codigo_usuario(6), password(7)
+    // Orden esperado del CSV: nombre(0), ap_paterno(1), ap_materno(2), ci(3), email(4), area(5), categoria(6), codigo_usuario(7), password(8)
     const data = {
       nombre: cols[0] || '',
       ap_paterno: cols[1] || '',
       ap_materno: cols[2] || '',
-      email: cols[3] || '',
-      area: cols[4] || '',
-      categoria: cols[5] || '',
-      codigo_usuario: cols[6] || '',
-      password: cols[7] || ''
+      ci: cols[3] || '',
+      email: cols[4] || '',
+      area: cols[5] || '',
+      categoria: cols[6] || '',
+      codigo_usuario: cols[7] || '',
+      password: cols[8] || ''
     };
 
     if (Object.values(data).every(v => v === '')) continue;
@@ -197,11 +199,12 @@ btnExport.addEventListener('click', () => {
         tds[0]?.textContent?.trim() || '', // nombre
         tds[1]?.textContent?.trim() || '', // ap_paterno
         tds[2]?.textContent?.trim() || '', // ap_materno
-        tds[3]?.textContent?.trim() || '', // email
-        tds[4]?.textContent?.trim() || '', // area
-        tds[5]?.textContent?.trim() || '', // categoria
-        tds[6]?.textContent?.trim() || '', // codigo_usuario
-        tds[7]?.textContent?.trim() || ''  // password
+        tds[3]?.textContent?.trim() || '', // ci
+        tds[4]?.textContent?.trim() || '', // email
+        tds[5]?.textContent?.trim() || '', // area
+        tds[6]?.textContent?.trim() || '', // categoria
+        tds[7]?.textContent?.trim() || '', // codigo_usuario
+        tds[8]?.textContent?.trim() || ''  // password
       ].join(',');
     });
 
@@ -210,9 +213,9 @@ btnExport.addEventListener('click', () => {
     .filter(tr => tr.style.display !== 'none')
     .map(tr => {
       const tds = tr.querySelectorAll('td');
-      const areaNombre = tds[4]?.textContent?.trim() || ''; // area ahora índice 4
+      const areaNombre = tds[5]?.textContent?.trim() || ''; // area ahora índice 5
       const areaId = getAreaId(areaNombre);
-      const categoriaNombre = tds[5]?.textContent?.trim() || '';
+      const categoriaNombre = tds[6]?.textContent?.trim() || '';
 
       if (areaNombre && !areaId) {
         console.warn(`Área "${areaNombre}" no encontrada en el sistema`);
@@ -222,11 +225,12 @@ btnExport.addEventListener('click', () => {
         name: tds[0]?.textContent?.trim() || '',
         last_name_father: tds[1]?.textContent?.trim() || '',
         last_name_moothe: tds[2]?.textContent?.trim() || '',
-        email: tds[3]?.textContent?.trim() || '',
-        password: tds[7]?.textContent?.trim() || '', // password índice 7
+        ci: tds[3]?.textContent?.trim() || '',
+        email: tds[4]?.textContent?.trim() || '',
+        password: tds[8]?.textContent?.trim() || '', // password índice 8
         role: 'Estudiante',
         area_id: (areaId ?? areaNombre),
-        user_code: tds[6]?.textContent?.trim() || '', // codigo_usuario índice 6
+        user_code: tds[7]?.textContent?.trim() || '', // codigo_usuario índice 7
         is_active: true,
         categoria: categoriaNombre
       };

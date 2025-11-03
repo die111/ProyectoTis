@@ -49,7 +49,7 @@
                     <!-- Contenido de la fase -->
                     <div class="flex-1 space-y-3">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
+                            <div class="col-span-1 md:col-span-2">
                                 <label class="block text-sm font-medium text-gray-700 mb-1">
                                     Nombre de la Fase
                                 </label>
@@ -59,14 +59,6 @@
                                         <option value="{{ $fase->id }}" x-bind:disabled="phases.filter(p => p.phase_id == {{ $fase->id }}).length > 0 && phase.phase_id != {{ $fase->id }}">{{ $fase->name }}</option>
                                     @endforeach
                                 </select>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 mb-1">
-                                    Clasificados
-                                </label>
-                                <input type="number" x-model="phase.clasificados" min="1" step="1"
-                                    placeholder="Ej: 10"
-                                    class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
                             </div>
                         </div>
 

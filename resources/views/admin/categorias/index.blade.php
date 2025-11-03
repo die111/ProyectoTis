@@ -105,8 +105,8 @@
               </tr>
             </thead>
             <tbody class="max-h-72 overflow-y-auto">
-              @forelse ($categories as $c)
-                <tr class="odd:bg-white even:bg-slate-100/70">
+              @forelse ($categories as $i => $c)
+                <tr class="text-sm {{ $i % 2 === 0 ? 'bg-white' : 'bg-[#d7dde4]' }}">
                   <td class="px-5 py-3 text-sm text-slate-700 w-1/4">{{ $c->nombre ?? 'N/A' }}</td>
                   <td class="px-5 py-3 text-sm text-slate-700 w-2/4">{{ $c->descripcion ?? 'N/A' }}</td>
                   <td class="px-5 py-3 text-sm w-1/8">
@@ -180,6 +180,15 @@
     </div>
   </div>
 </div>
+
+<style>
+  thead tr.bg-gray-500 {
+    background: #949BA2 !important;
+  }
+  thead tr.bg-gray-500 th {
+    color: #fff !important;
+  }
+</style>
 
 <script>
   function closeNotificationModal() {

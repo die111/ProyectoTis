@@ -158,8 +158,23 @@
           @endif
           
           <div class="pt-2">
-            <button class="rounded-full bg-slate-700 px-4 py-1.5 text-white text-sm shadow hover:bg-slate-800" 
-                    onclick="gestionarFase({{ $fase->id }}, {{ $numeroFase }}, '{{ $btnTexto }}')">
+             {{-- @php
+              $hoy = now();
+              $fueraDeRango = false;
+              if ($fechaInicio && $fechaFin) {
+                $fueraDeRango = $hoy->lt($fechaInicio) || $hoy->gt($fechaFin);
+              } elseif ($fechaInicio) {
+                $fueraDeRango = $hoy->lt($fechaInicio);
+              } elseif ($fechaFin) {
+                $fueraDeRango = $hoy->gt($fechaFin);
+              }
+            @endphp
+            <button class="rounded-full bg-slate-700 px-4 py-1.5 text-white text-sm shadow hover:bg-slate-800 {{ $fueraDeRango ? 'pointer-events-none opacity-60' : '' }}"
+                    onclick="gestionarFase({{ $fase->id }}, {{ $numeroFase }}, '{{ $btnTexto }}')" @if($fueraDeRango) disabled @endif> --}}
+             
+              <button class="rounded-full bg-slate-700 px-4 py-1.5 text-white text-sm shadow hover:bg-slate-800" 
+              onclick="gestionarFase({{ $fase->id }}, {{ $numeroFase }}, '{{ $btnTexto }}')">
+              
               {{ $btnTexto }}
             </button>
           </div>

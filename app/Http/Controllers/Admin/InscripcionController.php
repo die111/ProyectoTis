@@ -167,6 +167,7 @@ class InscripcionController extends Controller
                         'name' => $est['name'],
                         'last_name_father' => $est['last_name_father'],
                         'last_name_mother' => $est['last_name_moothe'],
+                        'ci' => $est['ci'] ?? null,
                         'email' => $est['email'],
                         'password' => bcrypt($est['password']),
                         'role_id' => $studentRoleId, // SIEMPRE Estudiante

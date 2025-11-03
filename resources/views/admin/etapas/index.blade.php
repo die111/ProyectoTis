@@ -1,4 +1,3 @@
-
 @extends('layouts.app')
 
 @section('title', 'Etapas · Admin')
@@ -32,7 +31,7 @@
     <table class="w-full min-w-[600px] text-center align-middle">
         <thead class="grid-headers">
             <tr>
-                <th class="cell header whitespace-nowrap">ID</th>
+                <!-- <th class="cell header whitespace-nowrap">ID</th> -->
                 <th class="cell header whitespace-nowrap">Nombre de Etapa</th>
                 <th class="cell header whitespace-nowrap">Descripción</th>
                 <th class="cell header whitespace-nowrap">Acciones</th>
@@ -41,7 +40,7 @@
         <tbody>
             @forelse($phases as $i => $phase)
             <tr class="{{ $i % 2 === 0 ? '' : 'bg-[#d7dde4]' }} hover:bg-blue-50 transition-colors">
-                <td class="py-3 px-2 font-semibold text-gray-800 align-middle">{{ $phase->id }}</td>
+                <!-- <td class="py-3 px-2 font-semibold text-gray-800 align-middle">{{ $phase->id }}</td> -->
                 <td class="py-3 px-2 text-gray-900 align-middle">{{ $phase->name }}</td>
                 <td class="py-3 px-2 text-gray-700 align-middle">{{ $phase->description ?? '—' }}</td>
                 <td class="py-2 px-2 align-middle">
@@ -65,7 +64,7 @@
             </tr>
             @empty
             <tr>
-                <td colspan="4" class="px-6 py-4 text-center text-gray-500">No hay etapas registradas.</td>
+                <td colspan="3" class="px-6 py-4 text-center text-gray-500">No hay etapas registradas.</td>
             </tr>
             @endforelse
         </tbody>
@@ -98,6 +97,15 @@
 .search-input-wrapper input{width:100%;height:40px;background:#c4c4c4;border:1px solid #0b0b0b;border-radius:10px;padding:0 40px 0 12px;font-size:13px;color:#3a4651;font-weight:600}
 .search-input-wrapper input::placeholder{color:rgba(58,70,81,.5);font-weight:400}
 .search-icon{position:absolute;right:12px;top:50%;transform:translateY(-50%);width:20px;height:20px;max-width:20px;max-height:20px;color:rgba(58,70,81,.5);stroke:currentColor;stroke-width:2;fill:none;pointer-events:none}
+
+/* ===== Encabezados de tabla ===== */
+.grid-headers th {
+    background: #949BA2 !important;
+    color: #fff;
+    height: 56px;
+    font-size: 17px;
+    vertical-align: middle;
+}
 </style>
 @endpush
 

@@ -105,6 +105,12 @@
             <p><span class="font-semibold">Área:</span> {{ $competicion->area->name }}</p>
           @endif
           
+          @if($competicion->categorias && $competicion->categorias->count() > 0)
+            <p><span class="font-semibold">Categorías:</span> 
+              {{ $competicion->categorias->pluck('nombre')->join(', ') }}
+            </p>
+          @endif
+          
           <p><span class="font-semibold">Fecha Inicio:</span> {{ $competicion->fechaInicio ? $competicion->fechaInicio->format('d/m/Y') : 'No definida' }}</p>
           
           @if($competicion->fechaFin)
@@ -120,12 +126,26 @@
           @endif
           
           <div class="pt-2">
+            @php
+              $hoy = now();
+              $inicio = $competicion->fechaInicio;
+              $fin = $competicion->fechaFin;
+              $fueraDeRango = false;
+              if ($inicio && $fin) {
+                $fueraDeRango = $hoy->lt($inicio) || $hoy->gt($fin);
+              } elseif ($inicio) {
+                $fueraDeRango = $hoy->lt($inicio);
+              } elseif ($fin) {
+                $fueraDeRango = $hoy->gt($fin);
+              }
+            @endphp
             @if($competicion->state === 'activa')
-              <a href="{{ route('admin.evaluacion.fases', $competicion->id) }}" class="inline-block rounded-full bg-slate-700 px-4 py-1.5 text-white text-sm shadow hover:bg-slate-800 no-underline">
+              <a href="{{ route('admin.evaluacion.fases', $competicion->id) }}" class="inline-block rounded-full bg-slate-700 px-4 py-1.5 text-white text-sm shadow hover:bg-slate-800 no-underline {{ $fueraDeRango ? 'pointer-events-none opacity-60' : '' }}"
+                @if($fueraDeRango) tabindex="-1" aria-disabled="true" @endif>
                 {{ $btnTexto }}
               </a>
             @else
-              <button class="rounded-full bg-slate-700 px-4 py-1.5 text-white text-sm shadow hover:bg-slate-800" onclick="gestionarCompeticion({{ $competicion->id }}, '{{ $competicion->state }}')">
+              <button class="rounded-full bg-slate-700 px-4 py-1.5 text-white text-sm shadow hover:bg-slate-800 {{ $fueraDeRango ? 'pointer-events-none opacity-60' : '' }}" onclick="gestionarCompeticion({{ $competicion->id }}, '{{ $competicion->state }}')" @if($fueraDeRango) disabled @endif>
                 {{ $btnTexto }}
               </button>
             @endif

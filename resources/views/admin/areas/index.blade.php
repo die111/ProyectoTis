@@ -54,9 +54,8 @@
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-200 bg-white/95">
-                        @forelse($areas as $area)
-                            <tr class="text-sm text-slate-800 hover:bg-slate-50 cursor-pointer area-row {{ $loop->even ? 'bg-white' : '' }}"
-                                style="{{ $loop->odd ? 'background-color: #D7DDE4;' : '' }}"
+                        @forelse($areas as $i => $area)
+                            <tr class="text-sm text-slate-800 hover:bg-slate-50 cursor-pointer area-row {{ $i % 2 === 0 ? 'bg-white' : 'bg-[#d7dde4]' }}"
                                 data-route="{{ route('admin.areas.destroy', $area->id) }}" data-id="{{ $area->id }}"
                                 data-name="{{ $area->name }}" data-description="{{ $area->description }}"
                                 data-active="{{ $area->is_active }}" onclick="selectRow(this)">
@@ -64,13 +63,11 @@
                                 <td class="px-6 py-3">{{ Str::limit($area->description, 90) }}</td>
                                 <td class="px-6 py-3 text-center">
                                     @if($area->is_active)
-                                        <span
-                                            class="inline-flex rounded-full bg-green-100 px-2 text-xs font-semibold leading-5 text-green-800">
+                                        <span class="inline-flex rounded-full bg-green-100 px-2 text-xs font-semibold leading-5 text-green-800">
                                             Activo
                                         </span>
                                     @else
-                                        <span
-                                            class="inline-flex rounded-full bg-red-100 px-2 text-xs font-semibold leading-5 text-red-800">
+                                        <span class="inline-flex rounded-full bg-red-100 px-2 text-xs font-semibold leading-5 text-red-800">
                                             Inactivo
                                         </span>
                                     @endif

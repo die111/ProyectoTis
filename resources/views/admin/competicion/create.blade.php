@@ -68,16 +68,26 @@
                         </h2>
                     </div>
                     <div class="p-6" x-data='{
+                        inscripcionInicio: "",
+                        inscripcionFin: "",
                         evaluacionInicio: "",
-                        evaluacionFin: ""
+                        evaluacionFin: "",
+                        premiacionInicio: "",
+                        premiacionFin: "",
+                        get inscripcionCompleta() {
+                            return this.inscripcionInicio && this.inscripcionFin;
+                        },
+                        get evaluacionCompleta() {
+                            return this.evaluacionInicio && this.evaluacionFin;
+                        }
                     }'>
                         <!-- Calendario Visual -->
                         @include('components.calendar-date-range-picker')
 
                         <!-- Campos de Fechas Adicionales -->
                         <div class="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
-                            <!-- Campo 1: Registro de Equipos -->
-                            <div class="bg-gray-50 p-4 rounded-lg border border-gray-200" :class="{'opacity-50': !startDate || !endDate}">
+                            <!-- Etapa de Inscripción -->
+                            <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
                                 <h3 class="text-md font-semibold text-gray-800 mb-3 flex items-center gap-2">
                                     <i class="fas fa-users text-green-600"></i>
                                     Etapa de Inscripción
@@ -85,7 +95,8 @@
                                 <div class="space-y-3">
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 mb-1">Fecha de Inicio</label>
-                                        <input type="date" name="inscripcion_inicio" 
+                                        <input type="date" name="inscripcion_inicio"
+                                            x-model="inscripcionInicio"
                                             :disabled="!startDate || !endDate"
                                             :min="startDate"
                                             :max="endDate"
@@ -93,7 +104,8 @@
                                     </div>
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 mb-1">Fecha de Fin</label>
-                                        <input type="date" name="inscripcion_fin" 
+                                        <input type="date" name="inscripcion_fin"
+                                            x-model="inscripcionFin"
                                             :disabled="!startDate || !endDate"
                                             :min="startDate"
                                             :max="endDate"
@@ -106,8 +118,8 @@
                                 </div>
                             </div>
 
-                            <!-- Campo 2: Evaluación -->
-                            <div class="bg-gray-50 p-4 rounded-lg border border-gray-200" :class="{'opacity-50': !startDate || !endDate}">
+                            <!-- Etapa de Evaluación -->
+                            <div class="bg-gray-50 p-4 rounded-lg border border-gray-200" :class="{'opacity-50': !inscripcionCompleta}">
                                 <h3 class="text-md font-semibold text-gray-800 mb-3 flex items-center gap-2">
                                     <i class="fas fa-clipboard-check text-blue-600"></i>
                                     Etapa de Evaluación
@@ -115,31 +127,31 @@
                                 <div class="space-y-3">
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 mb-1">Fecha de Inicio</label>
-                                        <input type="date" name="evaluacion_inicio" 
-                                            :disabled="!startDate || !endDate"
+                                        <input type="date" name="evaluacion_inicio"
+                                            x-model="evaluacionInicio"
+                                            :disabled="!inscripcionCompleta"
                                             :min="startDate"
                                             :max="endDate"
-                                            x-model="evaluacionInicio"
                                             class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm disabled:bg-gray-100 disabled:cursor-not-allowed">
                                     </div>
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 mb-1">Fecha de Fin</label>
-                                        <input type="date" name="evaluacion_fin" 
-                                            :disabled="!startDate || !endDate"
+                                        <input type="date" name="evaluacion_fin"
+                                            x-model="evaluacionFin"
+                                            :disabled="!inscripcionCompleta"
                                             :min="startDate"
                                             :max="endDate"
-                                            x-model="evaluacionFin"
                                             class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm disabled:bg-gray-100 disabled:cursor-not-allowed">
                                     </div>
                                 </div>
-                                <div x-show="!startDate || !endDate" class="mt-2 text-xs text-amber-600 flex items-center gap-1">
+                                <div x-show="!inscripcionCompleta" class="mt-2 text-xs text-amber-600 flex items-center gap-1">
                                     <i class="fas fa-exclamation-triangle"></i>
-                                    <span>Selecciona primero el rango de fechas de la competencia</span>
+                                    <span>Completa primero las fechas de inscripción</span>
                                 </div>
                             </div>
 
-                            <!-- Campo 3: Resultados -->
-                            <div class="bg-gray-50 p-4 rounded-lg border border-gray-200" :class="{'opacity-50': !startDate || !endDate}">
+                            <!-- Etapa de Premiación -->
+                            <div class="bg-gray-50 p-4 rounded-lg border border-gray-200" :class="{'opacity-50': !evaluacionCompleta}">
                                 <h3 class="text-md font-semibold text-gray-800 mb-3 flex items-center gap-2">
                                     <i class="fas fa-trophy text-yellow-600"></i>
                                     Etapa de premiación
@@ -147,24 +159,26 @@
                                 <div class="space-y-3">
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 mb-1">Fecha de Inicio</label>
-                                        <input type="date" name="premiacion_inicio" 
-                                            :disabled="!startDate || !endDate"
+                                        <input type="date" name="premiacion_inicio"
+                                            x-model="premiacionInicio"
+                                            :disabled="!evaluacionCompleta"
                                             :min="startDate"
                                             :max="endDate"
                                             class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 text-sm disabled:bg-gray-100 disabled:cursor-not-allowed">
                                     </div>
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 mb-1">Fecha de Fin</label>
-                                        <input type="date" name="premiacion_fin" 
-                                            :disabled="!startDate || !endDate"
+                                        <input type="date" name="premiacion_fin"
+                                            x-model="premiacionFin"
+                                            :disabled="!evaluacionCompleta"
                                             :min="startDate"
                                             :max="endDate"
                                             class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 text-sm disabled:bg-gray-100 disabled:cursor-not-allowed">
                                     </div>
                                 </div>
-                                <div x-show="!startDate || !endDate" class="mt-2 text-xs text-amber-600 flex items-center gap-1">
+                                <div x-show="!evaluacionCompleta" class="mt-2 text-xs text-amber-600 flex items-center gap-1">
                                     <i class="fas fa-exclamation-triangle"></i>
-                                    <span>Selecciona primero el rango de fechas de la competencia</span>
+                                    <span>Completa primero las fechas de evaluación</span>
                                 </div>
                             </div>
                         </div>
@@ -347,7 +361,6 @@
                         <input type="hidden" :name="`phases[${index}][phase_id]`" :value="phase.phase_id">
                         <input type="hidden" :name="`phases[${index}][start_date]`" :value="phase.start_date">
                         <input type="hidden" :name="`phases[${index}][end_date]`" :value="phase.end_date">
-                        <input type="hidden" :name="`phases[${index}][clasificados]`" :value="phase.clasificados">
                     </div>
                 </template>
                 <div class="flex justify-end gap-3">
