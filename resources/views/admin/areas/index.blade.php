@@ -28,9 +28,9 @@
 
         {{-- Buscador --}}
         <form method="GET" action="{{ route('admin.areas.index') }}"
-            class="mx-auto mb-6 flex w-full max-w-2xl items-center gap-3">
+            class="mx-auto mb-6 flex w-full max-w-2xl items-center gap-3" onsubmit="return flexibleAreaSearch(event)">
             <div class="relative flex-1">
-                <input type="text" name="q" value="{{ request('q') }}" placeholder="Buscar Área"
+                <input type="text" name="q" id="areaSearchInput" value="{{ request('q') }}" placeholder="Buscar Área"
                     class="w-full rounded-lg border border-slate-300 bg-slate-200/70 pl-10 pr-3 py-2.5 text-sm text-slate-800 placeholder-slate-500 focus:border-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-500/20">
             </div>
             <button
@@ -163,6 +163,32 @@
                     alert('Selecciona un área para la acción.');
                     return false;
                 }
+            }
+
+            function flexibleAreaSearch(event) {
+                event.preventDefault();
+                const input = document.getElementById('areaSearchInput');
+                const query = removeDiacritics(input.value.trim().toLowerCase());
+                const rows = document.querySelectorAll('.area-row');
+                let found = false;
+                rows.forEach(row => {
+                    const name = removeDiacritics(row.querySelector('td:nth-child(1)').textContent.toLowerCase());
+                    const desc = removeDiacritics(row.querySelector('td:nth-child(2)').textContent.toLowerCase());
+                    // Permite buscar por palabras separadas, no solo por frase exacta
+                    const queryWords = query.split(/\s+/).filter(Boolean);
+                    const matches = queryWords.every(word => name.includes(word) || desc.includes(word));
+                    row.classList.toggle('hidden', !matches);
+                    if (matches) found = true;
+                });
+                if (!found && query.length > 0) {
+                    // Si no hay coincidencias, mostrar todas las filas
+                    rows.forEach(row => row.classList.remove('hidden'));
+                }
+                return false;
+            }
+
+            function removeDiacritics(str) {
+                return str.normalize('NFD').replace(/\p{Diacritic}/gu, '');
             }
         </script>
     </section>
