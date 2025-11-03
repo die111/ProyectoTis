@@ -19,6 +19,7 @@ class PermissionSeeder extends Seeder
             ['name' => 'areas', 'description' => 'Gestionar áreas'],
             ['name' => 'categorias', 'description' => 'Gestionar categorías'],
             ['name' => 'evaluaciones', 'description' => 'Gestionar evaluaciones'],
+            ['name' => 'inscripcion_competencia', 'description' => 'Inscribirse a competencias activas'],
         ];
         foreach ($permissions as $perm) {
             Permission::firstOrCreate(['name' => $perm['name']], $perm);
@@ -26,6 +27,15 @@ class PermissionSeeder extends Seeder
         $adminRole = Role::where('name', 'admin')->first();
         if ($adminRole) {
             $adminRole->permissions()->sync(Permission::pluck('id')->toArray());
+        }
+
+        // Asignar permiso de inscripción a competencias solo al rol estudiante
+        $estudianteRole = Role::where('name', 'estudiante')->first();
+        if ($estudianteRole) {
+            $inscripcionPermission = Permission::where('name', 'inscripcion_competencia')->first();
+            if ($inscripcionPermission) {
+                $estudianteRole->permissions()->attach($inscripcionPermission->id);
+            }
         }
     }
 }

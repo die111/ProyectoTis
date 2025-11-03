@@ -8,7 +8,8 @@ class PermissionMiddleware
 {
     public function handle($request, Closure $next, $permission)
     {
-        $user = Auth::user();
+    /** @var \App\Models\User|null $user */
+    $user = Auth::user();
         if ($user && $user->role && $user->role->permissions->pluck('name')->contains($permission)) {
             return $next($request);
         }
