@@ -35,186 +35,14 @@ class Sidebar extends Component
         /** @var \App\Models\User|null $user */
         $user = $this->user;
         $items = [];
-<<<<<<< Updated upstream
-
-    // Menús específicos por rol
-    $role = $user->role ? $user->role->name : null;
-    switch ($role) {
-            case 'admin':
-                $items = [
-                    [
-                        'name' => 'Dashboard',
-                        'route' => 'dashboard',
-                        'icon' => 'fas fa-tachometer-alt',
-                        'active' => $this->isRouteActive(['dashboard'])
-                    ],
-                    [
-                        'name' => 'Competicion',
-                        'route' => 'admin.competicion.index',
-                        'icon' => 'fas fa-trophy',
-                        'active' => $this->isRouteActive(['competicion.*'])
-                    ],
-                    [
-                        'name' => 'Roles',
-                        'route' => 'admin.roles.index',
-                        'icon' => 'fas fa-user-tag',
-                        'active' => $this->isRouteActive(['roles.*'])
-                    ],
-                    [
-                        'name' => 'Usuarios',
-                        'route' => 'admin.usuarios.index',
-                        'icon' => 'fas fa-users',
-                        'active' => $this->isRouteActive(['usuarios.*'])
-                    ],
-                    [
-                        'name' => 'Inscripción',
-                        'icon' => 'fas fa-clipboard-list',
-                        'active' => $this->isRouteActive(['admin.inscripcion.*']),
-                        'submenu' => [
-                            [
-                                'name' => 'Inscribir por CSV',
-                                'route' => 'admin.inscripcion.index',
-                                'icon' => 'fas fa-file-csv',
-                                'active' => $this->isRouteActive(['admin.inscripcion.index'])
-                            ],
-                            [
-                                'name' => 'Solicitud',
-                                'route' => 'admin.inscripcion.solicitud',
-                                'icon' => 'fas fa-file-alt',
-                                'active' => $this->isRouteActive(['admin.inscripcion.solicitud'])
-                            ]
-                        ]
-                    ],
-                    [
-                        'name' => 'Gestion de Fases',
-                        'route' => 'admin.etapas.index',
-                        'icon' => 'fas fa-sitemap',
-                        'active' => $this->isRouteActive(['gestion-fases.*'])
-                    ],
-                    [
-                        'name' => 'Gestion de Areas',
-                        'route' => 'admin.areas.index',
-                        'icon' => 'fas fa-th-large',
-                        'active' => $this->isRouteActive(['areas.*'])
-                    ]
-                ];
-                break;
-
-            case 'responsable_area':
-                $items = [
-                    [
-                        'name' => 'Dashboard',
-                        'route' => 'dashboard',
-                        'icon' => 'fas fa-tachometer-alt',
-                        'active' => $this->isRouteActive(['dashboard'])
-                    ],
-                    [
-                        'name' => 'Solicitud Inscripcion',
-                        'route' => '#',
-                        'icon' => 'fas fa-file-alt',
-                        'active' => $this->isRouteActive(['responsable.inscripciones.*'])
-                    ],
-                    [
-                        'name' => 'Registrar CSV',
-                        'route' => '#',
-                        'icon' => 'fas fa-file-csv',
-                        'active' => $this->isRouteActive(['responsable.csv.*'])
-                    ],
-                    [
-                        'name' => 'Modificar Usuario',
-                        'route' => '#',
-                        'icon' => 'fas fa-user-edit',
-                        'active' => $this->isRouteActive(['responsable.usuarios.*'])
-                    ],
-                    [
-                        'name' => 'Fases',
-                        'route' => '#',
-                        'icon' => 'fas fa-list-ol',
-                        'active' => $this->isRouteActive(['responsable.fases.*'])
-                    ],
-                    [
-                        'name' => 'Listas',
-                        'route' => '#',
-                        'icon' => 'fas fa-list',
-                        'active' => $this->isRouteActive(['responsable.listas.*'])
-                    ],
-                    [
-                        'name' => 'Premiados',
-                        'route' => '#',
-                        'icon' => 'fas fa-trophy',
-                        'active' => $this->isRouteActive(['responsable.premiados.*'])
-                    ],
-                    [
-                        'name' => 'Reclamos',
-                        'route' => '#',
-                        'icon' => 'fas fa-exclamation-triangle',
-                        'active' => $this->isRouteActive(['responsable.reclamos.*'])
-                    ],
-                ];
-                break;
-
-            case 'evaluador':
-                $items = [
-                    [
-                        'name' => 'Dashboard',
-                        'route' => 'dashboard',
-                        'icon' => 'fas fa-tachometer-alt',
-                        'active' => $this->isRouteActive(['dashboard'])
-                    ],
-                    [
-                        'name' => 'Mis Evaluaciones',
-                        'route' => '#',
-                        'icon' => 'fas fa-clipboard-check',
-                        'active' => $this->isRouteActive(['evaluador.evaluaciones.*'])
-                    ],
-                    [
-                        'name' => 'Olimpistas',
-                        'route' => '#',
-                        'icon' => 'fas fa-user-graduate',
-                        'active' => $this->isRouteActive(['evaluador.olimpistas.*'])
-                    ]
-                ];
-                break;
-
-            case 'coordinador':
-                $items = [
-                    [
-                        'name' => 'Dashboard',
-                        'route' => 'dashboard',
-                        'icon' => 'fas fa-tachometer-alt',
-                        'active' => $this->isRouteActive(['dashboard'])
-                    ],
-                    [
-                        'name' => 'Seguimiento',
-                        'route' => '#',
-                        'icon' => 'fas fa-tasks',
-                        'active' => $this->isRouteActive(['coordinador.seguimiento.*'])
-                    ],
-                    [
-                        'name' => 'Reportes',
-                        'route' => '#',
-                        'icon' => 'fas fa-chart-line',
-                        'active' => $this->isRouteActive(['coordinador.reportes.*'])
-                    ]
-                ];
-                break;
-
-            default:
-                $items = [
-                    [
-                        'name' => 'Dashboard',
-                        'route' => 'dashboard',
-                        'icon' => 'fas fa-tachometer-alt',
-                        'active' => $this->isRouteActive(['dashboard'])
-                    ]
-                ];
-=======
         if (is_null($user)) {
             return $items;
         }
 
         $role = $user->role;
+        $isAdmin = $role && ($role->name === 'admin');
         $permissions = $role ? $role->permissions->pluck('name')->toArray() : [];
+
         $menuConfig = [
             'dashboard' => [
                 'name' => 'Dashboard',
@@ -244,26 +72,29 @@ class Sidebar extends Component
                 'name' => 'Inscripción',
                 'icon' => 'fas fa-clipboard-list',
                 'active' => $this->isRouteActive(['admin.inscripcion.*']),
-                'submenu' => array_filter([
-                    in_array('inscripcion', $permissions) ? [
+                'submenu' => [
+                    [
                         'name' => 'Listado',
                         'route' => 'admin.inscripcion.index',
                         'icon' => 'fas fa-list',
+                        'permission' => 'inscripcion',
                         'active' => $this->isRouteActive(['admin.inscripcion.index'])
-                    ] : null,
-                    in_array('inscripcion', $permissions) ? [
+                    ],
+                    [
                         'name' => 'Solicitudes',
                         'route' => 'admin.inscripcion.solicitud',
                         'icon' => 'fas fa-envelope-open-text',
+                        'permission' => 'inscripcion',
                         'active' => $this->isRouteActive(['admin.inscripcion.solicitud'])
-                    ] : null,
-                    in_array('inscripcion', $permissions) ? [
+                    ],
+                    [
                         'name' => 'Guardar Estudiantes',
                         'route' => 'admin.inscripcion.guardarEstudiantes',
                         'icon' => 'fas fa-user-plus',
+                        'permission' => 'inscripcion',
                         'active' => $this->isRouteActive(['admin.inscripcion.guardarEstudiantes'])
-                    ] : null,
-                ])
+                    ],
+                ]
             ],
             'fases' => [
                 'name' => 'Gestión de Fases',
@@ -290,13 +121,20 @@ class Sidebar extends Component
                 'active' => $this->isRouteActive(['estudiante.inscripcion.*'])
             ]
         ];
-        foreach ($menuConfig as $perm => $item) {
-            if (in_array($perm, $permissions)) {
-                // Si tiene submenú, filtra los submenús por permisos
-                if (isset($item['submenu'])) {
-                    $submenu = array_filter($item['submenu'], function($sub) use ($permissions) {
 
+        foreach ($menuConfig as $perm => $item) {
+            if ($isAdmin || in_array($perm, $permissions)) {
+                if (isset($item['submenu']) && is_array($item['submenu'])) {
+                    $submenu = array_filter($item['submenu'], function ($sub) use ($isAdmin, $permissions) {
+                        if (empty($sub)) {
+                            return false;
+                        }
+                        if (!isset($sub['permission'])) {
+                            return true;
+                        }
+                        return $isAdmin || in_array($sub['permission'], $permissions);
                     });
+                    $submenu = array_values($submenu);
                     if (count($submenu)) {
                         $item['submenu'] = $submenu;
                         $items[] = $item;
@@ -305,7 +143,6 @@ class Sidebar extends Component
                     $items[] = $item;
                 }
             }
->>>>>>> Stashed changes
         }
 
         return $items;

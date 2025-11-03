@@ -7,6 +7,8 @@ use App\Http\Controllers\Admin\EtapaController;
 use App\Http\Controllers\Admin\InscripcionController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\UsuarioController;
+use App\Http\Controllers\Admin\CategoriaController;
+use App\Http\Controllers\Admin\EvaluacionController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'role:admin'])->prefix('dashboard/admin')->name('admin.')->group(function () {
@@ -34,20 +36,6 @@ Route::middleware(['auth', 'role:admin'])->prefix('dashboard/admin')->name('admi
     Route::post('roles/{id}/deactivate', [RoleController::class, 'deactivate'])->name('roles.deactivate');
 
     // Rutas areas
-<<<<<<< Updated upstream
-    Route::resource('areas', AreaController::class);
-    Route::post('areas/bulk-activate', [AreaController::class, 'bulkActivate'])->name('areas.bulk-activate');
-    Route::post('areas/bulk-deactivate', [AreaController::class, 'bulkDeactivate'])->name('areas.bulk-deactivate');
-    
-    // Ruta para la página de solicitud de inscripción (debe ir ANTES del resource)
-    Route::get('inscripcion/solicitud', function() {
-        return view('admin.inscripcion.solicitud');
-    })->name('inscripcion.solicitud');
-    
-    Route::resource('inscripcion', InscripcionController::class);
-    Route::resource('etapas', EtapaController::class);
-    Route::patch('etapas/{id}/habilitar', [EtapaController::class, 'habilitar'])->name('etapas.habilitar');
-=======
     Route::resource('areas', AreaController::class); // ->middleware('permission:areas')
     Route::post('areas/bulk-activate', [AreaController::class, 'bulkActivate'])->name('areas.bulk-activate'); // ->middleware('permission:areas')
     Route::post('areas/bulk-deactivate', [AreaController::class, 'bulkDeactivate'])->name('areas.bulk-deactivate'); // ->middleware('permission:areas')
@@ -59,6 +47,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('dashboard/admin')->name('admi
 
     // Ruta para crear etapa (etapas.create)
     Route::get('etapas/create', [EtapaController::class, 'create'])->name('etapas.create');
+
     // Ruta para la página de solicitud de inscripción (debe ir ANTES del resource)
     Route::get('inscripcion/solicitud', [InscripcionController::class, 'solicitud'])->name('inscripcion.solicitud');
     // Endpoint para actualizar estado de una solicitud (usado desde la vista de solicitudes)
@@ -71,13 +60,10 @@ Route::middleware(['auth', 'role:admin'])->prefix('dashboard/admin')->name('admi
     Route::resource('inscripcion', InscripcionController::class); // ->middleware('permission:inscripcion')
     Route::resource('phases', EtapaController::class)->names('phases'); // ->middleware('permission:fases')
     Route::patch('phases/{id}/habilitar', [EtapaController::class, 'habilitar'])->name('phases.habilitar'); // ->middleware('permission:fases')
->>>>>>> Stashed changes
 
     // Ruta para guardar estudiantes
     Route::post('inscripcion/guardar-estudiantes', [InscripcionController::class, 'guardarEstudiantes'])->name('inscripcion.guardarEstudiantes');
 
-<<<<<<< Updated upstream
-=======
     // Ruta evaluaciones
     Route::resource('evaluacion', EvaluacionController::class); // ->middleware('permission:evaluaciones')
 
@@ -101,8 +87,6 @@ Route::middleware(['auth', 'role:admin'])->prefix('dashboard/admin')->name('admi
 
     // Ruta para finalizar fase desde la vista de calificación
     Route::post('evaluacion/{competicion}/fase/{fase}/finalizar', [EvaluacionController::class, 'finalizarFase'])->name('evaluacion.finalizar-fase');
-
->>>>>>> Stashed changes
     // Futuras rutas de áreas (descomentar cuando estén listas)
     // Route::resource('areas', App\Http\Controllers\Admin\AreaController::class);
 });

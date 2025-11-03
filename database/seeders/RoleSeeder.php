@@ -13,14 +13,6 @@ class RoleSeeder extends Seeder
      */
     public function run(): void
     {
-<<<<<<< Updated upstream
-        DB::table('roles')->insert([
-            ['name' => 'admin', 'description' => 'Administrador del sistema', 'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'responsable_area', 'description' => 'Responsable de gestionar y administrar un area especifica del sistema', 'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'evaluador', 'description' => 'Usuario encargado de evaluar y calificar participantes en las competencias', 'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'coordinador', 'description' => 'Cordinador de eventos y actividades dentro del sistema', 'created_at' => now(), 'updated_at' => now()],
-        ]);
-=======
         $roles = [
             ['name' => 'admin', 'description' => 'Administrador del sistema'],
             ['name' => 'responsable_area', 'description' => 'Responsable de gestionar y administrar un area especifica del sistema'],
@@ -32,7 +24,6 @@ class RoleSeeder extends Seeder
         foreach ($roles as $role) {
             Role::firstOrCreate(['name' => $role['name']], $role);
         }
->>>>>>> Stashed changes
     }
 }
 
