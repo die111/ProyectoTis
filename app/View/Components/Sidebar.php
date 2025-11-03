@@ -16,17 +16,12 @@ class Sidebar extends Component
     {
         /** @var \App\Models\User|null $this->user */
         $this->user = Auth::user();
-        // If there's no authenticated user (e.g. during some tests or guest views),
-        // avoid building the menu which assumes a user/role exists.
+        // Defer building menu items until render time to avoid DB access during bootstrap/tests
+        // and handle cases where there is no authenticated user.
         if (is_null($this->user)) {
             $this->menuItems = [];
             return;
         }
-        // Defer building menu items until render time and be defensive about DB access.
-        // Accessing relationships in the constructor can trigger DB queries during
-        // application bootstrap (before tests run migrations) which leads to
-        // "transaction aborted" or "undefined table" errors in tests. We'll
-        // compute the menu lazily in render().
         $this->menuItems = [];
     }
 
@@ -120,14 +115,15 @@ class Sidebar extends Component
                 'route' => 'estudiante.inscripcion.index',
                 'icon' => 'fas fa-file-signature',
                 'active' => $this->isRouteActive(['estudiante.inscripcion.*'])
-            ]
+            ],
         ];
         foreach ($menuConfig as $perm => $item) {
             if (in_array($perm, $permissions)) {
                 // Si tiene submenú, filtra los submenús por permisos
                 if (isset($item['submenu'])) {
                     $submenu = array_filter($item['submenu'], function($sub) use ($permissions) {
-
+                        // Si quieres permisos separados por subítem, aquí puedes personalizar
+                        return $sub !== null;
                     });
                     if (count($submenu)) {
                         $item['submenu'] = $submenu;
@@ -179,14 +175,12 @@ class Sidebar extends Component
 
     public function render(): View
     {
-        // Populate menu items lazily and defensively. Any DB faults will be
-        // caught and menu will fall back to empty.
+        // Populate menu items lazily and defensively; fail closed on errors
         try {
             if (empty($this->menuItems) && $this->user) {
                 $this->menuItems = $this->getMenuItems();
             }
         } catch (\Throwable $e) {
-            // swallow and default to empty menu to keep views/tests stable
             $this->menuItems = [];
         }
 
