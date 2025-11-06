@@ -38,7 +38,7 @@ class Sidebar extends Component
         $permissions = $role ? $role->permissions->pluck('name')->toArray() : [];
         $menuConfig = [
             'dashboard' => [
-                'name' => 'Dashboard',
+                'name' => 'Panel de Control',
                 'route' => 'admin.dashboard',
                 'icon' => 'fas fa-tachometer-alt',
                 'active' => $this->isRouteActive(['admin.dashboard'])

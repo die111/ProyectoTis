@@ -5,14 +5,15 @@
 
 @section('content')
     <!--  CABECERA / ACCIONES   -->
-    <div class="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-        <div>
+    <div class="container mx-auto px-4 max-w-full relative">
+    <div class="mb-8">
+        <div class="w-full text-center max-w-4xl mx-auto">
             <h1 class="text-3xl font-bold mb-2 text-black">Gestión de Competencias</h1>
             <p class="text-muted-foreground text-gray-700">
-                Crea y administra competencias académicas con fases, áreas y niveles educativos
+                Crea y administra competencias académicas con categirias, fases y areas
             </p>
         </div>
-        <button class="flex items-center gap-2 bg-[#091c47] hover:bg-blue-800 transition text-white font-semibold px-5 py-2 rounded-lg shadow create-btn btn-pressable self-start md:self-auto w-full md:w-auto justify-center" type="button"
+        <button class="absolute right-0 top-0 flex items-center gap-2 bg-[#091c47] hover:bg-blue-800 transition text-white font-semibold px-5 py-2 rounded-lg shadow create-btn btn-pressable" type="button"
             onclick="window.location='{{ route('admin.competicion.create') }}'">
             <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
                 <path fill="currentColor" d="M11 11V5h2v6h6v2h-6v6h-2v-6H5v-2z" />
@@ -50,6 +51,7 @@
             </div>
         @endif
     @endif
+    </div>
 
       @push('scripts')
       <script>
