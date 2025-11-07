@@ -53,7 +53,6 @@ class DashboardController extends Controller
             'evaluadores_asignados' => \App\Models\User::where('role', 'evaluador')
                 ->where('area', $user->area)
                 ->count(),
-            'clasificados' => 0
         ];
         
         return view('dashboard.responsable', compact('stats'));

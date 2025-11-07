@@ -34,9 +34,8 @@ class EtapaController extends Controller
         $request->validate([
             'name' => 'required|string|max:255|unique:phases,name',
             'description' => 'nullable|string',
-            'clasificados' => 'required|integer|min:1',
         ]);
-        Phase::create($request->all());
+        Phase::create($request->only(['name', 'description']));
         return redirect()->route('admin.phases.index')->with([
             'swal_custom' => true,
             'swal_title' => '¡Éxito!',
@@ -56,10 +55,9 @@ class EtapaController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'clasificados' => 'required|integer|min:1',
         ]);
         $phase = Phase::findOrFail($id);
-        $phase->update($request->all());
+        $phase->update($request->only(['name', 'description']));
        
          return redirect()->route('admin.phases.index')->with([
             'swal_custom' => true,

@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 class Phase extends Model
 {
     protected $fillable = [
-        'name', 'description','clasificados', 'is_active'
+        'name', 'description', 'is_active'
     ];
 
     // Relación muchos a muchos con Competicion

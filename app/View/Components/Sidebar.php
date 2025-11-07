@@ -67,7 +67,7 @@ class Sidebar extends Component
                 'active' => $this->isRouteActive(['admin.inscripcion.*']),
                 'submenu' => array_filter([
                     in_array('inscripcion', $permissions) ? [
-                        'name' => 'Listado',
+                        'name' => 'Registro por CSV',
                         'route' => 'admin.inscripcion.index',
                         'icon' => 'fas fa-list',
                         'active' => $this->isRouteActive(['admin.inscripcion.index'])
@@ -78,12 +78,12 @@ class Sidebar extends Component
                         'icon' => 'fas fa-envelope-open-text',
                         'active' => $this->isRouteActive(['admin.inscripcion.solicitud'])
                     ] : null,
-                    in_array('inscripcion', $permissions) ? [
-                        'name' => 'Guardar Estudiantes',
-                        'route' => 'admin.inscripcion.guardarEstudiantes',
-                        'icon' => 'fas fa-user-plus',
-                        'active' => $this->isRouteActive(['admin.inscripcion.guardarEstudiantes'])
-                    ] : null,
+                    // in_array('inscripcion', $permissions) ? [
+                    //     'name' => 'Guardar Estudiantes',
+                    //     'route' => 'admin.inscripcion.guardarEstudiantes',
+                    //     'icon' => 'fas fa-user-plus',
+                    //     'active' => $this->isRouteActive(['admin.inscripcion.guardarEstudiantes'])
+                    // ] : null,
                 ])
             ],
             'fases' => [

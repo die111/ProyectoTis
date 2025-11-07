@@ -10,7 +10,7 @@ return new class extends Migration {
             $table->id();
             $table->string('name');
             $table->text('description')->nullable();
-            $table->integer('clasificados')->nullable();
+            $table->integer('clasificados')->nullable(); // Relación restaurada
             $table->boolean('is_active')->default(true);
             $table->timestamps();
         });
