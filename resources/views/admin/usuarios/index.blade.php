@@ -58,7 +58,7 @@
 
 
     <section class="min-h-[80vh] w-full bg-white">
-        <div class="mx-auto max-w-6xl px-6 py-10">
+    <div class="mx-auto w-full max-w-full px-6 py-10">
 
             {{-- Filtro superior --}}
             <div class="flex flex-col items-center gap-6">
@@ -97,8 +97,8 @@
             </div>
 
             {{-- Tabla --}}
-            <div class="mt-10 overflow-hidden rounded-lg shadow-sm ring-1 ring-slate-300/60">
-                <table class="min-w-full divide-y divide-slate-200">
+            <div class="mt-10 w-full overflow-x-auto rounded-lg shadow-sm ring-1 ring-slate-300/60">
+                <table class="min-w-full w-full divide-y divide-slate-200">
                     <thead class="bg-slate-600">
                         <tr class="text-left text-xs font-semibold uppercase tracking-wider text-white">
                             <th scope="col" class="px-6 py-4">Nombre</th>
