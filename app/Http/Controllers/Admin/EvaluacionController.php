@@ -12,6 +12,7 @@ use App\Models\{
     Medal,
     Winer
 };
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Http\Request;
@@ -927,5 +928,54 @@ class EvaluacionController extends \App\Http\Controllers\Controller
     {
         // Determinar si es etapa de clasificación
         return true; // Implementar según tu lógica
+    }
+
+    // Generar PDF de inscritos
+    public function generarPdfInscritos(Request $request, $competicion, $fase)
+    {
+        // Obtener filtros
+        $categoria = $request->input('categoria');
+        $area = $request->input('area');
+        $estado_activo = $request->input('estado_activo', 'activo');
+        $search = $request->input('search');
+        $numeroFase = $request->input('fase_n');
+
+        // Obtener datos igual que en gestionarEstudiantes
+        $competicion = \App\Models\Competicion::findOrFail($competicion);
+        $faseObj = \App\Models\Phase::findOrFail($fase);
+        $faseEnCompeticion = $competicion->phases()->where('phase_id', $faseObj->id)->first();
+        $todasLasFases = $competicion->phases()->orderBy('competition_phase.id')->get();
+        $numeroFase = (int) $request->input('fase_n', $request->input('fase'));
+        if ($numeroFase <= 0) {
+            foreach ($todasLasFases as $index => $f) {
+                if ($f->id == $faseObj->id) { $numeroFase = $index + 1; break; }
+            }
+            if ($numeroFase <= 0) { $numeroFase = 1; }
+        } else {
+            $maxFases = max(1, $todasLasFases->count());
+            if ($numeroFase > $maxFases) { $numeroFase = $maxFases; }
+        }
+        $categorias = \App\Models\Categoria::where('is_active', true)->get();
+        $areas = \App\Models\Area::where('is_active', true)->get();
+        $query = \App\Models\Inscription::with(['user', 'area', 'categoria']);
+        $query->where('competition_id', $competicion->id);
+        $query->where('fase', $numeroFase);
+        if ($estado_activo === 'inactivo') { $query->where('is_active', false); }
+        elseif ($estado_activo === 'todos') { /* no-op */ }
+        else { $query->where('is_active', true); }
+        if ($categoria) { $query->where('categoria_id', $categoria); }
+        if ($area) { $query->where('area_id', $area); }
+        if ($search) {
+            $query->whereHas('user', function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('last_name_father', 'like', "%{$search}%")
+                  ->orWhere('last_name_mother', 'like', "%{$search}%")
+                  ->orWhere('school', 'like', "%{$search}%");
+            });
+        }
+        $estudiantes = $query->get();
+        // Generar PDF
+        $pdf = Pdf::loadView('admin.evaluacion.pdf.inscritos', compact('competicion', 'faseObj', 'categorias', 'areas', 'estudiantes', 'numeroFase'));
+        return $pdf->stream('lista_inscritos.pdf');
     }
 }
