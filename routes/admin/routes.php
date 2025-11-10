@@ -87,6 +87,9 @@ Route::middleware(['auth'])->prefix('dashboard/admin')->name('admin.')->group(fu
     // Ruta para finalizar fase desde la vista de calificación
     Route::post('evaluacion/{competicion}/fase/{fase}/finalizar', [EvaluacionController::class, 'finalizarFase'])->name('evaluacion.finalizar-fase');
 
+    // Ruta para generar PDF de inscritos
+    Route::get('evaluacion/{competicion}/fase/{fase}/estudiantes/pdf', [EvaluacionController::class, 'generarPdfInscritos'])->name('evaluacion.fase.estudiantes.pdf');
+
     // Futuras rutas de áreas (descomentar cuando estén listas)
     // Route::resource('areas', App\Http\Controllers\Admin\AreaController::class);
 });
