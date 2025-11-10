@@ -13,6 +13,9 @@ use Illuminate\Support\Facades\Log;
 use App\Models\CompetitionCategoryArea;
 use App\Models\Level;
 use App\Models\Categoria;
+use App\Models\Permission;
+use App\Models\User;
+use App\Notifications\FrontNotification;
 
 class InscripcionController extends Controller
 {
@@ -23,9 +26,8 @@ class InscripcionController extends Controller
     {
         $user = Auth::user();
         
-        // Obtener competencias activas (permitir inscripción antes de que inicien)
-        $competenciasActivas = Competicion::where('state', 'activa')
-            ->where('fechaFin', '>=', now()) // Solo que no hayan terminado
+        // Obtener competencias activas que están en período de inscripción
+        $competenciasActivas = Competicion::inscripcionAbierta()
             ->with(['area', 'phases'])
             ->orderBy('fechaInicio', 'asc')
             ->get();
@@ -43,8 +45,7 @@ class InscripcionController extends Controller
      */
     public function competenciasActivas()
     {
-        $competencias = Competicion::where('state', 'activa')
-            ->where('fechaFin', '>=', now()) // Solo que no hayan terminado
+        $competencias = Competicion::inscripcionAbierta()
             ->with(['area', 'phases'])
             ->orderBy('fechaInicio', 'asc')
             ->get();
@@ -71,6 +72,13 @@ class InscripcionController extends Controller
             return redirect()->route('estudiante.inscripcion.index')
                 ->with('error', 'Esta competencia ya ha finalizado.');
         }
+        
+        // Verificar si está en período de inscripción
+        if (!$competencia->isInscripcionAbierta()) {
+            $status = $competencia->getInscripcionStatus();
+            return redirect()->route('estudiante.inscripcion.index')
+                ->with('error', $status['message']);
+        }
 
         $user = Auth::user();
         $areas = Area::where('is_active', true)->get();
@@ -93,7 +101,7 @@ class InscripcionController extends Controller
                 'level_id' => 'required|exists:levels,id',
                 'es_grupal' => 'boolean',
                 'grupo_nombre' => 'nullable|string|max:255',
-                'observaciones' => 'nullable|string',
+                'observaciones_estudiante' => 'nullable|string',
             ]);
             
             // Verificar si la competencia está activa
@@ -105,6 +113,19 @@ class InscripcionController extends Controller
                     ], 400);
                 }
                 return redirect()->back()->with('error', 'Esta competencia no está activa.');
+            }
+            
+            // Verificar si estamos dentro del rango de fechas de inscripción
+            if (!$competicion->isInscripcionAbierta()) {
+                $status = $competicion->getInscripcionStatus();
+                
+                if ($request->expectsJson()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => $status['message']
+                    ], 400);
+                }
+                return redirect()->back()->with('error', $status['message']);
             }
             
             // Verificar si ya está inscrito en esta área
@@ -164,8 +185,35 @@ class InscripcionController extends Controller
                 'estado' => 'pendiente',
                 'es_grupal' => $request->es_grupal ?? false,
                 'grupo_nombre' => $request->grupo_nombre,
-                'observaciones' => $request->observaciones,
+                'observaciones_estudiante' => $request->observaciones_estudiante,
             ]);
+            
+            // Enviar notificación a usuarios con permiso de 'inscripcion'
+            try {
+                $permission = Permission::where('name', 'inscripcion')->first();
+                if ($permission) {
+                    // Obtener todos los roles que tienen este permiso
+                    $roleIds = $permission->roles()->pluck('roles.id');
+                    
+                    // Obtener usuarios activos que tienen alguno de esos roles
+                    $usersToNotify = User::whereIn('role_id', $roleIds)
+                        ->where('is_active', true)
+                        ->get();
+                    
+                    // Enviar notificación a cada usuario
+                    foreach ($usersToNotify as $userToNotify) {
+                        $userToNotify->notify(new FrontNotification(
+                            'Nueva Inscripción Pendiente',
+                            "El estudiante {$user->name} {$user->last_name_father} se ha inscrito a la competencia '{$competicion->name}' y requiere aprobación.",
+                            'info',
+                            route('admin.inscripcion.solicitud') . '?inscripcion_id=' . $inscripcion->id,
+                            $inscripcion->id
+                        ));
+                    }
+                }
+            } catch (\Exception $e) {
+                Log::error('Error al enviar notificaciones de nueva inscripción: ' . $e->getMessage());
+            }
             
             if ($request->expectsJson()) {
                 return response()->json([

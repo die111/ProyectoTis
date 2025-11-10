@@ -58,6 +58,14 @@
 
         <!-- Bottom section -->
         <div class="border-t border-gray-700/50 p-4 space-y-2 mt-auto">
+            <a href="{{ route('notifications.index') }}" class="sidebar-item flex items-center px-4 py-2 text-sm font-medium text-gray-300 rounded-md hover:bg-primary-800 hover:text-white transition-all duration-200 {{ request()->routeIs('notifications.*') ? 'sidebar-item-active' : '' }}">
+                <div class="relative">
+                    <i class="fas fa-bell w-6 h-6 mr-3 text-lg"></i>
+                    {{-- Badge moved to header to avoid duplicate counters --}}
+                </div>
+                <span class="hide-on-collapse">Notificaciones</span>
+            </a>
+            
             <a href="{{ route('profile.show') }}" class="sidebar-item flex items-center px-4 py-2 text-sm font-medium text-gray-300 rounded-md hover:bg-primary-800 hover:text-white transition-all duration-200">
                 <i class="fas fa-user w-6 h-6 mr-3 text-lg"></i>
                 <span class="hide-on-collapse">Perfil</span>

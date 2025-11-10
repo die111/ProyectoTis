@@ -5,6 +5,9 @@ namespace App\Providers;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Event;
+use Illuminate\Notifications\Events\BroadcastNotificationCreated;
+use App\Listeners\AddNotificationIdToBroadcast;
 use Carbon\Carbon;
 
 class AppServiceProvider extends ServiceProvider
@@ -30,6 +33,13 @@ class AppServiceProvider extends ServiceProvider
         } catch (\Throwable $e) {
             // if Carbon or locale setting fails, continue silently
         }
+        
+        // Registrar listener para agregar ID de notificación al broadcast
+        Event::listen(
+            BroadcastNotificationCreated::class,
+            AddNotificationIdToBroadcast::class
+        );
+        
         // Compartir notificaciones no leídas con todas las vistas
         View::composer('*', function ($view) {
             // Guard against missing notifications table or other DB issues during tests

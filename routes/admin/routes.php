@@ -49,6 +49,7 @@ Route::middleware(['auth'])->prefix('dashboard/admin')->name('admin.')->group(fu
     Route::get('etapas/create', [EtapaController::class, 'create'])->name('etapas.create');
     // Ruta para la página de solicitud de inscripción (debe ir ANTES del resource)
     Route::get('inscripcion/solicitud', [InscripcionController::class, 'solicitud'])->name('inscripcion.solicitud');
+    Route::get('inscripcion/solicitud/{id}', [InscripcionController::class, 'show'])->name('inscripcion.solicitud.show');
     Route::post('inscripcion/solicitud/{id}/estado', [InscripcionController::class, 'actualizarEstado'])->name('inscripcion.actualizarEstado');
 
     // Endpoints JSON de inscripción (deben ir antes del resource para evitar colisión con {inscripcion})

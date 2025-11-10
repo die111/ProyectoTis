@@ -100,11 +100,12 @@
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nivel</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
                             <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha de Inscripción</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
                         </tr>
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-200">
                         @foreach($misInscripciones as $inscripcion)
-                            <tr class="hover:bg-gray-50">
+                            <tr class="hover:bg-gray-50 inscripcion-row" data-inscripcion-id="{{ $inscripcion->id }}">
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <div class="text-sm font-medium text-gray-900">{{ $inscripcion->competition->name }}</div>
                                 </td>
@@ -112,25 +113,31 @@
                                     <div class="text-sm text-gray-900">{{ $inscripcion->area->name }}</div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="text-sm text-gray-900">{{ $inscripcion->competicion->nombre }}</div>
+                                    <div class="text-sm text-gray-900">{{ $inscripcion->level->name ?? 'N/A' }}</div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     @if($inscripcion->estado === 'pendiente')
                                         <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
-                                            Pendiente
+                                            <i class="fas fa-clock mr-1"></i>Pendiente
                                         </span>
                                     @elseif($inscripcion->estado === 'confirmada')
                                         <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                                            Confirmada
+                                            <i class="fas fa-check mr-1"></i>Confirmada
                                         </span>
                                     @else
                                         <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
-                                            Rechazada
+                                            <i class="fas fa-times mr-1"></i>Rechazada
                                         </span>
                                     @endif
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                     {{ $inscripcion->created_at->format('d/m/Y H:i') }}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                    <button onclick="verDetalleInscripcion({{ $inscripcion->id }})" 
+                                            class="text-blue-600 hover:text-blue-800 font-medium">
+                                        <i class="fas fa-eye mr-1"></i>Ver Detalle
+                                    </button>
                                 </td>
                             </tr>
                         @endforeach
@@ -138,6 +145,30 @@
                 </table>
             </div>
         @endif
+    </div>
+</div>
+
+<!-- Modal de Detalle de Inscripción -->
+<div id="modalDetalleInscripcion" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-5 border w-full max-w-2xl shadow-lg rounded-md bg-white">
+        <div class="mt-3">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-medium text-gray-900">Detalle de Inscripción</h3>
+                <button onclick="cerrarModalDetalle()" class="text-gray-400 hover:text-gray-500">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            
+            <div id="contenidoDetalleInscripcion" class="space-y-4">
+                <!-- Se llenará dinámicamente con JavaScript -->
+            </div>
+
+            <div class="mt-6 flex justify-end">
+                <button onclick="cerrarModalDetalle()" class="px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-800 rounded-md transition-colors">
+                    Cerrar
+                </button>
+            </div>
+        </div>
     </div>
 </div>
 @endsection
@@ -154,6 +185,8 @@
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
+    const inscripciones = @json($misInscripciones);
+
     // Cambio de pestañas
     document.getElementById('tabCompetencias').addEventListener('click', function() {
         document.getElementById('contentCompetencias').classList.remove('hidden');
@@ -171,6 +204,121 @@
         this.classList.remove('border-transparent', 'text-gray-500');
         document.getElementById('tabCompetencias').classList.remove('active', 'border-blue-500', 'text-blue-600');
         document.getElementById('tabCompetencias').classList.add('border-transparent', 'text-gray-500');
+    });
+
+    // Función para ver detalle de inscripción
+    function verDetalleInscripcion(id) {
+        const inscripcion = inscripciones.find(i => i.id === id);
+        if (!inscripcion) return;
+
+        let html = `
+            <div class="space-y-4">
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <p class="text-sm font-semibold text-gray-700">Competencia:</p>
+                        <p class="text-sm text-gray-900">${inscripcion.competition ? inscripcion.competition.name : '—'}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm font-semibold text-gray-700">Área:</p>
+                        <p class="text-sm text-gray-900">${inscripcion.area ? inscripcion.area.name : '—'}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm font-semibold text-gray-700">Nivel:</p>
+                        <p class="text-sm text-gray-900">${inscripcion.level ? inscripcion.level.name : 'N/A'}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm font-semibold text-gray-700">Tipo:</p>
+                        <p class="text-sm text-gray-900">${inscripcion.es_grupal ? 'Grupal' : 'Individual'}</p>
+                    </div>
+                    ${inscripcion.grupo_nombre ? `
+                    <div class="col-span-2">
+                        <p class="text-sm font-semibold text-gray-700">Nombre del Grupo:</p>
+                        <p class="text-sm text-gray-900">${inscripcion.grupo_nombre}</p>
+                    </div>
+                    ` : ''}
+                    <div class="col-span-2">
+                        <p class="text-sm font-semibold text-gray-700">Estado:</p>
+                        <p class="text-sm">
+                            ${inscripcion.estado === 'pendiente' ? 
+                                '<span class="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full font-medium"><i class="fas fa-clock mr-1"></i>Pendiente</span>' : 
+                                inscripcion.estado === 'confirmada' ? 
+                                '<span class="px-3 py-1 bg-green-100 text-green-800 rounded-full font-medium"><i class="fas fa-check mr-1"></i>Confirmada</span>' : 
+                                '<span class="px-3 py-1 bg-red-100 text-red-800 rounded-full font-medium"><i class="fas fa-times mr-1"></i>Rechazada</span>'}
+                        </p>
+                    </div>
+                    <div class="col-span-2">
+                        <p class="text-sm font-semibold text-gray-700">Fecha de Inscripción:</p>
+                        <p class="text-sm text-gray-900">${new Date(inscripcion.created_at).toLocaleString('es-BO')}</p>
+                    </div>
+                </div>
+        `;
+
+        // Agregar observaciones del estudiante si existen
+        if (inscripcion.observaciones_estudiante) {
+            html += `
+                <div class="mt-4">
+                    <p class="text-sm font-semibold text-gray-700 mb-2">Tus Observaciones:</p>
+                    <div class="bg-blue-50 border border-blue-200 rounded p-3">
+                        <p class="text-sm text-gray-900">${inscripcion.observaciones_estudiante}</p>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Agregar motivo de rechazo si existe
+        if (inscripcion.estado === 'rechazada' && inscripcion.motivo_rechazo) {
+            html += `
+                <div class="mt-4">
+                    <p class="text-sm font-semibold text-gray-700 mb-2">Motivo del Rechazo:</p>
+                    <div class="bg-red-50 border border-red-200 rounded p-3">
+                        <p class="text-sm text-gray-900">${inscripcion.motivo_rechazo}</p>
+                    </div>
+                </div>
+            `;
+        }
+
+        html += `</div>`;
+
+        document.getElementById('contenidoDetalleInscripcion').innerHTML = html;
+        document.getElementById('modalDetalleInscripcion').classList.remove('hidden');
+    }
+
+    function cerrarModalDetalle() {
+        document.getElementById('modalDetalleInscripcion').classList.add('hidden');
+    }
+
+    // Cerrar modal al hacer clic fuera
+    document.getElementById('modalDetalleInscripcion').addEventListener('click', function(e) {
+        if (e.target === this) {
+            cerrarModalDetalle();
+        }
+    });
+
+    // Auto-abrir desde notificaciones
+    document.addEventListener('DOMContentLoaded', function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const inscripcionId = urlParams.get('inscripcion_id');
+        
+        if (inscripcionId) {
+            // Cambiar a la pestaña de Mis Inscripciones
+            document.getElementById('tabMisInscripciones').click();
+            
+            // Esperar un momento para que la pestaña cambie
+            setTimeout(() => {
+                // Resaltar la fila
+                const fila = document.querySelector(`tr[data-inscripcion-id="${inscripcionId}"]`);
+                if (fila) {
+                    fila.classList.add('bg-yellow-50', 'border-2', 'border-yellow-400');
+                    fila.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+                
+                // Abrir el modal de detalle
+                verDetalleInscripcion(parseInt(inscripcionId));
+                
+                // Limpiar el parámetro de la URL
+                window.history.replaceState({}, document.title, window.location.pathname);
+            }, 300);
+        }
     });
 
     // Mostrar mensajes de sesión (si existen)

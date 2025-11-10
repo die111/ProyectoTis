@@ -61,7 +61,7 @@ class InscripcionController extends Controller
         return trim((string) $s);
     }
 
-    // Resuelve el ID de área por nombre (o devuelve el numérico si ya lo es)
+    // Resuelve el ID de área por nombre
     protected function resolveAreaId($input, array $areaMap, array $areaList): ?int
     {
         if (is_null($input)) return null;
@@ -71,24 +71,20 @@ class InscripcionController extends Controller
         $norm = $this->normalizeName((string)$input);
         if ($norm === '') return null;
 
-        // 1) Coincidencia exacta normalizada
         if (isset($areaMap[$norm])) return (int) $areaMap[$norm];
 
-        // 2) Coincidencia por "contiene"
         foreach ($areaList as $row) {
             if (str_contains($row['norm'], $norm) || str_contains($norm, $row['norm'])) {
                 return (int) $row['id'];
             }
         }
 
-        // 3) Coincidencia por similitud (similar_text)
         $bestId = null; $bestPct = 0.0;
         foreach ($areaList as $row) {
             $pct = 0.0;
             similar_text($norm, $row['norm'], $pct);
             if ($pct > $bestPct) { $bestPct = $pct; $bestId = (int) $row['id']; }
         }
-        // Umbral de similitud (70%)
         if ($bestId !== null && $bestPct >= 70.0) return $bestId;
 
         return null;
@@ -129,6 +125,15 @@ class InscripcionController extends Controller
         return view('admin.inscripcion.solicitud', compact('inscripciones'));
     }
 
+    public function show($id)
+    {
+        // Buscar la inscripción con todas sus relaciones
+        $inscripcion = Inscription::with(['user', 'competition', 'area', 'level', 'categoria'])
+            ->findOrFail($id);
+        
+        return view('admin.inscripcion.show', compact('inscripcion'));
+    }
+
     public function actualizarEstado(Request $request, $id)
     {
         try {
@@ -142,9 +147,12 @@ class InscripcionController extends Controller
             
             // Actualizar el estado
             $inscripcion->estado = $request->estado;
-            if ($request->observaciones) {
-                $inscripcion->observaciones = $request->observaciones;
+            
+            // Si se rechaza, guardar el motivo en motivo_rechazo
+            if ($request->estado === 'rechazada' && $request->observaciones) {
+                $inscripcion->motivo_rechazo = $request->observaciones;
             }
+            
             $inscripcion->save();
 
             // Enviar notificación al estudiante
@@ -154,7 +162,8 @@ class InscripcionController extends Controller
                 $mensaje['titulo'],
                 $mensaje['mensaje'],
                 $mensaje['tipo'],
-                route('estudiante.inscripcion.index')
+                route('estudiante.inscripcion.index') . '?inscripcion_id=' . $inscripcion->id,
+                $inscripcion->id  // Pasar el ID de la inscripción
             ));
 
             return response()->json([
@@ -185,7 +194,7 @@ class InscripcionController extends Controller
             case 'rechazada':
                 return [
                     'titulo' => 'Inscripción Rechazada',
-                    'mensaje' => "Tu inscripción a la competencia '{$competencia}' ha sido rechazada. Revisa las observaciones.",
+                    'mensaje' => "Tu inscripción a la competencia '{$competencia}' ha sido rechazada. Revisa el motivo del rechazo.",
                     'tipo' => 'error'
                 ];
             case 'pendiente':
@@ -227,9 +236,8 @@ class InscripcionController extends Controller
                 ], 422);
             }
 
-            // Preparar catálogo de áreas en memoria para matching robusto
             $areas = Area::where('is_active', true)->get(['id','name']);
-            $areaMap = []; // nombre normalizado -> id
+            $areaMap = []; 
             $areaList = [];
             foreach ($areas as $a) {
                 $norm = $this->normalizeName($a->name);

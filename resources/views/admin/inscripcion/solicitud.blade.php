@@ -111,10 +111,10 @@
                                         {{ $inscripcion->created_at->format('d/m/Y H:i') }}
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                        <button onclick="abrirModalDetalle({{ $inscripcion->id }})" 
-                                                class="text-blue-600 hover:text-blue-900 mr-3" title="Ver detalles">
+                                        <a href="{{ route('admin.inscripcion.solicitud.show', $inscripcion->id) }}" 
+                                           class="text-blue-600 hover:text-blue-900 mr-3" title="Ver detalles">
                                             <i class="fas fa-eye"></i>
-                                        </button>
+                                        </a>
                                         @if($inscripcion->estado === 'pendiente')
                                             <button onclick="cambiarEstado({{ $inscripcion->id }}, 'confirmada')" 
                                                     class="text-green-600 hover:text-green-900 mr-3" title="Aprobar">
@@ -133,30 +133,6 @@
                 </div>
             </div>
         @endif
-    </div>
-</div>
-
-<!-- Modal de Detalle -->
-<div id="modalDetalle" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden overflow-y-auto h-full w-full z-50">
-    <div class="relative top-20 mx-auto p-5 border w-full max-w-2xl shadow-lg rounded-md bg-white">
-        <div class="mt-3">
-            <div class="flex items-center justify-between mb-4">
-                <h3 class="text-lg font-medium text-gray-900">Detalle de Inscripción</h3>
-                <button onclick="cerrarModalDetalle()" class="text-gray-400 hover:text-gray-500">
-                    <i class="fas fa-times text-xl"></i>
-                </button>
-            </div>
-            
-            <div id="contenidoDetalle" class="space-y-4">
-                <!-- Se llenará dinámicamente con JavaScript -->
-            </div>
-
-            <div class="mt-6 flex justify-end space-x-3">
-                <button onclick="cerrarModalDetalle()" class="px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-800 rounded-md transition-colors">
-                    Cerrar
-                </button>
-            </div>
-        </div>
     </div>
 </div>
 @endsection
@@ -180,8 +156,6 @@
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
-    const inscripciones = @json($inscripciones);
-
     function filtrarPor(estado) {
         // Actualizar botones activos
         document.querySelectorAll('.filtro-btn').forEach(btn => {
@@ -198,83 +172,6 @@
                 fila.style.display = 'none';
             }
         });
-    }
-
-    function abrirModalDetalle(id) {
-        const inscripcion = inscripciones.find(i => i.id === id);
-        if (!inscripcion) return;
-
-        const html = `
-            <div class="grid grid-cols-2 gap-4">
-                <div>
-                    <p class="text-sm font-semibold text-gray-700">Estudiante:</p>
-                    <p class="text-sm text-gray-900">${inscripcion.user ? (inscripcion.user.name + ' ' + (inscripcion.user.last_name_father || '')) : '—'}</p>
-                </div>
-                <div>
-                    <p class="text-sm font-semibold text-gray-700">Email:</p>
-                    <p class="text-sm text-gray-900">${inscripcion.user ? inscripcion.user.email : '—'}</p>
-                </div>
-                <div>
-                    <p class="text-sm font-semibold text-gray-700">Competencia:</p>
-                    <p class="text-sm text-gray-900">${inscripcion.competition ? inscripcion.competition.name : '—'}</p>
-                </div>
-                <div>
-                    <p class="text-sm font-semibold text-gray-700">Área:</p>
-                    <p class="text-sm text-gray-900">${inscripcion.area ? inscripcion.area.name : '—'}</p>
-                </div>
-                <div>
-                    <p class="text-sm font-semibold text-gray-700">Nivel:</p>
-                    <p class="text-sm text-gray-900">${inscripcion.level ? inscripcion.level.name : '—'}</p>
-                </div>
-                <div>
-                    <p class="text-sm font-semibold text-gray-700">Tipo:</p>
-                    <p class="text-sm text-gray-900">${inscripcion.es_grupal ? 'Grupal' : 'Individual'}</p>
-                </div>
-                ${inscripcion.grupo_nombre ? `
-                <div class="col-span-2">
-                    <p class="text-sm font-semibold text-gray-700">Nombre del Grupo:</p>
-                    <p class="text-sm text-gray-900">${inscripcion.grupo_nombre}</p>
-                </div>
-                ` : ''}
-                ${inscripcion.observaciones ? `
-                <div class="col-span-2">
-                    <p class="text-sm font-semibold text-gray-700">Observaciones:</p>
-                    <p class="text-sm text-gray-900">${inscripcion.observaciones}</p>
-                </div>
-                ` : ''}
-                <div>
-                    <p class="text-sm font-semibold text-gray-700">Estado:</p>
-                    <p class="text-sm text-gray-900">${inscripcion.estado.charAt(0).toUpperCase() + inscripcion.estado.slice(1)}</p>
-                </div>
-                <div>
-                    <p class="text-sm font-semibold text-gray-700">Fecha de Inscripción:</p>
-                    <p class="text-sm text-gray-900">${new Date(inscripcion.created_at).toLocaleString('es-ES')}</p>
-                </div>
-            </div>
-
-            ${inscripcion.estado === 'pendiente' ? `
-            <div class="mt-6 pt-6 border-t border-gray-200">
-                <p class="text-sm font-semibold text-gray-700 mb-3">Acciones:</p>
-                <div class="flex space-x-3">
-                    <button onclick="cambiarEstado(${id}, 'confirmada')" 
-                            class="flex-1 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md transition-colors">
-                        <i class="fas fa-check mr-2"></i>Aprobar
-                    </button>
-                    <button onclick="cambiarEstado(${id}, 'rechazada')" 
-                            class="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md transition-colors">
-                        <i class="fas fa-times mr-2"></i>Rechazar
-                    </button>
-                </div>
-            </div>
-            ` : ''}
-        `;
-
-        document.getElementById('contenidoDetalle').innerHTML = html;
-        document.getElementById('modalDetalle').classList.remove('hidden');
-    }
-
-    function cerrarModalDetalle() {
-        document.getElementById('modalDetalle').classList.add('hidden');
     }
 
     function cambiarEstado(id, nuevoEstado) {
@@ -343,10 +240,14 @@
         });
     }
 
-    // Cerrar modal al hacer clic fuera
-    document.getElementById('modalDetalle').addEventListener('click', function(e) {
-        if (e.target === this) {
-            cerrarModalDetalle();
+    // Redirigir a la vista de detalle si viene desde una notificación
+    document.addEventListener('DOMContentLoaded', function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const inscripcionId = urlParams.get('inscripcion_id');
+        
+        if (inscripcionId) {
+            // Redirigir directamente a la vista de detalle
+            window.location.href = `{{ route('admin.inscripcion.solicitud') }}/${inscripcionId}`;
         }
     });
 </script>

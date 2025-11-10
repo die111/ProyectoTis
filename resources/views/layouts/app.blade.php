@@ -5,6 +5,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    @auth
+    <meta name="user-id" content="{{ auth()->id() }}">
+    @endauth
     <title>@yield('title', 'Oh! SanSi - Olimpiada en Ciencias y Tecnología')</title>
 
     <!-- Fonts -->
@@ -68,6 +71,9 @@
     <!-- Footer fuera del contenedor flex principal -->
     @include('components.footer')
     @include('components.global-swal')
+
+    <!-- Vite Scripts -->
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
 
     @stack('scripts')
 </body>

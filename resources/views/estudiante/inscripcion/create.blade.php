@@ -127,10 +127,10 @@
 
             <!-- Observaciones -->
             <div class="mb-6">
-                <label for="observaciones" class="block text-sm font-semibold text-gray-700 mb-2">
+                <label for="observaciones_estudiante" class="block text-sm font-semibold text-gray-700 mb-2">
                     Observaciones
                 </label>
-                <textarea id="observaciones" name="observaciones" rows="4" 
+                <textarea id="observaciones_estudiante" name="observaciones_estudiante" rows="4" 
                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
                           placeholder="Información adicional que consideres relevante (opcional)"></textarea>
                 <p class="mt-1 text-sm text-gray-500">Puedes agregar cualquier información adicional</p>
@@ -207,7 +207,7 @@
             level_id: formData.get('level_id'),
             es_grupal: formData.get('tipo_inscripcion') === 'grupal',
             grupo_nombre: formData.get('grupo_nombre'),
-            observaciones: formData.get('observaciones'),
+            observaciones_estudiante: formData.get('observaciones_estudiante'),
             _token: formData.get('_token')
         };
 

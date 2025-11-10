@@ -63,11 +63,13 @@
                 <button @click="open = !open" class="focus:outline-none relative">
                     <i class="fas fa-bell text-gray-700 text-lg"></i>
                     @php
+                        // Mantener la colección de no leídas para el dropdown/acciones.
                         $unreadNotifications = Auth::user()->unreadNotifications;
                     @endphp
+                    {{-- Mostrar el badge en el header (solo si hay notificaciones no leídas) --}}
                     @if($unreadNotifications->count() > 0)
                         <span class="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full px-1.5 py-0.5 animate-pulse">
-                            {{ $unreadNotifications->count() }}
+                            {{ $unreadNotifications->count() > 99 ? '99+' : $unreadNotifications->count() }}
                         </span>
                     @endif
                 </button>
@@ -84,7 +86,7 @@
                     <ul class="max-h-96 overflow-y-auto">
                         @forelse(Auth::user()->notifications->take(10) as $notification)
                             <li class="px-4 py-3 text-sm {{ $notification->read_at ? 'bg-white' : 'bg-blue-50' }} border-b last:border-b-0 hover:bg-gray-50 cursor-pointer"
-                                onclick="marcarComoLeida('{{ $notification->id }}', '{{ $notification->data['url'] ?? '#' }}')">
+                                onclick="window.location.href='{{ route('notifications.show', $notification->id) }}'">
                                 <div class="flex items-start">
                                     <div class="flex-shrink-0 mr-3">
                                         @if(isset($notification->data['tipo']))
@@ -100,8 +102,8 @@
                                         @endif
                                     </div>
                                     <div class="flex-1">
-                                        <p class="font-semibold text-gray-800">{{ $notification->data['titulo'] ?? 'Notificación' }}</p>
-                                        <p class="text-gray-600 mt-1">{{ $notification->data['mensaje'] ?? 'Tienes una nueva notificación' }}</p>
+                                        <p class="font-semibold text-gray-800">{{ $notification->data['title'] ?? $notification->data['titulo'] ?? 'Notificación' }}</p>
+                                        <p class="text-gray-600 mt-1">{{ $notification->data['message'] ?? $notification->data['mensaje'] ?? 'Tienes una nueva notificación' }}</p>
                                         <span class="block text-xs text-gray-400 mt-1">{{ $notification->created_at->diffForHumans() }}</span>
                                     </div>
                                     @if(!$notification->read_at)
@@ -118,9 +120,11 @@
                             </li>
                         @endforelse
                     </ul>
-                    @if(Auth::user()->notifications->count() > 10)
+                    @if(Auth::user()->notifications->count() > 0)
                         <div class="p-3 border-t text-center">
-                            <a href="#" class="text-sm text-blue-600 hover:text-blue-800">Ver todas las notificaciones</a>
+                            <a href="{{ route('notifications.index') }}" class="text-sm text-blue-600 hover:text-blue-800">
+                                <i class="fas fa-list mr-1"></i>Ver todas las notificaciones
+                            </a>
                         </div>
                     @endif
                 </div>
