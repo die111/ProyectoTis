@@ -12,6 +12,80 @@ const fileNameEl = document.getElementById('fileName');
 const txtSearch = document.getElementById('txtSearch');
 const btnSearch = document.getElementById('btnSearch');
 const btnSearchIcon = document.getElementById('btnSearchIcon');
+const cmbCompeticiones = document.getElementById('cmbCompeticiones');
+
+// Token CSRF (opcional para GET)
+const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+
+// ====== Mapa de áreas (nombre -> ID) ======
+let areasMap = {};
+
+// Cargar las áreas al iniciar
+(function cargarAreas() {
+  const headers = { 'Content-Type': 'application/json' };
+  if (csrfToken) headers['X-CSRF-TOKEN'] = csrfToken;
+  fetch('/dashboard/admin/inscripcion/get-areas', { method: 'GET', headers })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success && data.areas) {
+        // Crear mapa de nombre -> ID (case insensitive)
+        data.areas.forEach(area => {
+          areasMap[area.name.toLowerCase().trim()] = area.id;
+        });
+        console.log('Áreas cargadas:', areasMap);
+      }
+    })
+    .catch(error => { console.error('Error al cargar áreas:', error); });
+})();
+
+// Cargar las competiciones activas al iniciar
+(function cargarCompeticiones() {
+  if (!cmbCompeticiones) return;
+  const headers = { 'Content-Type': 'application/json' };
+  if (csrfToken) headers['X-CSRF-TOKEN'] = csrfToken;
+  fetch('/dashboard/admin/inscripcion/get-competiciones', { method: 'GET', headers })
+    .then(res => res.json())
+    .then(data => {
+      console.log('Respuesta competiciones:', data);
+      if (data.success && Array.isArray(data.competiciones)) {
+        const activas = data.competiciones.filter(c => (c.state || '').toLowerCase() === 'activa');
+
+        // Si ya hay opciones precargadas desde el servidor (más de 1 incluyendo placeholder), evitar duplicados
+        const existingValues = new Set(Array.from(cmbCompeticiones.options).map(o => String(o.value)));
+
+        if (activas.length === 0) {
+          // Solo mostrar mensaje si no hay nada precargado (aparte del placeholder)
+          if (cmbCompeticiones.options.length <= 1) {
+            const opt = document.createElement('option');
+            opt.value = '';
+            opt.disabled = true;
+            opt.textContent = 'No hay competiciones activas';
+            cmbCompeticiones.appendChild(opt);
+          }
+          return;
+        }
+
+        activas.forEach(comp => {
+          const idStr = String(comp.id);
+          if (existingValues.has(idStr)) return; // evitar duplicado
+          const option = document.createElement('option');
+          option.value = comp.id;
+          option.textContent = comp.name;
+          if (comp.description) option.title = comp.description;
+          cmbCompeticiones.appendChild(option);
+        });
+        console.log('Competiciones activas cargadas (sin duplicar):', activas.length);
+      }
+    })
+    .catch(error => { console.error('Error al cargar competiciones:', error); });
+})();
+
+// Función para obtener el ID de área por nombre
+function getAreaId(areaName) {
+  if (!areaName || areaName.trim() === '') return null;
+  const normalizedName = areaName.toLowerCase().trim();
+  return areasMap[normalizedName] || null;
+}
 
 // ====== Upload UI CSV ======
 fakeFile.addEventListener('click', () => inputFile.click());
@@ -32,16 +106,17 @@ function nuevaFila(data = {}) {
   tr.setAttribute('data-selectable', '1');
   tr.className = 'border-b last:border-b-0';
 
-  // Orden: nombre, ap_paterno, ap_materno, email, password, rol, area, codigo_usuario
+  // Orden en tabla/CSV: nombre, ap_paterno, ap_materno, ci, email, area, categoria, codigo_usuario, password
   [
     'nombre',
     'ap_paterno',
     'ap_materno',
+    'ci',
     'email',
-    'password',
-    'rol',
     'area',
-    'codigo_usuario'
+    'categoria',
+    'codigo_usuario',
+    'password'
   ].forEach(k => {
     const td = document.createElement('td');
     td.className = 'px-3 py-2';
@@ -91,21 +166,22 @@ function cargarCSV(csvText){
   let startIndex = 0;
   if (filas.length) {
     const headerGuess = parseLine(filas[0]).join(' ').toLowerCase();
-    if (/nombre|paterno|materno|email|contraseña|password|rol|area|codigo/.test(headerGuess)) startIndex = 1;
+    if (/nombre|paterno|materno|ci|email|contraseña|password|rol|area|codigo|categor/i.test(headerGuess)) startIndex = 1;
   }
 
   for (let i=startIndex;i<filas.length;i++){
     const cols = parseLine(filas[i]).map(c => (c || '').trim());
-    // Espera 8 columnas en el orden solicitado
+    // Orden esperado del CSV: nombre(0), ap_paterno(1), ap_materno(2), ci(3), email(4), area(5), categoria(6), codigo_usuario(7), password(8)
     const data = {
       nombre: cols[0] || '',
       ap_paterno: cols[1] || '',
       ap_materno: cols[2] || '',
-      email: cols[3] || '',
-      password: cols[4] || '',
-      rol: cols[5] || '',
-      area: cols[6] || '',
-      codigo_usuario: cols[7] || ''
+      ci: cols[3] || '',
+      email: cols[4] || '',
+      area: cols[5] || '',
+      categoria: cols[6] || '',
+      codigo_usuario: cols[7] || '',
+      password: cols[8] || ''
     };
 
     if (Object.values(data).every(v => v === '')) continue;
@@ -123,11 +199,12 @@ btnExport.addEventListener('click', () => {
         tds[0]?.textContent?.trim() || '', // nombre
         tds[1]?.textContent?.trim() || '', // ap_paterno
         tds[2]?.textContent?.trim() || '', // ap_materno
-        tds[3]?.textContent?.trim() || '', // email
-        tds[4]?.textContent?.trim() || '', // password
-        tds[5]?.textContent?.trim() || '', // rol
-        tds[6]?.textContent?.trim() || '', // area
-        tds[7]?.textContent?.trim() || ''  // codigo_usuario
+        tds[3]?.textContent?.trim() || '', // ci
+        tds[4]?.textContent?.trim() || '', // email
+        tds[5]?.textContent?.trim() || '', // area
+        tds[6]?.textContent?.trim() || '', // categoria
+        tds[7]?.textContent?.trim() || '', // codigo_usuario
+        tds[8]?.textContent?.trim() || ''  // password
       ].join(',');
     });
 
@@ -136,18 +213,35 @@ btnExport.addEventListener('click', () => {
     .filter(tr => tr.style.display !== 'none')
     .map(tr => {
       const tds = tr.querySelectorAll('td');
+      const areaNombre = tds[5]?.textContent?.trim() || ''; // area ahora índice 5
+      const areaId = getAreaId(areaNombre);
+      const categoriaNombre = tds[6]?.textContent?.trim() || '';
+
+      if (areaNombre && !areaId) {
+        console.warn(`Área "${areaNombre}" no encontrada en el sistema`);
+      }
+
       return {
         name: tds[0]?.textContent?.trim() || '',
         last_name_father: tds[1]?.textContent?.trim() || '',
         last_name_moothe: tds[2]?.textContent?.trim() || '',
-        email: tds[3]?.textContent?.trim() || '',
-        password: tds[4]?.textContent?.trim() || '',
-        role: tds[5]?.textContent?.trim() || '',
-        area_id: tds[6]?.textContent?.trim() || '',
-        user_code: tds[7]?.textContent?.trim() || '',
-        is_active: true
+        ci: tds[3]?.textContent?.trim() || '',
+        email: tds[4]?.textContent?.trim() || '',
+        password: tds[8]?.textContent?.trim() || '', // password índice 8
+        role: 'Estudiante',
+        area_id: (areaId ?? areaNombre),
+        user_code: tds[7]?.textContent?.trim() || '', // codigo_usuario índice 7
+        is_active: true,
+        categoria: categoriaNombre
       };
     });
+
+  const competitionId = cmbCompeticiones?.value || '';
+
+  if (!competitionId) {
+    alert('Seleccione una competición antes de guardar.');
+    return;
+  }
 
   if (estudiantes.length > 0) {
     fetch('/dashboard/admin/inscripcion/guardar-estudiantes', {
@@ -156,21 +250,21 @@ btnExport.addEventListener('click', () => {
         'Content-Type': 'application/json',
         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
       },
-      body: JSON.stringify({ estudiantes })
+      body: JSON.stringify({ estudiantes, competition_id: Number(competitionId) })
     })
     .then(res => res.json())
-    .then(data => {
+    .then((data) => {
       if (data.success) {
         Swal.fire({
           title: '¡Éxito!',
-          text: data.message || 'Estudiantes guardados correctamente.',
+          text: data.message || 'Estudiantes e inscripciones guardados correctamente.',
           icon: 'success',
           confirmButtonText: 'Aceptar'
         });
       } else {
         Swal.fire({
           title: 'Error',
-          text: 'Error al guardar estudiantes: ' + (data.error || 'Error desconocido'),
+          text: 'Error al guardar: ' + (data.error || 'Error desconocido'),
           icon: 'error',
           confirmButtonText: 'Aceptar'
         });
@@ -190,7 +284,7 @@ btnExport.addEventListener('click', () => {
 
   if (filas.length === 0) { alert('No hay datos para exportar.'); return; }
 
-  const encabezado = 'NOMBRE,APELLIDO PATERNO,APELLIDO MATERNO,EMAIL,CONTRASEÑA,ROL,AREA,CODIGO USUARIO';
+  const encabezado = 'NOMBRE,APELLIDO PATERNO,APELLIDO MATERNO,EMAIL,AREA,CATEGORIA,CODIGO USUARIO,CONTRASEÑA';
   const csv = [encabezado, ...filas].join('\n');
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
@@ -325,3 +419,23 @@ document.getElementById('frmAdd').addEventListener('submit', (e)=>{
     .forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
   clearPhoto();
 });
+
+// Deshabilitar el botón Guardar y Exportar hasta que se seleccione una competición
+function actualizarEstadoBtnExport() {
+  if (!cmbCompeticiones || !btnExport) return;
+  if (!cmbCompeticiones.value) {
+    btnExport.disabled = true;
+    btnExport.classList.add('bg-gray-400', 'text-gray-200', 'cursor-not-allowed');
+    btnExport.classList.remove('bg-[#091c47]', 'text-white', 'hover:bg-[#0c3e92]');
+  } else {
+    btnExport.disabled = false;
+    btnExport.classList.remove('bg-gray-400', 'text-gray-200', 'cursor-not-allowed');
+    btnExport.classList.add('bg-[#091c47]', 'text-white', 'hover:bg-[#0c3e92]');
+  }
+}
+
+// Inicializar estado al cargar
+actualizarEstadoBtnExport();
+
+// Actualizar al cambiar selección
+cmbCompeticiones.addEventListener('change', actualizarEstadoBtnExport);

@@ -33,7 +33,6 @@
   <table class="w-full min-w-[600px] text-center align-middle">
     <thead class="grid-headers">
       <tr>
-        <th class="cell header whitespace-nowrap">ID</th>
         <th class="cell header whitespace-nowrap">Nombre de Rol</th>
         <th class="cell header whitespace-nowrap">Descripción</th>
         <th class="cell header whitespace-nowrap">Acciones</th>
@@ -41,8 +40,7 @@
     </thead>
     <tbody>
       @foreach($roles as $i => $role)
-      <tr class="{{ $i % 2 === 0 ? '' : 'bg-[#d7dde4]' }} hover:bg-blue-50 transition-colors">
-        <td class="py-3 px-2 font-semibold text-gray-800 align-middle">{{ $role->id }}</td>
+      <tr class="{{ $i % 2 === 0 ? 'bg-white' : 'bg-[#d7dde4]' }} hover:bg-blue-50 transition-colors">
         <td class="py-3 px-2 text-gray-900 align-middle">{{ $role->name }}</td>
         <td class="py-3 px-2 text-gray-700 align-middle">{{ $role->description ?? '—' }}</td>
         <td class="py-2 px-2 align-middle">
@@ -144,7 +142,12 @@
   border:1px solid #cfd6df;
 }
 table{border-collapse:separate;border-spacing:0;width:100%;background:var(--table-bg);}
-.grid-headers th{background:var(--table-header-bg);color:#fff;padding:14px 8px;text-align:center;font-family:'Quicksand',sans-serif;font-weight:700;font-size:14px;white-space:nowrap;}
+.grid-headers th {
+  background: #949BA2 !important;
+  color: #fff !important;
+  height: 56px;
+  font-size: 1.1rem;
+}
 td,th{vertical-align:middle;}
 tbody tr{transition:background 0.15s;}
 tbody tr:nth-child(even){background:var(--table-row-alt-bg);}

@@ -111,7 +111,7 @@ class UserSeeder extends Seeder
             'date_of_birth' => '1982-05-10',
         ]);
 
-        // Nuevos usuarios de ejemplo con campos adicionales
+        // Nuevos usuarios de ejemplo with additional fields
         User::create([
             'name' => 'Juan',
             'last_name_father' => 'Pérez',
@@ -147,5 +147,28 @@ class UserSeeder extends Seeder
             'telephone_number' => '70022222',
             'date_of_birth' => '1997-07-20',
         ]);
+
+        // Usuarios estudiantes de ejemplo
+        // $estudianteRoleId = DB::table('roles')->where('name', 'estudiante')->value('id');
+        // for ($i = 1; $i <= 50; $i++) {
+        //     $dia = ($i % 28) + 1; // Día entre 1 y 28
+        //     User::create([
+        //         'name' => 'Estudiante' . $i,
+        //         'last_name_father' => 'ApellidoP' . $i,
+        //         'last_name_mother' => 'ApellidoM' . $i,
+        //         'email' => 'estudiante' . $i . '@example.com',
+        //         'password' => Hash::make('estudiante123'),
+        //         'role_id' => $estudianteRoleId,
+        //         'area_id' => ($i % 6) + 1, // Asignar áreas del 1 al 6
+        //         'user_code' => 'ESTU' . str_pad($i, 3, '0', STR_PAD_LEFT),
+        //         'school' => 'Unidad Educativa Ejemplo',
+        //         'level' => 'Secundaria',
+        //         'is_active' => true,
+        //         'ci' => 'ESTUCI' . $i,
+        //         'address' => 'Dirección ' . $i,
+        //         'telephone_number' => '7100000' . $i,
+        //         'date_of_birth' => '2005-01-' . str_pad($dia, 2, '0', STR_PAD_LEFT),
+        //     ]);
+        // }
     }
 }

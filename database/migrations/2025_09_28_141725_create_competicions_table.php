@@ -19,6 +19,19 @@ return new class extends Migration
                   ->default('borrador');
             $table->dateTime('fechaInicio');
             $table->dateTime('fechaFin');
+            
+            // Fechas de Etapa de Inscripción
+            $table->date('inscripcion_inicio')->nullable();
+            $table->date('inscripcion_fin')->nullable();
+            
+            // Fechas de Etapa de Evaluación
+            $table->date('evaluacion_inicio')->nullable();
+            $table->date('evaluacion_fin')->nullable();
+            
+            // Fechas de Etapa de Premiación
+            $table->date('premiacion_inicio')->nullable();
+            $table->date('premiacion_fin')->nullable();
+            
             $table->timestamps();
         });
     }

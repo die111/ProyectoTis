@@ -8,6 +8,18 @@
         @csrf
         @method('PUT')
         <div class="mb-4">
+        <div class="mb-4">
+            <label class="block text-gray-700 font-semibold mb-2">Permisos</label>
+            <div class="grid grid-cols-2 gap-2">
+                @foreach($permissions as $permission)
+                    <label class="flex items-center space-x-2">
+                        <input type="checkbox" name="permissions[]" value="{{ $permission->id }}" {{ in_array($permission->id, $rolePermissions) ? 'checked' : '' }}>
+                        <span>{{ $permission->name }}</span>
+                    </label>
+                @endforeach
+            </div>
+            @error('permissions')<span class="text-red-500 text-sm">{{ $message }}</span>@enderror
+        </div>
             <label for="name" class="block text-gray-700 font-semibold mb-2">Nombre del Rol <span class="text-red-500">*</span></label>
             <input type="text" name="name" id="name" class="w-full border border-gray-300 rounded px-3 py-2" value="{{ old('name', $role->name) }}" required>
             @error('name')<span class="text-red-500 text-sm">{{ $message }}</span>@enderror

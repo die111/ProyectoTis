@@ -3,32 +3,27 @@
 @section('title', 'Editar Fase')
 
 @section('content')
-<div class="w-full min-h-screen bg-[#f5f5f7] flex items-center justify-center py-8">
-    <div class="w-full max-w-2xl mx-auto bg-white rounded-lg shadow p-8">
-        <form action="{{ route('admin.etapas.update', $phase->id) }}" method="POST" class="space-y-6">
+<div class="container mx-auto py-8 px-32">
+    <div class="flex items-center justify-between mb-6">
+        <h1 class="text-2xl font-bold w-full text-center">Editar Fase</h1>
+    </div>
+    <div class="p-6 w-full">
+        <form action="{{ route('admin.phases.update', $phase->id) }}" method="POST">
             @csrf
             @method('PUT')
-            <div>
-                <label for="name" class="block text-sm font-semibold text-gray-700 mb-1">Nombre:</label>
-                <input type="text" name="name" id="name" value="{{ old('name', $phase->name) }}" required
-                    class="w-full bg-[#f8f9fa] border border-gray-300 rounded-lg px-4 py-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#091c47]">
+            <div class="mb-4">
+                <label for="name" class="block text-gray-700 font-semibold mb-2">Nombre</label>
+                <input type="text" name="name" id="name" class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring focus:border-blue-400" value="{{ old('name', $phase->name) }}" required>
                 @error('name')<span class="text-red-500 text-sm">{{ $message }}</span>@enderror
             </div>
-            <div>
-                <label for="description" class="block text-sm font-semibold text-gray-700 mb-1">Descripción:</label>
-                <textarea name="description" id="description" rows="2"
-                    class="w-full bg-[#f8f9fa] border border-gray-300 rounded-lg px-4 py-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#091c47]">{{ old('description', $phase->description) }}</textarea>
+            <div class="mb-4">
+                <label for="description" class="block text-gray-700 font-semibold mb-2">Descripción</label>
+                <textarea name="description" id="description" rows="3" class="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring focus:border-blue-400">{{ old('description', $phase->description) }}</textarea>
                 @error('description')<span class="text-red-500 text-sm">{{ $message }}</span>@enderror
             </div>
-            <div>
-                <label for="clasificados" class="block text-sm font-semibold text-gray-700 mb-1">Clasificados:</label>
-                <textarea name="clasificados" id="clasificados" rows="2"
-                    class="w-full bg-[#f8f9fa] border border-gray-300 rounded-lg px-4 py-3 text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#091c47]">{{ old('clasificados', $phase->clasificados) }}</textarea>
-                @error('clasificados')<span class="text-red-500 text-sm">{{ $message }}</span>@enderror
-            </div>
-            <div class="flex justify-center gap-8 mt-8">
-                <a href="{{ route('admin.etapas.index') }}" class="px-8 py-3 rounded-lg bg-[#d90429] text-white font-semibold text-lg hover:bg-[#a6031f] transition">Cancelar</a>
-                <button type="submit" class="px-8 py-3 rounded-lg bg-[#091c47] text-white font-semibold text-lg hover:bg-[#122a5c] transition">Actualizar</button>
+            <div class="flex justify-end gap-2">
+                <a href="{{ route('admin.phases.index') }}" class="bg-gray-300 text-black px-4 py-2 rounded hover:bg-gray-400 transition">Cancelar</a>
+                <button type="submit" class="bg-[#091c47] text-white px-4 py-2 rounded hover:bg-blue-700 transition">Actualizar</button>
             </div>
         </form>
     </div>
