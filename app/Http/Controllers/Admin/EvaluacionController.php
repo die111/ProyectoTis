@@ -470,6 +470,7 @@ class EvaluacionController extends \App\Http\Controllers\Controller
         $query = \App\Models\Inscription::with(['user', 'area', 'categoria']);
         $query->where('competition_id', $competicion->id);
         $query->where('fase', $numeroFase);
+        $query->where('estado', 'confirmada');
         if (request('estado_activo') === 'inactivo') { $query->where('is_active', false); }
         elseif (request('estado_activo') === 'todos') { /* no-op */ }
         else { $query->where('is_active', true); }
@@ -977,5 +978,72 @@ class EvaluacionController extends \App\Http\Controllers\Controller
         // Generar PDF
         $pdf = Pdf::loadView('admin.evaluacion.pdf.inscritos', compact('competicion', 'faseObj', 'categorias', 'areas', 'estudiantes', 'numeroFase'));
         return $pdf->stream('lista_inscritos.pdf');
+    }
+
+    // Generar PDF de clasificados (siguiente fase)
+    public function generarPdfClasificados(Request $request, $competicion, $fase)
+    {
+        // Filtros similares para mantener consistencia visual
+        $categoria = $request->input('categoria');
+        $area = $request->input('area');
+        $estado_activo = $request->input('estado_activo', 'activo');
+        $search = $request->input('search');
+        $numeroFaseActual = (int) $request->input('fase_n', $request->input('fase'));
+
+        $competicion = \App\Models\Competicion::findOrFail($competicion);
+        $faseObj = \App\Models\Phase::findOrFail($fase);
+
+        // Calcular número de fase si no viene correcto
+        $todasLasFases = $competicion->phases()->orderBy('competition_phase.id')->get();
+        if ($numeroFaseActual <= 0) {
+            foreach ($todasLasFases as $index => $f) {
+                if ($f->id == $faseObj->id) { $numeroFaseActual = $index + 1; break; }
+            }
+            if ($numeroFaseActual <= 0) { $numeroFaseActual = 1; }
+        } else {
+            $maxFases = max(1, $todasLasFases->count());
+            if ($numeroFaseActual > $maxFases) { $numeroFaseActual = $maxFases; }
+        }
+
+        $numeroFaseSiguiente = $numeroFaseActual + 1;
+
+        // Traer inscripciones de la siguiente fase como "clasificados"
+        $query = \App\Models\Inscription::with(['user', 'area', 'categoria', 'evaluations'])
+            ->where('competition_id', $competicion->id)
+            ->where('fase', $numeroFaseSiguiente);
+
+        if ($estado_activo === 'inactivo') { $query->where('is_active', false); }
+        elseif ($estado_activo === 'todos') { /* no-op */ }
+        else { $query->where('is_active', true); }
+        if ($categoria) { $query->where('categoria_id', $categoria); }
+        if ($area) { $query->where('area_id', $area); }
+        if ($search) {
+            $query->whereHas('user', function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('last_name_father', 'like', "%{$search}%")
+                  ->orWhere('last_name_mother', 'like', "%{$search}%")
+                  ->orWhere('school', 'like', "%{$search}%");
+            });
+        }
+
+        $clasificados = $query->get();
+
+        // Obtener inscripciones de la fase actual (anterior a la siguiente) para los mismos usuarios con sus evaluaciones
+        $inscripcionesPreviasKeyed = \App\Models\Inscription::with(['evaluations'])
+            ->where('competition_id', $competicion->id)
+            ->where('fase', $numeroFaseActual)
+            ->whereIn('user_id', $clasificados->pluck('user_id'))
+            ->get()
+            ->keyBy('user_id');
+
+        $pdf = Pdf::loadView('admin.evaluacion.pdf.clasificados', [
+            'competicion' => $competicion,
+            'faseObj' => $faseObj,
+            'numeroFaseActual' => $numeroFaseActual,
+            'numeroFaseSiguiente' => $numeroFaseSiguiente,
+            'estudiantes' => $clasificados,
+            'inscripcionesPreviasKeyed' => $inscripcionesPreviasKeyed,
+        ]);
+        return $pdf->stream('lista_clasificados.pdf');
     }
 }

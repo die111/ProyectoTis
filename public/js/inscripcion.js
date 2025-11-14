@@ -224,7 +224,7 @@ btnExport.addEventListener('click', () => {
       return {
         name: tds[0]?.textContent?.trim() || '',
         last_name_father: tds[1]?.textContent?.trim() || '',
-        last_name_moothe: tds[2]?.textContent?.trim() || '',
+        last_name_mother: tds[2]?.textContent?.trim() || '',
         ci: tds[3]?.textContent?.trim() || '',
         email: tds[4]?.textContent?.trim() || '',
         password: tds[8]?.textContent?.trim() || '', // password índice 8

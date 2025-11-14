@@ -140,10 +140,10 @@
         </p>
       </div>
       <div class="flex gap-3 items-center">
-        <a href="{{ route('admin.evaluacion.fase.estudiantes.pdf', ['competicion' => $competicion->id, 'fase' => $fase->id, 'fase_n' => $numeroFase]) }}" target="_blank" class="rounded-md px-6 py-2 text-sm font-medium text-white shadow-sm hover:opacity-90" style="background-color: #2563eb;">
+        <a href="{{ route('admin.evaluacion.fase.estudiantes.pdf', ['competicion' => $competicion->id, 'fase' => $fase->id, 'fase_n' => $numeroFase, 'categoria' => request('categoria'), 'area' => request('area'), 'estado_activo' => request('estado_activo'), 'search' => request('search')]) }}" target="_blank" class="rounded-md px-6 py-2 text-sm font-medium text-white shadow-sm hover:opacity-90" style="background-color: #2563eb;">
           Crear Lista Inscritos
         </a>
-        <a href="#" class="rounded-md px-6 py-2 text-sm font-medium text-white shadow-sm hover:opacity-90" style="background-color: #059669;">
+        <a href="{{ route('admin.evaluacion.fase.clasificados.pdf', ['competicion' => $competicion->id, 'fase' => $fase->id, 'fase_n' => $numeroFase, 'categoria' => request('categoria'), 'area' => request('area'), 'estado_activo' => request('estado_activo'), 'search' => request('search')]) }}" target="_blank" class="rounded-md px-6 py-2 text-sm font-medium text-white shadow-sm hover:opacity-90" style="background-color: #059669;">
           Crear Lista Clasificados
         </a>
         <a href="{{ route('admin.evaluacion.calificar', ['competicion' => $competicion->id, 'fase' => $fase->id, 'fase_n' => $numeroFase]) }}" class="rounded-md px-6 py-2 text-sm font-medium text-white shadow-sm hover:opacity-90" style="background-color: #091C47;">

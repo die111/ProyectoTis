@@ -90,6 +90,9 @@ Route::middleware(['auth'])->prefix('dashboard/admin')->name('admin.')->group(fu
     // Ruta para generar PDF de inscritos
     Route::get('evaluacion/{competicion}/fase/{fase}/estudiantes/pdf', [EvaluacionController::class, 'generarPdfInscritos'])->name('evaluacion.fase.estudiantes.pdf');
 
+    // Ruta para generar PDF de clasificados (siguiente fase)
+    Route::get('evaluacion/{competicion}/fase/{fase}/clasificados/pdf', [EvaluacionController::class, 'generarPdfClasificados'])->name('evaluacion.fase.clasificados.pdf');
+
     // Futuras rutas de áreas (descomentar cuando estén listas)
     // Route::resource('areas', App\Http\Controllers\Admin\AreaController::class);
 });
