@@ -103,4 +103,15 @@ class AreaController extends Controller
             'swal_text' => 'Área eliminada correctamente.'
         ]);
     }
+
+    public function create()
+    {
+        return view('admin.areas.create-area');
+    }
+
+    public function edit($id)
+    {
+        $area = \App\Models\Area::findOrFail($id);
+        return view('admin.areas.edit-area', compact('area'));
+    }
 }

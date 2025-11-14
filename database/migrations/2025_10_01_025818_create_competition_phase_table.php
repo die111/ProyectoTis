@@ -15,8 +15,13 @@ return new class extends Migration
             $table->id();
             $table->foreignId('competition_id')->constrained('competicions')->onDelete('cascade');
             $table->foreignId('phase_id')->constrained('phases')->onDelete('cascade');
+            $table->integer('clasificados')->nullable();
             $table->date('start_date')->nullable();
             $table->date('end_date')->nullable();
+            // Nuevos campos de clasificación incorporados en la creación
+            $table->string('classification_type')->nullable();
+            $table->unsignedInteger('classification_cupo')->nullable();
+            $table->decimal('classification_nota_minima', 5, 2)->nullable();
             $table->timestamps();
         });
     }

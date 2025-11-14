@@ -10,7 +10,7 @@
         <div class="flex items-center justify-between">
             <div>
                 <h2 class="text-xl font-semibold text-gray-900">Bienvenido, {{ Auth::user()->name }}</h2>
-                <p class="text-gray-600 mt-1">{{ ucfirst(str_replace('_', ' ', Auth::user()->role)) }}</p>
+                <p class="text-gray-600 mt-1">{{ (Auth::check() && Auth::user()->relationLoaded('role')) ? ucfirst(str_replace('_', ' ', Auth::user()->role->name)) : '' }}</p>
                 @if(Auth::user()->area)
                     <p class="text-sm text-gray-500 mt-1">Área: {{ Auth::user()->area }}</p>
                 @endif

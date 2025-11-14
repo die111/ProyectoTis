@@ -87,7 +87,7 @@ class Etapa extends Model
     {
         $now = now();
         return $query->where('fechaInicio', '<=', $now)
-                    ->where('fechaFin', '>=', $now);
+            ->where('fechaFin', '>=', $now);
     }
 
     /**
@@ -157,11 +157,11 @@ class Etapa extends Model
         if ($this->noHaComenzado()) {
             return 'pendiente';
         }
-        
+
         if ($this->isActiva()) {
             return 'activa';
         }
-        
+
         return 'finalizada';
     }
 
@@ -170,7 +170,7 @@ class Etapa extends Model
      */
     public function getEstadoFormateado(): string
     {
-        return match($this->getEstado()) {
+        return match ($this->getEstado()) {
             'pendiente' => 'Pendiente',
             'activa' => 'En Curso',
             'finalizada' => 'Finalizada',
@@ -211,7 +211,7 @@ class Etapa extends Model
 
         $totalMinutos = $this->fechaInicio->diffInMinutes($this->fechaFin);
         $minutosTranscurridos = $this->fechaInicio->diffInMinutes(now());
-        
+
         return $totalMinutos > 0 ? round(($minutosTranscurridos / $totalMinutos) * 100, 2) : 0.0;
     }
 
@@ -223,7 +223,7 @@ class Etapa extends Model
         if ($this->haTerminado()) {
             return 0;
         }
-        
+
         return now()->diffInDays($this->fechaFin, false);
     }
 
@@ -235,7 +235,7 @@ class Etapa extends Model
         if ($this->noHaComenzado()) {
             return 0;
         }
-        
+
         return $this->fechaInicio->diffInDays(now());
     }
 
@@ -300,10 +300,15 @@ class Etapa extends Model
             'finalizadas' => $finalizadas
         ];
     }
-    
+
     // Relacion uno a muchos con Competicion
     public function competiciones()
     {
         return $this->hasMany(Competicion::class, 'id_competicion');
-    }   
+    }
+
+    public function evaluations()
+    {
+        return $this->hasMany(Evaluation::class);
+    }
 }

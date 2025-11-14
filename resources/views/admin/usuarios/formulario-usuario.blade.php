@@ -1,20 +1,18 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="container mx-auto py-10">
-  <div class="max-w-4xl mx-auto bg-white rounded-2xl shadow-lg overflow-hidden">
-    <!-- Header -->
-    <div class="bg-[#0C3E92] text-white px-6 py-5 flex items-center justify-between">
-      <a href="{{ $return ?? route('admin.usuarios.index') }}" class="text-white hover:text-gray-200 transition" title="Volver">
+<div class="w-full py-6 px-0">
+  <div class="w-full max-w-full">
+    <!-- Header  -->
+    <div class="flex items-center justify-between mb-6 px-6">
+      <a href="{{ $return ?? route('admin.usuarios.index') }}" class="text-gray-700 hover:text-gray-900 transition" title="Volver">
         <i class="bi bi-arrow-left-circle text-3xl"></i>
       </a>
-      <h2 class="text-2xl font-semibold">
-        {{ isset($user) ? 'Editar Usuario' : 'Crear Usuario' }}
-      </h2>
-      <div class="w-12"></div> <!-- Spacer para centrar el título -->
+      <h1 class="text-2xl font-bold w-full text-center">{{ isset($user) ? 'Editar Usuario' : 'Crear Usuario' }}</h1>
+      <div class="w-12"></div>
     </div>
     <!-- Body -->
-    <div class="bg-gray-200 px-6 py-6">
+    <div class="p-6 w-full">
       <p class="text-lg font-semibold text-gray-800">Los campos con * son obligatorios</p>
       <hr class="border-t border-gray-400 mt-2 mb-6" />
       <form action="{{ isset($user) ? route('admin.usuarios.update', $user->id) : route('admin.usuarios.store') }}" method="POST" class="space-y-6">

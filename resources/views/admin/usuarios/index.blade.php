@@ -57,8 +57,8 @@
     </div>
 
 
-    <section class="min-h-[80vh] w-full bg-slate-400/70">
-        <div class="mx-auto max-w-6xl px-6 py-10">
+    <section class="min-h-[80vh] w-full bg-white">
+    <div class="mx-auto w-full max-w-full px-6 py-10">
 
             {{-- Filtro superior --}}
             <div class="flex flex-col items-center gap-6">
@@ -97,8 +97,8 @@
             </div>
 
             {{-- Tabla --}}
-            <div class="mt-10 overflow-hidden rounded-lg shadow-sm ring-1 ring-slate-300/60">
-                <table class="min-w-full divide-y divide-slate-200">
+            <div class="mt-10 w-full overflow-x-auto rounded-lg shadow-sm ring-1 ring-slate-300/60">
+                <table class="min-w-full w-full divide-y divide-slate-200">
                     <thead class="bg-slate-600">
                         <tr class="text-left text-xs font-semibold uppercase tracking-wider text-white">
                             <th scope="col" class="px-6 py-4">Nombre</th>
@@ -118,8 +118,8 @@
                                 </td>
                             </tr>
                         @else
-                            @foreach($users as $user)
-                                <tr class="text-sm text-slate-800 hover:bg-slate-50">
+                            @foreach($users as $i => $user)
+                                <tr class="text-sm text-slate-800 hover:bg-slate-50 {{ $i % 2 === 0 ? 'bg-white' : 'bg-[#d7dde4]' }}">
                                     <td class="px-6 py-3">{{ $user->name }}</td>
                                     <td class="px-6 py-3">{{ $user->last_name_father }}</td>
                                     <td class="px-6 py-3">{{ $user->last_name_mother }}</td>
@@ -221,4 +221,11 @@
             }, 3500);
         </script>
     @endif
+
+    <style>
+        thead.bg-slate-600, thead.bg-slate-600 tr, thead.bg-slate-600 th, thead tr.text-white {
+            background: #949BA2 !important;
+            color: #fff !important;
+        }
+    </style>
 @endsection

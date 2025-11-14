@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 
 use App\Models\Phase;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class EtapaController extends Controller
 {
@@ -33,10 +34,9 @@ class EtapaController extends Controller
         $request->validate([
             'name' => 'required|string|max:255|unique:phases,name',
             'description' => 'nullable|string',
-            'clasificados' => 'required|integer|min:1',
         ]);
-        Phase::create($request->all());
-        return redirect()->route('admin.etapas.index')->with([
+        Phase::create($request->only(['name', 'description']));
+        return redirect()->route('admin.phases.index')->with([
             'swal_custom' => true,
             'swal_title' => '¡Éxito!',
             'swal_icon' => 'success',
@@ -55,12 +55,11 @@ class EtapaController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
-            'clasificados' => 'required|integer|min:1',
         ]);
         $phase = Phase::findOrFail($id);
-        $phase->update($request->all());
+        $phase->update($request->only(['name', 'description']));
        
-         return redirect()->route('admin.etapas.index')->with([
+         return redirect()->route('admin.phases.index')->with([
             'swal_custom' => true,
             'swal_title' => '¡Éxito!',
             'swal_icon' => 'success',
@@ -71,22 +70,53 @@ class EtapaController extends Controller
     public function destroy($id)
     {
         $phase = Phase::findOrFail($id);
-        $phase->is_active = false;
-        $phase->save();
-        return redirect()->route('admin.etapas.index')
+
+        DB::transaction(function () use ($phase, $id) {
+            // Obtener todas las competiciones donde está asociada esta fase (vía tabla pivot)
+            $links = DB::table('competition_phase')
+                ->where('phase_id', $id)
+                ->orderBy('id')
+                ->get();
+
+            foreach ($links as $link) {
+                $competitionId = $link->competition_id ?? $link->id_competition ?? null;
+                if (!$competitionId) continue;
+
+                // Determinar ordinal eliminado dentro de la competición usando el id del pivot como orden
+                $removedOrdinal = DB::table('competition_phase')
+                    ->where(function($q) use ($competitionId) {
+                        $q->where('competition_id', $competitionId)->orWhere('id_competition', $competitionId);
+                    })
+                    ->where('id', '<=', $link->id)
+                    ->count();
+
+                // Compactar numeración de inscripciones: fase > removedOrdinal => fase - 1
+                DB::table('inscriptions')
+                    ->where('competition_id', $competitionId)
+                    ->where('fase', '>', $removedOrdinal)
+                    ->decrement('fase');
+            }
+
+            // Desactivar la fase globalmente
+            $phase->is_active = false;
+            $phase->save();
+        });
+
+        return redirect()->route('admin.phases.index')
             ->with([
             'swal_custom' => true,
             'swal_title' => '¡Éxito!',
             'swal_icon' => 'success',
-            'swal_text' => 'Fase deshabilitado correctamente.'
+            'swal_text' => 'Fase deshabilitada y numeración sincronizada correctamente.'
         ]);
     }
+
     public function habilitar($id)
     {
         $phase = Phase::findOrFail($id);
         $phase->is_active = true;
         $phase->save();
-        return redirect()->route('admin.etapas.index')
+        return redirect()->route('admin.phases.index')
             ->with([
             'swal_custom' => true,
             'swal_title' => '¡Éxito!',
