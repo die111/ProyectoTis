@@ -438,7 +438,36 @@ class EvaluacionController extends \App\Http\Controllers\Controller
             ->orderBy('end_date', 'asc')
             ->get();
         
-        return view('admin.evaluacion.fases', compact('competicion', 'fases'));
+        // Preparar datos para la tarjeta de Premiación siguiendo la lógica de fases
+        $clasificados = collect();
+        $premiacion = [];
+        $totalFases = $fases->count();
+
+        if ($totalFases > 0) {
+            $numeroFaseAnterior = $totalFases; // última fase real listada
+
+            // Traer evaluaciones clasificadas de la última fase para esta competición
+            $clasificados = \App\Models\Evaluation::with(['inscription.user'])
+                ->where('estado', self::ESTADO_CLASIFICADO)
+                ->whereHas('inscription', function ($q) use ($competicion, $numeroFaseAnterior) {
+                    $q->where('competition_id', $competicion->id)
+                      ->where('is_active', true)
+                      ->where('estado', 'confirmada')
+                      ->where('fase', $numeroFaseAnterior);
+                })
+                ->orderByDesc('nota')
+                ->get()
+                ->map(function ($ev) {
+                    return (object) [
+                        'name' => trim(($ev->inscription->user->name ?? '') . ' ' . ($ev->inscription->user->last_name_father ?? '')),
+                        'full_name' => trim(($ev->inscription->user->name ?? '') . ' ' . ($ev->inscription->user->last_name_father ?? '')),
+                        'email' => $ev->inscription->user->email ?? null,
+                        'score' => $ev->nota,
+                    ];
+                });
+        }
+        
+        return view('admin.evaluacion.fases', compact('competicion', 'fases', 'clasificados', 'premiacion'));
     }
     
     /**
@@ -910,6 +939,82 @@ class EvaluacionController extends \App\Http\Controllers\Controller
             DB::rollBack();
             return redirect()->back()->with('error', 'Error al finalizar la fase: ' . $e->getMessage());
         }
+    }
+
+    /**
+     * Página de Premiación (medallero) por competición
+     */
+    public function premiacion(\App\Models\Competicion $competicion)
+    {
+        // Intentar obtener premiados desde el medallero configurado
+        $premiados = collect($this->generarReportePremiados($competicion->id));
+
+        // Si no hay premiados del medallero, mostrar todos los clasificados de la última fase
+        if ($premiados->isEmpty()) {
+            $totalFases = $competicion->phases()->count();
+            if ($totalFases > 0) {
+                $numeroFaseAnterior = $totalFases;
+
+                // Obtener clasificados ordenados por nota descendente
+                $clasificados = \App\Models\Evaluation::with(['inscription.user', 'inscription.area', 'inscription.categoria'])
+                    ->where('estado', self::ESTADO_CLASIFICADO)
+                    ->whereHas('inscription', function ($q) use ($competicion, $numeroFaseAnterior) {
+                        $q->where('competition_id', $competicion->id)
+                          ->where('is_active', true)
+                          ->where('estado', 'confirmada')
+                          ->where('fase', $numeroFaseAnterior);
+                    })
+                    ->orderByDesc('nota')
+                    ->get();
+
+                // Agrupar por área y categoría, luego asignar posiciones y premios
+                $premiadosRaw = $clasificados->groupBy(function ($ev) {
+                    $area = $ev->inscription->area->name ?? 'Sin área';
+                    $nivel = $ev->inscription->categoria->nombre ?? 'Sin nivel';
+                    return $area . '|' . $nivel;
+                })->flatMap(function ($grupo) {
+                    // Ordenar por nota descendente dentro del grupo
+                    $ordenados = $grupo->sortByDesc('nota')->values();
+                    
+                    return $ordenados->map(function ($ev, $index) {
+                        $posicion = $index + 1;
+                        
+                        // Asignar premio según posición
+                        $premio = match($posicion) {
+                            1 => 'oro',
+                            2 => 'plata',
+                            3 => 'bronce',
+                            default => 'mencion_honor'
+                        };
+
+                        return [
+                            'posicion' => $posicion,
+                            'nombre_completo' => trim(($ev->inscription->user->name ?? '') . ' ' . ($ev->inscription->user->last_name_father ?? '') . ' ' . ($ev->inscription->user->last_name_mother ?? '')),
+                            'unidad_educativa' => $ev->inscription->user->school ?? 'No especificada',
+                            'area' => $ev->inscription->area->name ?? 'Sin área',
+                            'nivel' => $ev->inscription->categoria->nombre ?? 'Sin nivel',
+                            'nota' => $ev->nota,
+                            'premio' => $premio,
+                        ];
+                    });
+                });
+
+                $premiados = $premiadosRaw;
+            }
+        }
+
+        // Agrupar por Área y Nivel para la vista
+        $premiadosGrouped = $premiados->groupBy(function ($p) {
+            return ($p['area'] ?? 'Área') . ' | ' . ($p['nivel'] ?? 'Nivel');
+        })->map(function ($items) {
+            return $items->sortBy('posicion')->values();
+        });
+
+        return view('admin.evaluacion.premiacion', [
+            'competicion' => $competicion,
+            'premiados' => $premiados,
+            'premiadosGrouped' => $premiadosGrouped,
+        ]);
     }
 
     // Métodos auxiliares

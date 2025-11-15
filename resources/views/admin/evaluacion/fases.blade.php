@@ -196,6 +196,101 @@
         </div>
       </div>
     @endforelse
+
+    {{-- Tarjeta de Premiación --}} 
+    @php
+      // Paleta de colores igual que en las fases
+      $premColors = ['bg-red-600', 'bg-blue-600', 'bg-green-600', 'bg-purple-600', 'bg-yellow-600', 'bg-pink-600'];
+      $premSvgColors = ['#ef4444', '#2563eb', '#16a34a', '#9333ea', '#eab308', '#ec4899'];
+      $premIndex = ($fases->count() ?? 0); // siguiente índice
+      $premColorIndex = $premIndex % count($premColors);
+      $numeroFasePrem = ($fases->count() ?? 0) + 1;
+
+      // Estado y fechas opcionales para premiación si se pasan desde el controlador
+      $fechaInicioPrem = $premiacion['start_date'] ?? null;
+      $fechaFinPrem = $premiacion['end_date'] ?? null;
+      $estadoPrem = 'Disponible';
+      $ahoraPrem = now();
+      if ($fechaInicioPrem && $fechaFinPrem) {
+        if ($ahoraPrem < $fechaInicioPrem) {
+          $estadoPrem = 'Pendiente';
+        } elseif ($ahoraPrem >= $fechaInicioPrem && $ahoraPrem <= $fechaFinPrem) {
+          $estadoPrem = 'En Proceso';
+        } else {
+          $estadoPrem = 'Finalizada';
+        }
+      } elseif ($fechaInicioPrem || $fechaFinPrem) {
+        $estadoPrem = 'Parcialmente Configurada';
+      } else {
+        $estadoPrem = 'Sin Fechas Configuradas';
+      }
+
+      // Lista de clasificados esperada desde el controlador (colección o array)
+      $clasificadosList = collect($clasificados ?? []);
+    @endphp
+
+    <article class="phase-card rounded-2xl bg-white shadow ring-2 ring-{{ str_replace('bg-', '', $premColors[$premColorIndex]) }} overflow-hidden transition-all duration-200 hover:shadow-lg hover:scale-[1.02] hover:ring-4" data-phase="{{ strtolower($numeroFasePrem . ' premiacion') }}" data-phase-number="{{ $numeroFasePrem }}">
+      <div class="h-1.5 {{ $premColors[$premColorIndex] }}"></div>
+      <div class="brush relative px-8 pt-6">
+        <svg viewBox="0 0 360 120" class="w-full">
+          <defs>
+            <filter id="cloudShadowPrem">
+              <feDropShadow dx="2" dy="3" stdDeviation="4" flood-opacity="0.2"/>
+            </filter>
+          </defs>
+          <!-- Base de la nube -->
+          <ellipse cx="180" cy="55" rx="120" ry="25" 
+                   fill="{{ $premSvgColors[$premColorIndex] }}" 
+                   filter="url(#cloudShadowPrem)"
+                   opacity="0.9"/>
+          <!-- Círculos -->
+          <circle cx="80" cy="50" r="35" fill="{{ $premSvgColors[$premColorIndex] }}" opacity="0.85"/>
+          <circle cx="110" cy="40" r="28" fill="{{ $premSvgColors[$premColorIndex] }}" opacity="0.8"/>
+          <circle cx="95" cy="65" r="22" fill="{{ $premSvgColors[$premColorIndex] }}" opacity="0.75"/>
+          <circle cx="150" cy="35" r="25" fill="{{ $premSvgColors[$premColorIndex] }}" opacity="0.8"/>
+          <circle cx="180" cy="30" r="30" fill="{{ $premSvgColors[$premColorIndex] }}" opacity="0.85"/>
+          <circle cx="210" cy="35" r="25" fill="{{ $premSvgColors[$premColorIndex] }}" opacity="0.8"/>
+          <circle cx="280" cy="50" r="35" fill="{{ $premSvgColors[$premColorIndex] }}" opacity="0.85"/>
+          <circle cx="250" cy="40" r="28" fill="{{ $premSvgColors[$premColorIndex] }}" opacity="0.8"/>
+          <circle cx="265" cy="65" r="22" fill="{{ $premSvgColors[$premColorIndex] }}" opacity="0.75"/>
+          <circle cx="140" cy="70" r="18" fill="{{ $premSvgColors[$premColorIndex] }}" opacity="0.7"/>
+          <circle cx="180" cy="75" r="20" fill="{{ $premSvgColors[$premColorIndex] }}" opacity="0.7"/>
+          <circle cx="220" cy="70" r="18" fill="{{ $premSvgColors[$premColorIndex] }}" opacity="0.7"/>
+        </svg>
+
+        <!-- Insignia con numeración -->
+        <div class="absolute left-4 top-3">
+          <span class="inline-flex h-7 w-7 items-center justify-center rounded-full {{ $premColors[$premColorIndex] }} text-white text-xs font-bold shadow">
+            {{ $numeroFasePrem }}
+          </span>
+        </div>
+
+        <div class="pointer-events-none absolute inset-0 flex items-center justify-center px-4">
+          <span class="select-none text-lg md:text-xl lg:text-2xl font-extrabold tracking-wide text-white drop-shadow-lg text-center leading-tight max-w-full">
+            {{ Str::upper('Premiación') }}
+          </span>
+        </div>
+      </div>
+
+      <div class="space-y-2 px-8 pb-6 pt-2 text-sm">
+        <p><span class="font-semibold">Estado:</span> {{ $estadoPrem }}</p>
+        @if($fechaInicioPrem)
+          <p><span class="font-semibold">Fecha Inicio:</span> {{ \Carbon\Carbon::parse($fechaInicioPrem)->format('d/m/Y') }}</p>
+        @endif
+        @if($fechaFinPrem)
+          <p><span class="font-semibold">Fecha Fin:</span> {{ \Carbon\Carbon::parse($fechaFinPrem)->format('d/m/Y') }}</p>
+        @endif
+
+        {{-- Resumen sin nombres --}}
+        <p><span class="font-semibold">Total clasificados:</span> {{ $clasificadosList->count() }}</p>
+
+        <div class="pt-2">
+          <button class="rounded-full bg-slate-700 px-4 py-1.5 text-white text-sm shadow hover:bg-slate-800" onclick="gestionarPremiacion()">
+            Gestionar
+          </button>
+        </div>
+      </div>
+    </article>
   </section>
 </div>
 
@@ -229,6 +324,12 @@
     const competicionId = {{ $competicion->id }};
     // Usar fase_n para no chocar con el parámetro de ruta {fase}
     window.location.href = `/dashboard/admin/evaluacion/${competicionId}/fase/${faseId}/estudiantes?fase_n=${faseNumero}`;
+  }
+
+  // Función para gestionar premiación
+  function gestionarPremiacion() {
+    const competicionId = {{ $competicion->id }};
+    window.location.href = `/dashboard/admin/evaluacion/${competicionId}/premiacion`;
   }
 </script>
 @endsection
