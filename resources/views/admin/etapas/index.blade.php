@@ -50,7 +50,12 @@
                             <form action="{{ route('admin.phases.destroy', $phase->id) }}" method="POST" style="display:inline-block;" class="swal-delete">
                                 @csrf
                                 @method('DELETE')
-                                <button type="submit" class="btn btn-secondary btn-pressable px-3 py-1 text-sm">Desactivar</button>
+                                <button type="submit" 
+                                    class="btn btn-secondary btn-pressable px-3 py-1 text-sm {{ $phase->in_use ? 'opacity-50 cursor-not-allowed' : '' }}" 
+                                    {{ $phase->in_use ? 'disabled' : '' }}
+                                    @if($phase->in_use) title="No se puede desactivar porque está en uso en una competición" @endif>
+                                    Desactivar
+                                </button>
                             </form>
                         @else
                             <form action="{{ route('admin.phases.habilitar', $phase->id) }}" method="POST" style="display:inline-block;">
@@ -90,6 +95,9 @@
 .btn{height:36px;padding:0 14px;border-radius:10px;font-family:'Ubuntu',sans-serif}
 .btn-primary{background:#091c47;color:#fff}
 .btn-secondary{background:#f1f3f4;color:#111;border:1px solid #e5e7eb}
+.btn:disabled{cursor:not-allowed;opacity:0.5;filter:grayscale(50%)}
+.btn:disabled:hover{filter:grayscale(50%) brightness(1)}
+.btn:disabled:active{transform:none}
 
 /* ===== Buscador ===== */
 .search-panel{display:flex;gap:16px;margin-bottom:16px;justify-content:center;align-items:center;flex-wrap:wrap}
