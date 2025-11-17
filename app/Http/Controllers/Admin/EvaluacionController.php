@@ -440,7 +440,10 @@ class EvaluacionController extends \App\Http\Controllers\Controller
         
         // Preparar datos para la tarjeta de Premiación siguiendo la lógica de fases
         $clasificados = collect();
-        $premiacion = [];
+        $premiacion = [
+            'start_date' => $competicion->premiacion_inicio,
+            'end_date' => $competicion->premiacion_fin,
+        ];
         $totalFases = $fases->count();
 
         if ($totalFases > 0) {

@@ -37,7 +37,7 @@ class CompeticionController extends Controller
     public function create()
     {
         $areasCatalog = Area::all();
-        $fasesCatalog = Phase::all();
+        $fasesCatalog = Phase::where('is_active', true)->get();
         $categoriasCatalog = Categoria::all();
         return view('admin.competicion.create', compact('areasCatalog', 'fasesCatalog', 'categoriasCatalog'));
     }
@@ -50,7 +50,7 @@ class CompeticionController extends Controller
     {
         $competiciones = Competicion::with(['areas', 'phases', 'categorias', 'categoryAreas.categoria', 'categoryAreas.area'])->paginate(10);
         $areasCatalog = Area::all();
-        $fasesCatalog = Phase::all();
+        $fasesCatalog = Phase::where('is_active', true)->get();
         $categoriasCatalog = Categoria::all();
         return view('admin.competicion.index', compact('competiciones', 'areasCatalog', 'fasesCatalog', 'categoriasCatalog'));
     }
@@ -195,7 +195,7 @@ class CompeticionController extends Controller
     {
         $competicion = Competicion::with(['areas', 'phases', 'categorias'])->findOrFail($id);
         $areasCatalog = Area::all();
-        $fasesCatalog = Phase::all();
+        $fasesCatalog = Phase::where('is_active', true)->get();
         $categoriasCatalog = Categoria::all();
         return view('admin.competicion.edit', compact('competicion', 'areasCatalog', 'fasesCatalog', 'categoriasCatalog'));
     }
