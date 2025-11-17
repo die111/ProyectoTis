@@ -166,10 +166,12 @@
           </thead>
           <tbody class="bg-white divide-y divide-gray-200">
             @foreach($estudiantes as $estudiante)
-              <tr class="hover:bg-gray-50">
-                @php
-                  $evaluacion = $estudiante->evaluations->first();
-                @endphp
+              @php
+                $evaluacion = $estudiante->evaluations->first();
+                $estaCalificado = $evaluacion && $evaluacion->nota !== null;
+              @endphp
+              
+              <tr class="hover:bg-gray-50 {{ $estaCalificado ? 'bg-gray-50/50' : '' }}">
                 <td class="px-6 py-4 whitespace-nowrap">
                   <div class="flex items-center">
                     <div class="flex-shrink-0 h-10 w-10">
@@ -225,8 +227,6 @@
                 <td class="px-6 py-4 whitespace-nowrap text-center">
                   @php
                     // Determinar si está calificado basándose en si tiene una nota
-                    $estaCalificado = $evaluacion && $evaluacion->nota !== null;
-                    
                     if ($estaCalificado) {
                       $estadoCalifClass = 'bg-green-100 text-green-800';
                       $estadoCalifTexto = 'Calificado';
@@ -286,7 +286,7 @@
         @if($notaMinima !== null)
           <p class="text-xs text-emerald-700 mb-3">Criterio: Nota mínima >= {{ rtrim(rtrim(number_format($notaMinima, 2, '.', ''), '0'), '.') }}</p>
         @elseif($cupo !== null)
-          <p class="text-xs text-emerald-700 mb-3">Criterio: Top {{ $cupo }} mejores (incluye empates)</p>
+          <p class="text-xs text-emerald-700 mb-3">Criterio: Top {{ $cupo }} mejores con nota >= 51 (incluye empates)</p>
         @else
           <p class="text-xs text-amber-700 mb-3">Criterio: No configurado en esta fase</p>
         @endif

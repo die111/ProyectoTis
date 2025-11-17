@@ -563,16 +563,38 @@ class EvaluacionController extends \App\Http\Controllers\Controller
         // Cargar evaluaciones sin filtrar por stage_id
         $estudiantes = $query->with('evaluations')->get();
         
+        // Separar estudiantes calificados y no calificados
+        $noCalificados = $estudiantes->filter(function($e) {
+            $evaluacion = $e->evaluations->first();
+            return !$evaluacion || $evaluacion->nota === null;
+        });
+        
+        $calificados = $estudiantes->filter(function($e) {
+            $evaluacion = $e->evaluations->first();
+            return $evaluacion && $evaluacion->nota !== null;
+        });
+        
+        // Aplicar ordenamiento a cada grupo
         if ($sortBy === 'nombre') {
-            $estudiantes = $sortOrder === 'asc' 
-                ? $estudiantes->sortBy(fn($e) => $e->user->name . ' ' . $e->user->last_name_father)
-                : $estudiantes->sortByDesc(fn($e) => $e->user->name . ' ' . $e->user->last_name_father);
+            $noCalificados = $sortOrder === 'asc' 
+                ? $noCalificados->sortBy(fn($e) => $e->user->name . ' ' . $e->user->last_name_father)
+                : $noCalificados->sortByDesc(fn($e) => $e->user->name . ' ' . $e->user->last_name_father);
+            
+            $calificados = $sortOrder === 'asc' 
+                ? $calificados->sortBy(fn($e) => $e->user->name . ' ' . $e->user->last_name_father)
+                : $calificados->sortByDesc(fn($e) => $e->user->name . ' ' . $e->user->last_name_father);
         } elseif ($sortBy === 'nota') {
-            $estudiantes = $sortOrder === 'desc'
-                ? $estudiantes->sortByDesc(fn($e) => optional($e->evaluations->first())->nota ?? -1)
-                : $estudiantes->sortBy(fn($e) => optional($e->evaluations->first())->nota ?? 999);
+            $noCalificados = $sortOrder === 'asc'
+                ? $noCalificados->sortBy(fn($e) => $e->user->name . ' ' . $e->user->last_name_father)
+                : $noCalificados->sortByDesc(fn($e) => $e->user->name . ' ' . $e->user->last_name_father);
+            
+            $calificados = $sortOrder === 'desc'
+                ? $calificados->sortByDesc(fn($e) => optional($e->evaluations->first())->nota)
+                : $calificados->sortBy(fn($e) => optional($e->evaluations->first())->nota);
         }
-        $estudiantes = $estudiantes->values();
+        
+        // Combinar: no calificados primero, calificados después
+        $estudiantes = $noCalificados->merge($calificados)->values();
         return view('admin.evaluacion.calificar', compact('competicion', 'fase', 'estudiantes', 'areas', 'categorias', 'numeroFase'));
     }
 
@@ -878,16 +900,25 @@ class EvaluacionController extends \App\Http\Controllers\Controller
                     DB::rollBack();
                     return redirect()->back()->with('error', 'No se configuró un cupo válido para esta fase.');
                 }
-                $top = (clone $evaluacionesQuery)->take((int)$cupo)->get();
+                // Filtrar solo estudiantes con nota >= 51
+                $top = (clone $evaluacionesQuery)
+                    ->where('nota', '>=', 51)
+                    ->take((int)$cupo)
+                    ->get();
+                    
                 if ($top->isEmpty()) {
                     DB::rollBack();
-                    return redirect()->back()->with('error', 'No se encontraron evaluaciones para clasificar.');
+                    return redirect()->back()->with('error', 'No se encontraron estudiantes con nota >= 51 para clasificar.');
                 }
+                
                 $evaluaciones = $top;
                 $ultimaNota = optional($top->last())->nota;
-                if ($ultimaNota !== null) {
+                
+                // Incluir empates solo si también tienen nota >= 51
+                if ($ultimaNota !== null && $ultimaNota >= 51) {
                     $empatados = (clone $evaluacionesQuery)
                         ->where('nota', '=', $ultimaNota)
+                        ->where('nota', '>=', 51)
                         ->get();
                     $evaluaciones = $evaluaciones->merge($empatados)
                         ->unique('inscription_id')
@@ -934,7 +965,7 @@ class EvaluacionController extends \App\Http\Controllers\Controller
 
             $mensaje = $tipo === 'notas_altas'
                 ? "Clasificados {$clasificados} estudiantes con nota >= {$notaMinima} a la fase {$faseSiguiente}."
-                : "Clasificados {$clasificados} mejores puntajes (incluye empates) a la fase {$faseSiguiente}.";
+                : "Clasificados {$clasificados} mejores puntajes con nota >= 51 (incluye empates) a la fase {$faseSiguiente}.";
 
             return redirect()->back()->with('success', $mensaje);
 
@@ -1219,12 +1250,29 @@ class EvaluacionController extends \App\Http\Controllers\Controller
             ->get()
             ->keyBy('user_id');
 
+        // Ordenar los clasificados por nota (de mayor a menor)
+        $clasificadosOrdenados = $clasificados->sortByDesc(function($estudiante) use ($inscripcionesPreviasKeyed) {
+            // Buscar la nota en la evaluación actual o en la evaluación previa
+            $evaluacionActual = $estudiante->evaluations->first();
+            $notaActual = $evaluacionActual && $evaluacionActual->nota !== null ? $evaluacionActual->nota : null;
+            
+            if ($notaActual !== null) {
+                return $notaActual;
+            }
+            
+            $inscripcionPrevia = $inscripcionesPreviasKeyed->get($estudiante->user_id);
+            $evaluacionPrevia = $inscripcionPrevia ? $inscripcionPrevia->evaluations->first() : null;
+            $notaPrevia = $evaluacionPrevia && $evaluacionPrevia->nota !== null ? $evaluacionPrevia->nota : null;
+            
+            return $notaPrevia ?? -1; // -1 para que los sin nota vayan al final
+        })->values();
+
         $pdf = Pdf::loadView('admin.evaluacion.pdf.clasificados', [
             'competicion' => $competicion,
             'faseObj' => $faseObj,
             'numeroFaseActual' => $numeroFaseActual,
             'numeroFaseSiguiente' => $numeroFaseSiguiente,
-            'estudiantes' => $clasificados,
+            'estudiantes' => $clasificadosOrdenados,
             'inscripcionesPreviasKeyed' => $inscripcionesPreviasKeyed,
         ]);
         return $pdf->stream('lista_clasificados.pdf');
