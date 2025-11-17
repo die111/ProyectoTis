@@ -1017,6 +1017,81 @@ class EvaluacionController extends \App\Http\Controllers\Controller
         ]);
     }
 
+    /**
+     * Generar PDF de premiación por grupo (área y nivel)
+     */
+    public function generarPdfPremiacion(Request $request, $competicionId)
+    {
+        $competicion = Competicion::findOrFail($competicionId);
+        $area = $request->query('area');
+        $nivel = $request->query('nivel');
+
+        // Obtener clasificados de la última fase
+        $totalFases = $competicion->phases()->count();
+        if ($totalFases == 0) {
+            return response()->json(['error' => 'No hay fases configuradas'], 404);
+        }
+
+        $numeroFaseAnterior = $totalFases;
+
+        // Obtener clasificados del grupo específico
+        $clasificados = \App\Models\Evaluation::with(['inscription.user', 'inscription.area', 'inscription.categoria'])
+            ->where('estado', self::ESTADO_CLASIFICADO)
+            ->whereHas('inscription', function ($q) use ($competicion, $numeroFaseAnterior, $area, $nivel) {
+                $q->where('competition_id', $competicion->id)
+                  ->where('is_active', true)
+                  ->where('estado', 'confirmada')
+                  ->where('fase', $numeroFaseAnterior);
+                
+                if ($area) {
+                    $q->whereHas('area', function($qa) use ($area) {
+                        $qa->where('name', $area);
+                    });
+                }
+                
+                if ($nivel) {
+                    $q->whereHas('categoria', function($qc) use ($nivel) {
+                        $qc->where('nombre', $nivel);
+                    });
+                }
+            })
+            ->orderByDesc('nota')
+            ->get();
+
+        // Asignar posiciones y premios
+        $premiados = $clasificados->map(function ($ev, $index) use ($area, $nivel) {
+            $posicion = $index + 1;
+            
+            $premio = match($posicion) {
+                1 => 'oro',
+                2 => 'plata',
+                3 => 'bronce',
+                default => 'mencion_honor'
+            };
+
+            return [
+                'posicion' => $posicion,
+                'nombre_completo' => trim(($ev->inscription->user->name ?? '') . ' ' . ($ev->inscription->user->last_name_father ?? '') . ' ' . ($ev->inscription->user->last_name_mother ?? '')),
+                'unidad_educativa' => $ev->inscription->user->school ?? 'No especificada',
+                'area' => $area ?? ($ev->inscription->area->name ?? 'Sin área'),
+                'nivel' => $nivel ?? ($ev->inscription->categoria->nombre ?? 'Sin nivel'),
+                'nota' => $ev->nota,
+                'premio' => $premio,
+            ];
+        });
+
+        // Generar PDF
+        $pdf = Pdf::loadView('admin.evaluacion.pdf.premiacion', [
+            'competicion' => $competicion,
+            'premiados' => $premiados,
+            'area' => $area ?? 'Todas las áreas',
+            'nivel' => $nivel ?? 'Todos los niveles',
+            'grupo' => ($area ?? 'Todas') . ' | ' . ($nivel ?? 'Todos'),
+        ])->setPaper('letter', 'portrait');
+
+        return $pdf->stream("premiacion_{$competicion->id}_{$area}_{$nivel}.pdf");
+    }
+
     // Métodos auxiliares
     private function tienePermisosEvaluacion($evaluadorId, $areaId)
     {

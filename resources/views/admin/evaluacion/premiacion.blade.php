@@ -65,11 +65,16 @@
                 Mostrando {{ $items->count() }} clasificados
               </p>
             </div>
-            <div class="flex items-center gap-2 text-xs">
-              <span class="inline-flex items-center gap-1 rounded-full bg-yellow-100 px-2 py-1 text-yellow-800">🥇 Oro</span>
-              <span class="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2 py-1 text-gray-700">🥈 Plata</span>
-              <span class="inline-flex items-center gap-1 rounded-full bg-amber-200 px-2 py-1 text-amber-900">🥉 Bronce</span>
-              <span class="inline-flex items-center gap-1 rounded-full bg-blue-100 px-2 py-1 text-blue-800">🎖️ Mención</span>
+            <div class="flex items-center gap-3">
+              <div class="flex items-center gap-2 text-xs">
+                <span class="inline-flex items-center gap-1 rounded-full bg-yellow-100 px-2 py-1 text-yellow-800">🥇 Oro</span>
+                <span class="inline-flex items-center gap-1 rounded-full bg-gray-100 px-2 py-1 text-gray-700">🥈 Plata</span>
+                <span class="inline-flex items-center gap-1 rounded-full bg-amber-200 px-2 py-1 text-amber-900">🥉 Bronce</span>
+                <span class="inline-flex items-center gap-1 rounded-full bg-blue-100 px-2 py-1 text-blue-800">🎖️ Mención</span>
+              </div>
+              <button onclick="exportarGrupoPDF('{{ $grupo }}')" class="rounded-md px-4 py-2 text-sm font-medium text-white shadow-sm hover:opacity-90" style="background-color: #dc2626;">
+                📄 Exportar PDF
+              </button>
             </div>
           </div>
 
@@ -150,4 +155,15 @@
     </div>
   @endif
 </div>
+
+<!-- Scripts -->
+<script>
+  // Función para exportar grupo específico a PDF
+  function exportarGrupoPDF(grupo) {
+    const competicionId = {{ $competicion->id }};
+    const area = grupo.split(' | ')[0];
+    const nivel = grupo.split(' | ')[1];
+    window.open(`/dashboard/admin/evaluacion/${competicionId}/premiacion/pdf?area=${encodeURIComponent(area)}&nivel=${encodeURIComponent(nivel)}`, '_blank');
+  }
+</script>
 @endsection
