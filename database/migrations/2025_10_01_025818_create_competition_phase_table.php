@@ -18,6 +18,7 @@ return new class extends Migration
             $table->integer('clasificados')->nullable();
             $table->date('start_date')->nullable();
             $table->date('end_date')->nullable();
+            $table->string('color')->nullable();
             // Nuevos campos de clasificación incorporados en la creación
             $table->string('classification_type')->nullable();
             $table->unsignedInteger('classification_cupo')->nullable();

@@ -56,15 +56,24 @@
   <section id="grid" class="grid grid-cols-1 gap-6 md:grid-cols-2">
     @forelse($fases as $index => $fase)
       @php
-        $colors = ['bg-red-600', 'bg-blue-600', 'bg-green-600', 'bg-purple-600', 'bg-yellow-600', 'bg-pink-600'];
-        $svgColors = ['#ef4444', '#2563eb', '#16a34a', '#9333ea', '#eab308', '#ec4899'];
-        $colorIndex = $index % count($colors);
+        // Obtener el color personalizado de la base de datos o usar un color por defecto
+        $colorHex = $fase->pivot->color ?? null;
+        
+        // Debug: descomentar para ver el color
+        // dd($fase->pivot);
+        
+        // Si no hay color personalizado, usar colores predefinidos
+        if (!$colorHex) {
+          $colors = ['#ef4444', '#2563eb', '#16a34a', '#9333ea', '#eab308', '#ec4899'];
+          $colorIndex = $index % count($colors);
+          $colorHex = $colors[$colorIndex];
+        }
         
         // Por ahora, simplificamos la lógica para que siempre muestre "Gestionar"
         $estadoTexto = 'Disponible';
         $btnTexto = 'Gestionar';
         
-        // Determinar estado basado en las fechas del pivot (comentado por ahora)
+        // Determinar estado basado en las fechas del pivot
         $fechaInicio = $fase->pivot->start_date ?? null;
         $fechaFin = $fase->pivot->end_date ?? null;
         $ahora = now();
@@ -89,9 +98,12 @@
       @endphp
       
       <!-- Fase {{ $fase->name }} -->
-      <article class="phase-card rounded-2xl bg-white shadow ring-2 ring-{{ str_replace('bg-', '', $colors[$colorIndex]) }} overflow-hidden transition-all duration-200 hover:shadow-lg hover:scale-[1.02] hover:ring-4 cursor-pointer" data-phase="{{ strtolower($numeroFase . ' ' . $fase->name) }}" data-phase-number="{{ $numeroFase }}">
+      <article class="phase-card rounded-2xl bg-white shadow overflow-hidden transition-all duration-200 hover:shadow-lg hover:scale-[1.02] cursor-pointer" 
+               style="border: 2px solid {{ $colorHex }};"
+               data-phase="{{ strtolower($numeroFase . ' ' . $fase->name) }}" 
+               data-phase-number="{{ $numeroFase }}">
         
-        <div class="h-1.5 {{ $colors[$colorIndex] }}"></div>
+        <div class="h-1.5" style="background-color: {{ $colorHex }};"></div>
         <div class="brush relative px-8 pt-6">
           <svg viewBox="0 0 360 120" class="w-full">
             <defs>
@@ -102,35 +114,36 @@
             <!-- Nube orgánica con círculos superpuestos -->
             <!-- Base principal de la nube -->
             <ellipse cx="180" cy="55" rx="120" ry="25" 
-                     fill="{{ $svgColors[$colorIndex] }}" 
+                     fill="{{ $colorHex }}" 
                      filter="url(#cloudShadow{{ $index }})"
                      opacity="0.9"/>
             
             <!-- Círculos para crear la forma de nube -->
             <!-- Lado izquierdo -->
-            <circle cx="80" cy="50" r="35" fill="{{ $svgColors[$colorIndex] }}" opacity="0.85"/>
-            <circle cx="110" cy="40" r="28" fill="{{ $svgColors[$colorIndex] }}" opacity="0.8"/>
-            <circle cx="95" cy="65" r="22" fill="{{ $svgColors[$colorIndex] }}" opacity="0.75"/>
+            <circle cx="80" cy="50" r="35" fill="{{ $colorHex }}" opacity="0.85"/>
+            <circle cx="110" cy="40" r="28" fill="{{ $colorHex }}" opacity="0.8"/>
+            <circle cx="95" cy="65" r="22" fill="{{ $colorHex }}" opacity="0.75"/>
             
             <!-- Centro superior -->
-            <circle cx="150" cy="35" r="25" fill="{{ $svgColors[$colorIndex] }}" opacity="0.8"/>
-            <circle cx="180" cy="30" r="30" fill="{{ $svgColors[$colorIndex] }}" opacity="0.85"/>
-            <circle cx="210" cy="35" r="25" fill="{{ $svgColors[$colorIndex] }}" opacity="0.8"/>
+            <circle cx="150" cy="35" r="25" fill="{{ $colorHex }}" opacity="0.8"/>
+            <circle cx="180" cy="30" r="30" fill="{{ $colorHex }}" opacity="0.85"/>
+            <circle cx="210" cy="35" r="25" fill="{{ $colorHex }}" opacity="0.8"/>
             
             <!-- Lado derecho -->
-            <circle cx="280" cy="50" r="35" fill="{{ $svgColors[$colorIndex] }}" opacity="0.85"/>
-            <circle cx="250" cy="40" r="28" fill="{{ $svgColors[$colorIndex] }}" opacity="0.8"/>
-            <circle cx="265" cy="65" r="22" fill="{{ $svgColors[$colorIndex] }}" opacity="0.75"/>
+            <circle cx="280" cy="50" r="35" fill="{{ $colorHex }}" opacity="0.85"/>
+            <circle cx="250" cy="40" r="28" fill="{{ $colorHex }}" opacity="0.8"/>
+            <circle cx="265" cy="65" r="22" fill="{{ $colorHex }}" opacity="0.75"/>
             
             <!-- Detalles inferiores -->
-            <circle cx="140" cy="70" r="18" fill="{{ $svgColors[$colorIndex] }}" opacity="0.7"/>
-            <circle cx="180" cy="75" r="20" fill="{{ $svgColors[$colorIndex] }}" opacity="0.7"/>
-            <circle cx="220" cy="70" r="18" fill="{{ $svgColors[$colorIndex] }}" opacity="0.7"/>
+            <circle cx="140" cy="70" r="18" fill="{{ $colorHex }}" opacity="0.7"/>
+            <circle cx="180" cy="75" r="20" fill="{{ $colorHex }}" opacity="0.7"/>
+            <circle cx="220" cy="70" r="18" fill="{{ $colorHex }}" opacity="0.7"/>
           </svg>
 
           <!-- Insignia con numeración de la tarjeta -->
           <div class="absolute left-4 top-3">
-            <span class="inline-flex h-7 w-7 items-center justify-center rounded-full {{ $colors[$colorIndex] }} text-white text-xs font-bold shadow">
+            <span class="inline-flex h-7 w-7 items-center justify-center rounded-full text-white text-xs font-bold shadow" 
+                  style="background-color: {{ $colorHex }};">
               {{ $numeroFase }}
             </span>
           </div>
@@ -199,11 +212,8 @@
 
     {{-- Tarjeta de Premiación --}} 
     @php
-      // Paleta de colores igual que en las fases
-      $premColors = ['bg-red-600', 'bg-blue-600', 'bg-green-600', 'bg-purple-600', 'bg-yellow-600', 'bg-pink-600'];
-      $premSvgColors = ['#ef4444', '#2563eb', '#16a34a', '#9333ea', '#eab308', '#ec4899'];
-      $premIndex = ($fases->count() ?? 0); // siguiente índice
-      $premColorIndex = $premIndex % count($premColors);
+      // Color dorado/oro para premiación
+      $colorHexPrem = '#FFD700'; // Oro
       $numeroFasePrem = ($fases->count() ?? 0) + 1;
 
       // Estado y fechas opcionales para premiación si se pasan desde el controlador
@@ -229,8 +239,11 @@
       $clasificadosList = collect($clasificados ?? []);
     @endphp
 
-    <article class="phase-card rounded-2xl bg-white shadow ring-2 ring-{{ str_replace('bg-', '', $premColors[$premColorIndex]) }} overflow-hidden transition-all duration-200 hover:shadow-lg hover:scale-[1.02] hover:ring-4" data-phase="{{ strtolower($numeroFasePrem . ' premiacion') }}" data-phase-number="{{ $numeroFasePrem }}">
-      <div class="h-1.5 {{ $premColors[$premColorIndex] }}"></div>
+    <article class="phase-card rounded-2xl bg-white shadow overflow-hidden transition-all duration-200 hover:shadow-lg hover:scale-[1.02]" 
+             style="border: 2px solid {{ $colorHexPrem }};"
+             data-phase="{{ strtolower($numeroFasePrem . ' premiacion') }}" 
+             data-phase-number="{{ $numeroFasePrem }}">
+      <div class="h-1.5" style="background-color: {{ $colorHexPrem }};"></div>
       <div class="brush relative px-8 pt-6">
         <svg viewBox="0 0 360 120" class="w-full">
           <defs>
@@ -240,27 +253,28 @@
           </defs>
           <!-- Base de la nube -->
           <ellipse cx="180" cy="55" rx="120" ry="25" 
-                   fill="{{ $premSvgColors[$premColorIndex] }}" 
+                   fill="{{ $colorHexPrem }}" 
                    filter="url(#cloudShadowPrem)"
                    opacity="0.9"/>
           <!-- Círculos -->
-          <circle cx="80" cy="50" r="35" fill="{{ $premSvgColors[$premColorIndex] }}" opacity="0.85"/>
-          <circle cx="110" cy="40" r="28" fill="{{ $premSvgColors[$premColorIndex] }}" opacity="0.8"/>
-          <circle cx="95" cy="65" r="22" fill="{{ $premSvgColors[$premColorIndex] }}" opacity="0.75"/>
-          <circle cx="150" cy="35" r="25" fill="{{ $premSvgColors[$premColorIndex] }}" opacity="0.8"/>
-          <circle cx="180" cy="30" r="30" fill="{{ $premSvgColors[$premColorIndex] }}" opacity="0.85"/>
-          <circle cx="210" cy="35" r="25" fill="{{ $premSvgColors[$premColorIndex] }}" opacity="0.8"/>
-          <circle cx="280" cy="50" r="35" fill="{{ $premSvgColors[$premColorIndex] }}" opacity="0.85"/>
-          <circle cx="250" cy="40" r="28" fill="{{ $premSvgColors[$premColorIndex] }}" opacity="0.8"/>
-          <circle cx="265" cy="65" r="22" fill="{{ $premSvgColors[$premColorIndex] }}" opacity="0.75"/>
-          <circle cx="140" cy="70" r="18" fill="{{ $premSvgColors[$premColorIndex] }}" opacity="0.7"/>
-          <circle cx="180" cy="75" r="20" fill="{{ $premSvgColors[$premColorIndex] }}" opacity="0.7"/>
-          <circle cx="220" cy="70" r="18" fill="{{ $premSvgColors[$premColorIndex] }}" opacity="0.7"/>
+          <circle cx="80" cy="50" r="35" fill="{{ $colorHexPrem }}" opacity="0.85"/>
+          <circle cx="110" cy="40" r="28" fill="{{ $colorHexPrem }}" opacity="0.8"/>
+          <circle cx="95" cy="65" r="22" fill="{{ $colorHexPrem }}" opacity="0.75"/>
+          <circle cx="150" cy="35" r="25" fill="{{ $colorHexPrem }}" opacity="0.8"/>
+          <circle cx="180" cy="30" r="30" fill="{{ $colorHexPrem }}" opacity="0.85"/>
+          <circle cx="210" cy="35" r="25" fill="{{ $colorHexPrem }}" opacity="0.8"/>
+          <circle cx="280" cy="50" r="35" fill="{{ $colorHexPrem }}" opacity="0.85"/>
+          <circle cx="250" cy="40" r="28" fill="{{ $colorHexPrem }}" opacity="0.8"/>
+          <circle cx="265" cy="65" r="22" fill="{{ $colorHexPrem }}" opacity="0.75"/>
+          <circle cx="140" cy="70" r="18" fill="{{ $colorHexPrem }}" opacity="0.7"/>
+          <circle cx="180" cy="75" r="20" fill="{{ $colorHexPrem }}" opacity="0.7"/>
+          <circle cx="220" cy="70" r="18" fill="{{ $colorHexPrem }}" opacity="0.7"/>
         </svg>
 
         <!-- Insignia con numeración -->
         <div class="absolute left-4 top-3">
-          <span class="inline-flex h-7 w-7 items-center justify-center rounded-full {{ $premColors[$premColorIndex] }} text-white text-xs font-bold shadow">
+          <span class="inline-flex h-7 w-7 items-center justify-center rounded-full text-white text-xs font-bold shadow"
+                style="background-color: {{ $colorHexPrem }};">
             {{ $numeroFasePrem }}
           </span>
         </div>

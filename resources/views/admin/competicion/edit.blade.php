@@ -21,6 +21,7 @@
                     'start_date' => (string) $p->pivot->start_date,
                     'end_date' => (string) $p->pivot->end_date,
                     'clasificados' => $p->pivot->clasificados,
+                    'color' => $p->pivot->color ?? '#3B82F6',
                     'classification_type' => $p->pivot->classification_type,
                     'classification_cupo' => $p->pivot->classification_cupo,
                     'classification_nota_minima' => $p->pivot->classification_nota_minima,
@@ -376,6 +377,7 @@
                         <input type="hidden" :name="`phases[${index}][start_date]`" :value="phase.start_date">
                         <input type="hidden" :name="`phases[${index}][end_date]`" :value="phase.end_date">
                         <input type="hidden" :name="`phases[${index}][clasificados]`" :value="phase.clasificados">
+                        <input type="hidden" :name="`phases[${index}][color]`" :value="phase.color">
                     </div>
                 </template>
 

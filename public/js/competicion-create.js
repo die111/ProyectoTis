@@ -217,6 +217,9 @@ function competitionForm() {
             
             if (!timelineStartDate || !timelineEndDate) return;
 
+            // Generar un color aleatorio para la fase
+            const randomColor = '#' + Math.floor(Math.random()*16777215).toString(16).padStart(6, '0');
+
             const newPhase = {
                 id: 'phase-' + Date.now(),
                 name: 'Fase ' + (this.phases.length + 1),
@@ -224,6 +227,7 @@ function competitionForm() {
                 start_date: timelineStartDate,
                 end_date: this.calculateDefaultEndDate(timelineStartDate),
                 clasificados: '',
+                color: randomColor,
                 errors: []
             };
 

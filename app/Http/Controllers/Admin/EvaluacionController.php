@@ -434,6 +434,7 @@ class EvaluacionController extends \App\Http\Controllers\Controller
     {
         // Cargar las fases de la competición ordenadas por fechas
         $fases = $competicion->phases()
+            ->withPivot('color', 'start_date', 'end_date', 'clasificados', 'classification_type', 'classification_cupo', 'classification_nota_minima')
             ->orderBy('start_date', 'asc')
             ->orderBy('end_date', 'asc')
             ->get();

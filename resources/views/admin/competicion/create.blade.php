@@ -361,6 +361,7 @@
                         <input type="hidden" :name="`phases[${index}][phase_id]`" :value="phase.phase_id">
                         <input type="hidden" :name="`phases[${index}][start_date]`" :value="phase.start_date">
                         <input type="hidden" :name="`phases[${index}][end_date]`" :value="phase.end_date">
+                        <input type="hidden" :name="`phases[${index}][color]`" :value="phase.color">
                     </div>
                 </template>
                 <div class="flex justify-end gap-3">

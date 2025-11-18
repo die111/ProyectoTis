@@ -85,7 +85,7 @@ class Competicion extends Model
     public function phases()
     {
         return $this->belongsToMany(Phase::class, 'competition_phase', 'competition_id', 'phase_id')
-            ->withPivot('start_date', 'end_date', 'clasificados', 'classification_type', 'classification_cupo', 'classification_nota_minima')
+            ->withPivot('start_date', 'end_date', 'clasificados', 'color', 'classification_type', 'classification_cupo', 'classification_nota_minima')
             ->withTimestamps();
     }
 
