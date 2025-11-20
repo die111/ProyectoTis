@@ -252,7 +252,8 @@
                                         </div>
                                         <div class="md:col-span-1" x-show="phase.classification_type === 'cupo'">
                                             <label class="block text-sm font-medium text-gray-700 mb-1">Cupo</label>
-                                            <input type="number" min="1" x-model="phase.classification_cupo" :required="phase.classification_type === 'cupo'" :disabled="phase.classification_type !== 'cupo'" placeholder="Ej: 50" class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500" :name="`phases[${idx}][classification][cupo]`">
+                                            <!-- Añadido max="999" para limitar el cupo -->
+                                            <input type="number" min="1" max="999" x-model="phase.classification_cupo" :required="phase.classification_type === 'cupo'" :disabled="phase.classification_type !== 'cupo'" placeholder="Ej: 50" class="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500" :name="`phases[${idx}][classification][cupo]`">
                                         </div>
                                         <div class="md:col-span-1" x-show="phase.classification_type === 'notas_altas'">
                                             <label class="block text-sm font-medium text-gray-700 mb-1">Nota mínima</label>

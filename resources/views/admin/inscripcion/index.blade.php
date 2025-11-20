@@ -45,15 +45,23 @@
     <div class="mb-2 text-center">
       <span class="text-gray-800 text-base font-medium">Seleccione la competicon para la inscripcion</span>
     </div>
-    <div class="flex items-center justify-center mb-4">
-      <select id="cmbCompeticiones" class="px-4 py-2 rounded-md border border-gray-300 bg-white text-sm" style="min-width:280px">
-        <option value="" selected disabled>Selecciona una competición</option>
-        @isset($competiciones)
-          @foreach($competiciones as $c)
-            <option value="{{ $c->id }}">{{ $c->name }}</option>
-          @endforeach
-        @endisset
-      </select>
+    <div class="flex flex-col items-center mb-4 gap-2">
+      <div class="flex items-start gap-4">
+        <select id="cmbCompeticiones" class="px-4 py-2 rounded-md border border-gray-300 bg-white text-sm" style="min-width:280px">
+          <option value="" selected disabled>Selecciona una competición</option>
+          @isset($competiciones)
+            @foreach($competiciones as $c)
+              <option value="{{ $c->id }}">{{ $c->name }}</option>
+            @endforeach
+          @endisset
+        </select>
+        <div id="competitionMeta" class="text-left min-w-[260px] p-3 rounded-md border border-gray-200 bg-gray-50 text-xs leading-5">
+          <p class="font-semibold text-gray-700 mb-1">Categorías y Áreas</p>
+          <p class="text-gray-500" data-empty>Seleccione una competición para ver sus categorías y áreas.</p>
+          <!-- Contenedor horizontal -->
+          <div id="catAreaGrid" class="flex flex-nowrap gap-3 overflow-x-auto pb-1 custom-scroll"></div>
+        </div>
+      </div>
     </div>
 
     <!-- TABLA (solo lectura) -->
@@ -241,9 +249,68 @@
 
 @push('styles')
 <link rel="stylesheet" href="{{ asset('css/inscripcion.css') }}">
+<style>
+  /* Scrollbar fino opcional */
+  #catAreaGrid::-webkit-scrollbar { height:6px; }
+  #catAreaGrid::-webkit-scrollbar-track { background:#f1f1f1; border-radius:4px; }
+  #catAreaGrid::-webkit-scrollbar-thumb { background:#c5c5c5; border-radius:4px; }
+  #catAreaGrid::-webkit-scrollbar-thumb:hover { background:#a3a3a3; }
+</style>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 @endpush
 
 @push('scripts')
+<script>
+(function(){
+  const cmb = document.getElementById('cmbCompeticiones');
+  const metaBox = document.getElementById('competitionMeta');
+  const emptyMsg = metaBox.querySelector('[data-empty]');
+  const grid = document.getElementById('catAreaGrid');
+
+  function clear(){
+    grid.innerHTML='';
+    emptyMsg.classList.remove('hidden');
+  }
+
+  cmb?.addEventListener('change', ()=>{
+    const id = cmb.value;
+    clear();
+    if(!id) return;
+    fetch(`/dashboard/admin/inscripcion/competition/${id}/areas-categorias`)
+      .then(r=>r.json())
+      .then(data=>{
+        if(!data.success) return;
+        const categorias = data.categorias || [];
+        if(!categorias.length) return;
+        emptyMsg.classList.add('hidden');
+        categorias.forEach(cat=>{
+          const card = document.createElement('div');
+          card.className='min-w-[140px] flex-shrink-0 border rounded-md bg-white shadow-sm p-2';
+          const title = document.createElement('h4');
+          title.className='font-semibold text-gray-700 mb-1 text-center';
+          title.textContent = cat.nombre;
+          card.appendChild(title);
+          if(cat.areas && cat.areas.length){
+            const ul = document.createElement('ul');
+            ul.className='list-disc list-inside space-y-0.5';
+            cat.areas.forEach(a=>{
+              const li = document.createElement('li');
+              li.textContent = a.name;
+              ul.appendChild(li);
+            });
+            card.appendChild(ul);
+          } else {
+            const p = document.createElement('p');
+            p.className='text-gray-400 text-center';
+            p.textContent='(Sin áreas)';
+            card.appendChild(p);
+          }
+          grid.appendChild(card);
+        });
+      })
+      .catch(err=>console.error('Error cargando categorías/áreas', err));
+  });
+})();
+</script>
 <script src="{{ asset('js/inscripcion.js') }}"></script>
 @endpush

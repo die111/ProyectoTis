@@ -10,6 +10,7 @@ use App\Models\Role;
 use App\Models\Competicion;
 use App\Models\Inscription;
 use App\Models\Categoria;
+use App\Models\CompetitionCategoryArea;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use App\Notifications\FrontNotification;
@@ -331,6 +332,52 @@ class InscripcionController extends Controller
             return response()->json(['success' => true, 'message' => $message]);
         } catch (\Exception $e) {
             Log::error('Error al guardar estudiantes/inscripciones: ' . $e->getMessage());
+            return response()->json(['success' => false, 'error' => $e->getMessage()], 500);
+        }
+    }
+
+    public function getCompetitionAreasCategories($competitionId)
+    {
+        try {
+            $rows = CompetitionCategoryArea::with(['area:id,name', 'categoria:id,nombre'])
+                ->where('competition_id', $competitionId)
+                ->get();
+
+            $grouped = [];
+            foreach ($rows as $row) {
+                if (!$row->categoria) continue; // se requiere categoría para agrupar
+                $catId = $row->categoria->id;
+                if (!isset($grouped[$catId])) {
+                    $grouped[$catId] = [
+                        'id' => $catId,
+                        'nombre' => $row->categoria->nombre,
+                        'areas' => []
+                    ];
+                }
+                if ($row->area) {
+                    $areaId = $row->area->id;
+                    // evitar duplicados
+                    if (!isset($grouped[$catId]['areas'][$areaId])) {
+                        $grouped[$catId]['areas'][$areaId] = [
+                            'id' => $areaId,
+                            'name' => $row->area->name
+                        ];
+                    }
+                }
+            }
+
+            // Convertir áreas asociativas a listas simples
+            $categorias = array_map(function($c){
+                $c['areas'] = array_values($c['areas']);
+                return $c;
+            }, array_values($grouped));
+
+            return response()->json([
+                'success' => true,
+                'categorias' => $categorias,
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error obteniendo categorías/áreas agrupadas: '.$e->getMessage());
             return response()->json(['success' => false, 'error' => $e->getMessage()], 500);
         }
     }

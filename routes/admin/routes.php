@@ -55,6 +55,7 @@ Route::middleware(['auth'])->prefix('dashboard/admin')->name('admin.')->group(fu
     // Endpoints JSON de inscripción (deben ir antes del resource para evitar colisión con {inscripcion})
     Route::get('inscripcion/get-areas', [InscripcionController::class, 'getAreas'])->name('inscripcion.getAreas');
     Route::get('inscripcion/get-competiciones', [InscripcionController::class, 'getCompeticiones'])->name('inscripcion.getCompeticiones');
+    Route::get('inscripcion/competition/{competition}/areas-categorias', [InscripcionController::class, 'getCompetitionAreasCategories'])->name('inscripcion.areasCategorias');
 
     Route::resource('inscripcion', InscripcionController::class); // ->middleware('permission:inscripcion')
     Route::resource('phases', EtapaController::class)->names('phases'); // ->middleware('permission:fases')

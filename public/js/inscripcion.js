@@ -13,6 +13,42 @@ const txtSearch = document.getElementById('txtSearch');
 const btnSearch = document.getElementById('btnSearch');
 const btnSearchIcon = document.getElementById('btnSearchIcon');
 const cmbCompeticiones = document.getElementById('cmbCompeticiones');
+// Estructura permitida por competición (se carga al cambiar el combo)
+let allowedCatAreas = []; // [{id, nombre, areas:[{id,name}]}]
+let allowedAreasFlat = new Set();
+let allowedCategoriasFlat = new Set();
+
+function normalizeFlex(str){
+  return (str||'')
+    .toLowerCase()
+    .normalize('NFD') // separa tildes
+    .replace(/[\u0300-\u036f]/g,'') // elimina diacríticos
+    .replace(/[^a-z0-9 ]+/g,' ') // limpia símbolos
+    .replace(/\s+/g,' ') // colapsa espacios
+    .trim();
+}
+
+function resetAllowed(){
+  allowedCatAreas = []; allowedAreasFlat = new Set(); allowedCategoriasFlat = new Set();
+}
+
+cmbCompeticiones?.addEventListener('change', ()=>{
+  const id = cmbCompeticiones.value;
+  resetAllowed();
+  if(!id) return;
+  fetch(`/dashboard/admin/inscripcion/competition/${id}/areas-categorias`)
+    .then(r=>r.json())
+    .then(data=>{
+      if(!data.success) return;
+      allowedCatAreas = data.categorias || [];
+      allowedCategoriasFlat = new Set(allowedCatAreas.map(c=> normalizeFlex(c.nombre)));
+      allowedAreasFlat = new Set();
+      allowedCatAreas.forEach(c=> (c.areas||[]).forEach(a=> allowedAreasFlat.add(normalizeFlex(a.name))));
+      console.log('Permitidos categorías(normalizados):', [...allowedCategoriasFlat]);
+      console.log('Permitidos áreas(normalizados):', [...allowedAreasFlat]);
+    })
+    .catch(err=> console.error('Error cargando categorías/áreas permitidas', err));
+});
 
 // Token CSRF (opcional para GET)
 const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
@@ -209,79 +245,85 @@ btnExport.addEventListener('click', () => {
     });
 
   // Guardar en base de datos
-  const estudiantes = [...tbody.querySelectorAll('tr')]
-    .filter(tr => tr.style.display !== 'none')
-    .map(tr => {
-      const tds = tr.querySelectorAll('td');
-      const areaNombre = tds[5]?.textContent?.trim() || ''; // area ahora índice 5
-      const areaId = getAreaId(areaNombre);
-      const categoriaNombre = tds[6]?.textContent?.trim() || '';
-
-      if (areaNombre && !areaId) {
-        console.warn(`Área "${areaNombre}" no encontrada en el sistema`);
-      }
-
-      return {
-        name: tds[0]?.textContent?.trim() || '',
-        last_name_father: tds[1]?.textContent?.trim() || '',
-        last_name_mother: tds[2]?.textContent?.trim() || '',
-        ci: tds[3]?.textContent?.trim() || '',
-        email: tds[4]?.textContent?.trim() || '',
-        password: tds[8]?.textContent?.trim() || '', // password índice 8
-        role: 'Estudiante',
-        area_id: (areaId ?? areaNombre),
-        user_code: tds[7]?.textContent?.trim() || '', // codigo_usuario índice 7
-        is_active: true,
-        categoria: categoriaNombre
-      };
-    });
-
   const competitionId = cmbCompeticiones?.value || '';
-
   if (!competitionId) {
     alert('Seleccione una competición antes de guardar.');
     return;
   }
 
-  if (estudiantes.length > 0) {
-    fetch('/dashboard/admin/inscripcion/guardar-estudiantes', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-      },
-      body: JSON.stringify({ estudiantes, competition_id: Number(competitionId) })
+  // Construir estudiantes y FILTRAR por área/categoría permitidas
+  const estudiantes = [...tbody.querySelectorAll('tr')]
+    .filter(tr => tr.style.display !== 'none')
+    .map(tr => {
+      const tds = tr.querySelectorAll('td');
+      const areaNombre = (tds[5]?.textContent || '').trim();
+      const categoriaNombre = (tds[6]?.textContent || '').trim();
+      const areaKey = normalizeFlex(areaNombre);
+      const categoriaKey = normalizeFlex(categoriaNombre);
+
+      // Coincidencia flexible: exacta, contiene o es contenida
+      const areaOk = areaKey === '' || [...allowedAreasFlat].some(v => v === areaKey || v.includes(areaKey) || areaKey.includes(v));
+      const categoriaOk = categoriaKey === '' || [...allowedCategoriasFlat].some(v => v === categoriaKey || v.includes(categoriaKey) || categoriaKey.includes(v));
+
+      if(!(areaOk && categoriaOk)) return null; // descartar si no coincide flexiblemente
+      const areaId = getAreaId(areaNombre);
+      return {
+        name: (tds[0]?.textContent || '').trim(),
+        last_name_father: (tds[1]?.textContent || '').trim(),
+        last_name_mother: (tds[2]?.textContent || '').trim(),
+        ci: (tds[3]?.textContent || '').trim(),
+        email: (tds[4]?.textContent || '').trim(),
+        password: (tds[8]?.textContent || '').trim(),
+        role: 'Estudiante',
+        area_id: (areaId ?? areaNombre),
+        user_code: (tds[7]?.textContent || '').trim(),
+        is_active: true,
+        categoria: categoriaNombre
+      };
     })
-    .then(res => res.json())
-    .then((data) => {
-      if (data.success) {
-        Swal.fire({
-          title: '¡Éxito!',
-          text: data.message || 'Estudiantes e inscripciones guardados correctamente.',
-          icon: 'success',
-          confirmButtonText: 'Aceptar'
-        });
-      } else {
-        Swal.fire({
-          title: 'Error',
-          text: 'Error al guardar: ' + (data.error || 'Error desconocido'),
-          icon: 'error',
-          confirmButtonText: 'Aceptar'
-        });
-        console.error('Error del servidor:', data);
-      }
-    })
-    .catch(error => {
-      console.error('Error de conexión:', error);
+    .filter(e => e !== null);
+
+  if(estudiantes.length === 0){
+    alert('No hay estudiantes con área y categoría permitidas para esta competición.');
+    return;
+  }
+
+  fetch('/dashboard/admin/inscripcion/guardar-estudiantes', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+    },
+    body: JSON.stringify({ estudiantes, competition_id: Number(competitionId) })
+  })
+  .then(res => res.json())
+  .then((data) => {
+    if (data.success) {
       Swal.fire({
-        title: 'Error de Conexión',
-        text: 'No se pudo conectar con el servidor. Revisa tu conexión a internet.',
+        title: '¡Éxito!',
+        text: data.message || 'Estudiantes e inscripciones guardados correctamente.',
+        icon: 'success',
+        confirmButtonText: 'Aceptar'
+      });
+    } else {
+      Swal.fire({
+        title: 'Error',
+        text: 'Error al guardar: ' + (data.error || 'Error desconocido'),
         icon: 'error',
         confirmButtonText: 'Aceptar'
       });
+      console.error('Error del servidor:', data);
+    }
+  })
+  .catch(error => {
+    console.error('Error de conexión:', error);
+    Swal.fire({
+      title: 'Error de Conexión',
+      text: 'No se pudo conectar con el servidor. Revisa tu conexión a internet.',
+      icon: 'error',
+      confirmButtonText: 'Aceptar'
     });
-  }
-
+  });
   if (filas.length === 0) { alert('No hay datos para exportar.'); return; }
 
   const encabezado = 'NOMBRE,APELLIDO PATERNO,APELLIDO MATERNO,EMAIL,AREA,CATEGORIA,CODIGO USUARIO,CONTRASEÑA';
