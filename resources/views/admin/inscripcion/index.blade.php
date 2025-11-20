@@ -135,12 +135,8 @@
               <div class="form-grid">
                 <div class="form-column">
                   <div class="input-group">
-                    <label for="m_id">ID*:</label>
-                    <input type="text" id="m_id" name="m_id" placeholder="A001 (opcional)" data-autofocus>
-                  </div>
-                  <div class="input-group">
                     <label for="m_nombre">Nombre*:</label>
-                    <input type="text" id="m_nombre" name="m_nombre" placeholder="Nombre" required>
+                    <input type="text" id="m_nombre" name="m_nombre" placeholder="Nombre" required data-autofocus>
                   </div>
                   <div class="input-group">
                     <label for="m_paterno">Apellido Paterno*:</label>
@@ -151,86 +147,31 @@
                     <input type="text" id="m_materno" name="m_materno" placeholder="Apellido materno" required>
                   </div>
                   <div class="input-group">
-                    <label for="m_area">Área*:</label>
-                    <input type="text" id="m_area" name="m_area" placeholder="Física, Química..." required>
+                    <label for="m_ci">Cédula de identidad (C.I)*:</label>
+                    <input type="text" id="m_ci" name="m_ci" placeholder="1234567" required>
                   </div>
                   <div class="input-group">
-                    <label for="m_tutor">Tutor*:</label>
-                    <input type="text" id="m_tutor" name="m_tutor" placeholder="Nombre del tutor">
-                  </div>
-                  <div class="input-group">
-                    <label for="m_colegio">Colegio*:</label>
-                    <input type="text" id="m_colegio" name="m_colegio" placeholder="Colegio">
-                  </div>
-                  <div class="input-group">
-                    <label for="m_fnac">Fecha de nacimiento:</label>
-                    <input type="text" id="m_fnac" name="m_fnac" placeholder="dd/mm/aaaa">
-                  </div>
-                  <div class="input-group">
-                    <label for="m_direccion">Dirección:</label>
-                    <input type="text" id="m_direccion" name="m_direccion" placeholder="Dirección">
-                  </div>
-                  <div class="input-group">
-                    <label for="m_email">Correo*:</label>
-                    <input type="email" id="m_email" name="m_email" placeholder="correo@dominio.com">
+                    <label for="m_email">Email*:</label>
+                    <input type="email" id="m_email" name="m_email" placeholder="correo@dominio.com" required>
                   </div>
                 </div>
 
                 <div class="form-column">
-                  <!-- SUBIR FOTO -->
-                  <div class="profile-card">
-                    <div id="photoDrop" class="profile-drop" tabindex="0" aria-label="Zona para subir foto de perfil">
-                      <svg class="avatar-ico" viewBox="0 0 24 24" aria-hidden="true">
-                        <circle cx="12" cy="8" r="3.5"></circle>
-                        <path d="M4 19a8 8 0 0 1 16 0" />
-                      </svg>
-                      <img id="photoPreview" alt="Previsualización" hidden>
-                      <p class="drop-text">
-                        Arrastra una imagen aquí o
-                        <button type="button" id="btnPickPhoto" class="link-btn">sube una</button>
-                      </p>
-                      <input id="m_foto" type="file" accept="image/*" class="hidden-file">
-                    </div>
-                    <div class="profile-caption">
-                      <span class="caption-text">Foto de perfil</span>
-                      <div class="profile-actions">
-                        <button type="button" class="upload-button" id="btnPickPhoto2" aria-label="Subir foto">
-                          <svg width="21" height="21" viewBox="0 0 24 24" style="stroke:#111;fill:none;stroke-width:2">
-                            <path d="M12 16V4M12 4l-4 4m4-4 4 4M4 20h16" stroke-linecap="round" stroke-linejoin="round"/>
-                          </svg>
-                        </button>
-                        <button type="button" class="remove-button" id="btnRemovePhoto" aria-label="Quitar foto" title="Quitar foto">
-                          <svg width="20" height="20" viewBox="0 0 24 24" style="stroke:#991b1b;fill:none;stroke-width:2">
-                            <path d="M3 6h18M7 6v12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V6M9 6V4h6v2" stroke-linecap="round" stroke-linejoin="round"/>
-                          </svg>
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-
                   <div class="input-group">
-                    <label for="m_nivel">Nivel*:</label>
-                    <input type="text" id="m_nivel" name="m_nivel" placeholder="Tercero">
+                    <label for="m_area">Área*:</label>
+                    <input type="text" id="m_area" name="m_area" placeholder="Física, Química..." required>
                   </div>
                   <div class="input-group">
-                    <label for="m_categoria">Categoría:</label>
-                    <input type="text" id="m_categoria" name="m_categoria" placeholder="Individual">
+                    <label for="m_categoria">Categoría*:</label>
+                    <input type="text" id="m_categoria" name="m_categoria" placeholder="Individual" required>
                   </div>
                   <div class="input-group">
-                    <label for="m_tipo_col">Tipo de Colegio:</label>
-                    <input type="text" id="m_tipo_col" name="m_tipo_col" placeholder="Fiscal">
+                    <label for="m_codigo">Código de usuario*:</label>
+                    <input type="text" id="m_codigo" name="m_codigo" placeholder="USR001" required>
                   </div>
                   <div class="input-group">
-                    <label for="m_ci">Cédula de identidad*:</label>
-                    <input type="text" id="m_ci" name="m_ci" placeholder="1234567">
-                  </div>
-                  <div class="input-group">
-                    <label for="m_depmun">Departamento - Municipio*:</label>
-                    <input type="text" id="m_depmun" name="m_depmun" placeholder="Cochabamba - Cercado">
-                  </div>
-                  <div class="input-group">
-                    <label for="m_tel">Teléfono - Celular*:</label>
-                    <input type="tel" id="m_tel" name="m_tel" placeholder="7xxxxxxx">
+                    <label for="m_password">Contraseña*:</label>
+                    <input type="password" id="m_password" name="m_password" placeholder="********" required>
                   </div>
                 </div>
               </div>

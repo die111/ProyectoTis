@@ -342,17 +342,86 @@ btnExport.addEventListener('click', () => {
 });
 
 function filtrarTabla(q) {
-  const query = q.toLowerCase();
-  [...tbody.querySelectorAll('tr')].forEach(tr => {
-    const tds = tr.querySelectorAll('td');
-    const texto = Array.from(tds).map(td => td.textContent || '').join(' ').toLowerCase();
-    tr.style.display = (query === '' || texto.includes(query)) ? '' : 'none';
+  // NUEVO BUSCADOR FLEXIBLE
+  const raw = q || '';
+  const query = raw.trim();
+  const rows = [...tbody.querySelectorAll('tr')];
+  if(query === ''){ rows.forEach(tr=> tr.style.display=''); return; }
+
+  // Mapa de columnas para búsquedas tipo campo:valor
+  const columnMap = {
+    nombre:0, name:0,
+    paterno:1, ap_paterno:1,
+    materno:2, ap_materno:2,
+    ci:3, cedula:3, documento:3,
+    email:4, correo:4,
+    area:5,
+    categoria:6, cat:6,
+    codigo:7, usercode:7, usuario:7,
+    contraseña:8, password:8, pass:8
+  };
+
+  // Normalizar y tokenizar la consulta (soporta comillas para frases)
+  const tokens = [];
+  const regToken = /\"([^\"]+)\"|[^\s]+/g; // frases entre comillas o palabras
+  let m; while((m = regToken.exec(query))){ tokens.push(m[1] ? m[1] : m[0]); }
+  if(tokens.length === 0){ rows.forEach(tr=> tr.style.display=''); return; }
+
+  // Pre-cálculo: cache normalizada de cada fila
+  rows.forEach(tr => {
+    if(!tr._normCells){
+      const tds = [...tr.querySelectorAll('td')];
+      tr._normCells = tds.map(td => normalizeFlex(td.textContent));
+      tr._joined = tr._normCells.join(' ');
+    }
+  });
+
+  function levenshtein(a,b){
+    if(a === b) return 0; if(!a || !b) return Math.max(a.length,b.length);
+    const dp = Array(b.length+1).fill(0).map((_,i)=>[i]);
+    for(let j=1;j<=a.length;j++){ dp[0][j]=j; }
+    for(let i=1;i<=b.length;i++){
+      for(let j=1;j<=a.length;j++){
+        if(a[j-1] === b[i-1]) dp[i][j] = dp[i-1][j-1];
+        else dp[i][j] = 1 + Math.min(dp[i-1][j-1], dp[i][j-1], dp[i-1][j]);
+      }
+    }
+    return dp[b.length][a.length];
+  }
+
+  function matchToken(tr, token){
+    const isField = token.includes(':');
+    let field, value;
+    if(isField){ [field, value] = token.split(':'); field = normalizeFlex(field); value = normalizeFlex(value); }
+    else { value = normalizeFlex(token); }
+    if(!value) return true;
+
+    const cells = tr._normCells;
+
+    const tryApprox = (target) => {
+      if(value.length < 4) return false; // solo fuzzy para términos relativamente largos
+      const dist = levenshtein(value, target);
+      return dist <= 2; // tolerancia
+    };
+
+    if(isField){
+      const colIdx = columnMap[field];
+      if(colIdx == null) { // campo desconocido -> tratar como término general
+        return tr._joined.includes(value) || cells.some(c => c.includes(value) || tryApprox(c));
+      }
+      const cell = cells[colIdx] || '';
+      return cell.includes(value) || tryApprox(cell);
+    }
+    // Búsqueda general: coincide si aparece en alguna celda o aproximado
+    return tr._joined.includes(value) || cells.some(c => c.includes(value) || tryApprox(c));
+  }
+
+  rows.forEach(tr => {
+    const visible = tokens.every(tok => matchToken(tr, tok));
+    tr.style.display = visible ? '' : 'none';
   });
 }
 function aplicarFiltroActual() { filtrarTabla(txtSearch.value.trim()); }
-btnSearch.addEventListener('click', aplicarFiltroActual);
-btnSearchIcon.addEventListener('click', aplicarFiltroActual);
-txtSearch.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); aplicarFiltroActual(); }});
 
 // ==========================
 // MODAL abrir/cerrar
@@ -385,7 +454,7 @@ document.addEventListener('keydown', (e)=>{
 });
 
 // ==========================
-// SUBIR FOTO (preview + drag&drop)
+// SUBIR FOTO (preview + drag&drop) - ahora opcional, puede que el modal ya no tenga estos campos
 // ==========================
 const filePhoto      = document.getElementById('m_foto');
 const photoDrop      = document.getElementById('photoDrop');
@@ -396,70 +465,90 @@ const btnRemovePhoto = document.getElementById('btnRemovePhoto');
 
 let photoDataUrl = null;
 
-function pickPhoto(){ filePhoto.click(); }
-btnPickPhoto.addEventListener('click', pickPhoto);
-btnPickPhoto2.addEventListener('click', pickPhoto);
-photoDrop.addEventListener('click', (e)=> {
-  if (e.target === photoDrop || e.target.classList.contains('avatar-ico') || e.target.classList.contains('drop-text')) {
-    pickPhoto();
+if (filePhoto && photoDrop) {
+  function pickPhoto(){ filePhoto.click(); }
+  if(btnPickPhoto) btnPickPhoto.addEventListener('click', pickPhoto);
+  if(btnPickPhoto2) btnPickPhoto2.addEventListener('click', pickPhoto);
+  photoDrop.addEventListener('click', (e)=> {
+    if (e.target === photoDrop || e.target.classList.contains('avatar-ico') || e.target.classList.contains('drop-text')) {
+      pickPhoto();
+    }
+  });
+
+  function clearPhoto(){
+    photoDataUrl = null;
+    filePhoto.value = '';
+    if(photoPreview){ photoPreview.src = ''; photoPreview.hidden = true; }
+    photoDrop.classList.remove('has-image');
   }
-});
+  if(btnRemovePhoto) btnRemovePhoto.addEventListener('click', clearPhoto);
 
-function clearPhoto(){
-  photoDataUrl = null;
-  filePhoto.value = '';
-  photoPreview.src = '';
-  photoPreview.hidden = true;
-  photoDrop.classList.remove('has-image');
+  function handleFiles(files){
+    if (!files || !files.length) return;
+    const f = files[0];
+    if (!f.type.startsWith('image/')) { alert('El archivo debe ser una imagen.'); return; }
+    if (f.size > 3 * 1024 * 1024) { alert('La imagen no debe superar 3 MB.'); return; }
+    const reader = new FileReader();
+    reader.onload = () => {
+      photoDataUrl = reader.result;
+      if(photoPreview){
+        photoPreview.src = photoDataUrl;
+        photoPreview.hidden = false;
+      }
+      photoDrop.classList.add('has-image');
+    };
+    reader.readAsDataURL(f);
+  }
+
+  filePhoto.addEventListener('change', ()=> handleFiles(filePhoto.files));
+
+  ['dragenter','dragover','dragleave','drop'].forEach(ev=>{
+    photoDrop.addEventListener(ev, e=>{ e.preventDefault(); e.stopPropagation(); });
+  });
+  ['dragenter','dragover'].forEach(()=>{
+    photoDrop.classList.add('dragging');
+  });
+  ['dragleave','drop'].forEach(()=>{
+    photoDrop.classList.remove('dragging');
+  });
+  photoDrop.addEventListener('drop', e=> handleFiles(e.dataTransfer.files));
 }
-btnRemovePhoto.addEventListener('click', clearPhoto);
-
-function handleFiles(files){
-  if (!files || !files.length) return;
-  const f = files[0];
-  if (!f.type.startsWith('image/')) { alert('El archivo debe ser una imagen.'); return; }
-  if (f.size > 3 * 1024 * 1024) { alert('La imagen no debe superar 3 MB.'); return; }
-  const reader = new FileReader();
-  reader.onload = () => {
-    photoDataUrl = reader.result;
-    photoPreview.src = photoDataUrl;
-    photoPreview.hidden = false;
-    photoDrop.classList.add('has-image');
-  };
-  reader.readAsDataURL(f);
-}
-
-filePhoto.addEventListener('change', ()=> handleFiles(filePhoto.files));
-
-['dragenter','dragover','dragleave','drop'].forEach(ev=>{
-  photoDrop.addEventListener(ev, e=>{ e.preventDefault(); e.stopPropagation(); });
-});
-['dragenter','dragover'].forEach(()=>{
-  photoDrop.classList.add('dragging');
-});
-['dragleave','drop'].forEach(()=>{
-  photoDrop.classList.remove('dragging');
-});
-photoDrop.addEventListener('drop', e=> handleFiles(e.dataTransfer.files));
 
 // Submit modal -> agrega fila a la tabla y cierra
 document.getElementById('frmAdd').addEventListener('submit', (e)=>{
   e.preventDefault();
-  const id         = document.getElementById('m_id').value.trim();
-  const nombre     = document.getElementById('m_nombre').value.trim();
-  const ap_paterno = document.getElementById('m_paterno').value.trim();
-  const ap_materno = document.getElementById('m_materno').value.trim();
-  const area       = document.getElementById('m_area').value.trim();
+  const nombre          = document.getElementById('m_nombre').value.trim();
+  const ap_paterno      = document.getElementById('m_paterno').value.trim();
+  const ap_materno      = document.getElementById('m_materno').value.trim();
+  const ci              = document.getElementById('m_ci').value.trim();
+  const email           = document.getElementById('m_email').value.trim();
+  const area            = document.getElementById('m_area').value.trim();
+  const categoria       = document.getElementById('m_categoria').value.trim();
+  const codigo_usuario  = document.getElementById('m_codigo').value.trim();
+  const password        = document.getElementById('m_password').value.trim();
 
-  if (!nombre || !ap_paterno || !ap_materno || !area){
-    alert('Completa los campos obligatorios.');
+  if (!nombre || !ap_paterno || !ap_materno || !ci || !email || !area || !categoria || !codigo_usuario || !password){
+    alert('Completa todos los campos obligatorios.');
     return;
   }
-  nuevaFila({ id, nombre, ap_paterno, ap_materno, area });
+  
+  nuevaFila({ 
+    nombre, 
+    ap_paterno, 
+    ap_materno, 
+    ci, 
+    email, 
+    area, 
+    categoria, 
+    codigo_usuario, 
+    password 
+  });
+  
   closeModal();
-  ['m_id','m_nombre','m_paterno','m_materno','m_area','m_tutor','m_colegio','m_fnac','m_direccion','m_email','m_nivel','m_categoria','m_tipo_col','m_ci','m_depmun','m_tel']
+  
+  // Limpiar todos los campos del formulario
+  ['m_nombre','m_paterno','m_materno','m_ci','m_email','m_area','m_categoria','m_codigo','m_password']
     .forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
-  clearPhoto();
 });
 
 // Deshabilitar el botón Guardar y Exportar hasta que se seleccione una competición

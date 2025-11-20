@@ -25,7 +25,8 @@
     <form id="searchForm" class="search-panel w-full max-w-md mx-auto mb-6" action="{{ route('admin.competicion.index') }}" method="GET">
         <div class="flex items-center gap-2">
             <div class="relative flex-1">
-                <input id="searchInput" name="search" type="text" value="{{ request('search') }}" placeholder="Buscar por nombre o descripción..." aria-label="Buscar competencia" class="w-full px-4 py-2 pr-10 rounded-lg border border-gray-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-800" />
+                <!-- Ajustado placeholder para indicar que sólo busca por nombre -->
+                <input id="searchInput" name="search" type="text" value="{{ request('search') }}" placeholder="Buscar por nombre..." aria-label="Buscar competencia" class="w-full px-4 py-2 pr-10 rounded-lg border border-gray-300 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-800" />
                 <svg class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                     <circle cx="11" cy="11" r="7"></circle>
                     <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
@@ -35,9 +36,13 @@
         </div>
     </form>
 
-    @if (request()->routeIs('admin.competicion.create'))
+    @if (request()->routeIs('admin.competicion.create') && View::exists('admin.competicion.partials.form'))
         {{-- formulario de creacion --}}
         @include('admin.competicion.partials.form')
+    @elseif (request()->routeIs('admin.competicion.create'))
+        <div class="rounded-lg border border-red-300 bg-red-50 p-6 my-8 text-sm text-red-700">
+            La vista de formulario no está disponible.
+        </div>
     @else
         {{-- Lista de competiciones con filtros y tarjetas --}}
         @if ($competiciones->count() === 0)
@@ -55,43 +60,60 @@
 
       @push('scripts')
       <script>
-          // Filtros dinámicos
           document.addEventListener('DOMContentLoaded', function() {
               const filterButtons = document.querySelectorAll('[data-filter]');
               const competitionCards = document.querySelectorAll('[data-status]');
-        
+              const searchInput = document.getElementById('searchInput');
+              let currentFilter = 'all';
+
+              function normalize(str){
+                  return (str || '').toString().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+              }
+
+              function applyFilters(){
+                  const query = normalize(searchInput.value.trim());
+                  const tokens = query.length ? query.split(/\s+/).filter(Boolean) : [];
+                  competitionCards.forEach(card => {
+                      const status = card.getAttribute('data-status');
+                      // Sólo usar el nombre (en el h3) para la búsqueda
+                      const nameText = normalize(card.querySelector('h3')?.textContent || '');
+                      const matchesFilter = (currentFilter === 'all' || status === currentFilter);
+                      const matchesSearch = !tokens.length || tokens.every(t => nameText.includes(t));
+                      card.style.display = (matchesFilter && matchesSearch) ? 'block' : 'none';
+                  });
+              }
+
               filterButtons.forEach(button => {
                   button.addEventListener('click', function() {
                       const filter = this.getAttribute('data-filter');
-                
-                      // Actualizar botones activos
+                      currentFilter = filter;
+
                       filterButtons.forEach(btn => {
-                          btn.classList.remove('bg-primary', 'text-primary-foreground', 'bg-emerald-500', 'bg-blue-500', 'bg-red-500', 'text-white');
-                          btn.classList.add('border', 'border-border', 'text-foreground', 'hover:bg-secondary', 'bg-transparent');
+                          btn.classList.remove('bg-primary','text-primary-foreground','bg-emerald-500','bg-blue-500','bg-red-500','text-white','active');
+                          btn.classList.add('border','border-border','text-foreground','hover:bg-secondary','bg-transparent');
                       });
-                
-                      // Botones
-                      this.classList.remove('border', 'border-border', 'text-foreground', 'hover:bg-secondary', 'bg-transparent');
-                      if (filter === 'active') {
-                          this.classList.add('bg-emerald-500', 'text-white');
-                      } else if (filter === 'completed') {
-                          this.classList.add('bg-blue-500', 'text-white');
-                      } else if (filter === 'cancelled') {
-                          this.classList.add('bg-red-500', 'text-white');
+
+                      this.classList.remove('border','border-border','text-foreground','hover:bg-secondary','bg-transparent');
+                      if (filter === 'activa') {
+                          this.classList.add('bg-emerald-500','text-white');
+                      } else if (filter === 'completada') {
+                          this.classList.add('bg-blue-500','text-white');
+                      } else if (filter === 'cancelada') {
+                          this.classList.add('bg-red-500','text-white');
                       } else {
-                          this.classList.add('bg-primary', 'text-primary-foreground');
+                          this.classList.add('bg-primary','text-primary-foreground');
                       }
-                
-                      // Filtrar tarjetas
-                      competitionCards.forEach(card => {
-                          if (filter === 'all' || card.getAttribute('data-status') === filter) {
-                              card.style.display = 'block';
-                          } else {
-                              card.style.display = 'none';
-                          }
-                      });
+                      this.classList.add('active');
+
+                      applyFilters();
                   });
               });
+
+              searchInput.addEventListener('input', function(){
+                  applyFilters();
+              });
+
+              applyFilters();
           });
       </script>
       @endpush
