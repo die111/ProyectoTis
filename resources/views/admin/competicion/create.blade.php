@@ -42,10 +42,23 @@
                                 <label for="competition-name" class="block text-sm font-medium text-gray-700 mb-2">
                                     Nombre de la Competencia
                                 </label>
-                                <input type="text" id="competition-name" name="name" x-model="competitionName"
+                                <input type="text" id="competition-name" name="name"
                                     placeholder="Ej: Olimpiada Nacional de Ciencias 2025"
                                     class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                    maxlength="64"
+                                    title="Debe contener al menos 1 letra. Máximo 60 letras y 4 números. No se permiten caracteres especiales ni más de 2 caracteres idénticos consecutivos."
                                     required>
+                                <div class="mt-1 flex justify-between text-xs">
+                                    <span class="text-gray-500">Mínimo 1 letra. Máximo 60 letras y 4 números. No más de 2 caracteres idénticos consecutivos.</span>
+                                    <span class="text-gray-600">
+                                        Letras: <span id="letter-count" class="font-semibold">0</span>/60 | 
+                                        Números: <span id="number-count" class="font-semibold">0</span>/4
+                                    </span>
+                                </div>
+                                <div id="validation-error" class="mt-1 text-xs text-red-600 flex items-center gap-1" style="display: none;">
+                                    <i class="fas fa-exclamation-circle"></i>
+                                    <span id="validation-error-message"></span>
+                                </div>
                             </div>
                             <div>
                                 <label for="competition-description"
@@ -67,20 +80,7 @@
                             Seleccionar Rango de Fechas de la Competencia
                         </h2>
                     </div>
-                    <div class="p-6" x-data='{
-                        inscripcionInicio: "",
-                        inscripcionFin: "",
-                        evaluacionInicio: "",
-                        evaluacionFin: "",
-                        premiacionInicio: "",
-                        premiacionFin: "",
-                        get inscripcionCompleta() {
-                            return this.inscripcionInicio && this.inscripcionFin;
-                        },
-                        get evaluacionCompleta() {
-                            return this.evaluacionInicio && this.evaluacionFin;
-                        }
-                    }'>
+                    <div class="p-6">
                         <!-- Calendario Visual -->
                         @include('components.calendar-date-range-picker')
 
@@ -151,34 +151,43 @@
                             </div>
 
                             <!-- Etapa de Premiación -->
-                            <div class="bg-gray-50 p-4 rounded-lg border border-gray-200" :class="{'opacity-50': !evaluacionCompleta}">
+                            <div class="bg-gray-50 p-4 rounded-lg border border-gray-200" :class="{'opacity-50': !evaluacionCompleta, 'border-red-300': evaluacionCompleta && !premiacionCompleta}">
                                 <h3 class="text-md font-semibold text-gray-800 mb-3 flex items-center gap-2">
                                     <i class="fas fa-trophy text-yellow-600"></i>
                                     Etapa de premiación
+                                    <span class="text-red-600 text-xs" x-show="evaluacionCompleta && !premiacionCompleta">*Requerido</span>
                                 </h3>
                                 <div class="space-y-3">
                                     <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-1">Fecha de Inicio</label>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Fecha de Inicio <span class="text-red-600">*</span></label>
                                         <input type="date" name="premiacion_inicio"
                                             x-model="premiacionInicio"
                                             :disabled="!evaluacionCompleta"
                                             :min="startDate"
                                             :max="endDate"
-                                            class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 text-sm disabled:bg-gray-100 disabled:cursor-not-allowed">
+                                            class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
+                                            :class="{'border-red-300': evaluacionCompleta && !premiacionInicio}"
+                                            required>
                                     </div>
                                     <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-1">Fecha de Fin</label>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Fecha de Fin <span class="text-red-600">*</span></label>
                                         <input type="date" name="premiacion_fin"
                                             x-model="premiacionFin"
                                             :disabled="!evaluacionCompleta"
                                             :min="startDate"
                                             :max="endDate"
-                                            class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 text-sm disabled:bg-gray-100 disabled:cursor-not-allowed">
+                                            class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
+                                            :class="{'border-red-300': evaluacionCompleta && !premiacionFin}"
+                                            required>
                                     </div>
                                 </div>
                                 <div x-show="!evaluacionCompleta" class="mt-2 text-xs text-amber-600 flex items-center gap-1">
                                     <i class="fas fa-exclamation-triangle"></i>
                                     <span>Completa primero las fechas de evaluación</span>
+                                </div>
+                                <div x-show="evaluacionCompleta && !premiacionCompleta" class="mt-2 text-xs text-red-600 flex items-center gap-1">
+                                    <i class="fas fa-exclamation-circle"></i>
+                                    <span>Debes seleccionar las fechas de la etapa de premiación para crear la competencia</span>
                                 </div>
                             </div>
                         </div>
@@ -371,9 +380,20 @@
                         Cancelar
                     </button>
                     <button type="submit"
-                        class="btn btn-primary  bg-[#091c47]  text-white px-6 py-2 rounded-md">
+                        class="btn btn-primary px-6 py-2 rounded-md transition-all"
+                        :class="todasEtapasCompletas ? 'bg-[#091c47] text-white hover:bg-[#0a1d4a]' : 'bg-gray-400 text-gray-200 cursor-not-allowed'"
+                        :disabled="!todasEtapasCompletas"
+                        :title="!todasEtapasCompletas ? 'Debes completar las fechas de las 3 etapas (Inscripción, Evaluación y Premiación)' : ''">
                         Crear Competencia
                     </button>
+                </div>
+                
+                <!-- Mensaje de advertencia si faltan etapas -->
+                <div x-show="!todasEtapasCompletas" class="mt-3 flex justify-end">
+                    <div class="text-sm text-red-600 flex items-center gap-2 bg-red-50 border border-red-200 rounded-md px-4 py-2">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <span>Debes completar las fechas de las 3 etapas para crear la competencia</span>
+                    </div>
                 </div>
 
                 <!-- Campos ocultos para rango de fechas -->
@@ -381,5 +401,173 @@
                 <input type="hidden" name="fechaFin" :value="endDate">
             </form>
         </div>
+
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                const input = document.getElementById('competition-name');
+                const letterCountEl = document.getElementById('letter-count');
+                const numberCountEl = document.getElementById('number-count');
+                const validationError = document.getElementById('validation-error');
+                const validationErrorMsg = document.getElementById('validation-error-message');
+                
+                let lastValidValue = '';
+                
+                function removeConsecutiveDuplicates(str) {
+                    // Remove more than 2 consecutive identical characters
+                    return str.replace(/(.)\1{2,}/g, '$1$1');
+                }
+                
+                function validateInput(value) {
+                    // Remove special characters, only allow letters, spaces, and numbers
+                    value = value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s0-9]/g, '');
+                    
+                    // Remove double spaces
+                    value = value.replace(/\s{2,}/g, ' ');
+                    
+                    // Remove more than 2 consecutive identical characters
+                    value = removeConsecutiveDuplicates(value);
+                    
+                    // Separate text and numbers - Remove anything after numbers
+                    let textPart = '';
+                    let numberPart = '';
+                    
+                    // Find where numbers start at the end
+                    let lastNumberIndex = -1;
+                    for (let i = value.length - 1; i >= 0; i--) {
+                        if (/[0-9]/.test(value[i])) {
+                            lastNumberIndex = i;
+                        } else if (lastNumberIndex !== -1) {
+                            // Found a non-number after finding numbers at the end
+                            // This means there's text after numbers - remove everything after the first number block
+                            break;
+                        }
+                    }
+                    
+                    // Separate if there are numbers at the end
+                    if (lastNumberIndex !== -1 && /[0-9]$/.test(value)) {
+                        let firstNumberIndex = lastNumberIndex;
+                        for (let i = lastNumberIndex; i >= 0; i--) {
+                            if (/[0-9]/.test(value[i])) {
+                                firstNumberIndex = i;
+                            } else {
+                                break;
+                            }
+                        }
+                        textPart = value.substring(0, firstNumberIndex);
+                        numberPart = value.substring(firstNumberIndex);
+                        
+                        // Remove any text that might be after the numbers
+                        // By only taking characters up to and including the last number
+                    } else if (value.match(/\d/)) {
+                        // If there are numbers but not at the end, remove everything after the first number sequence
+                        const match = value.match(/^([^0-9]*\d+)/);
+                        if (match) {
+                            value = match[1];
+                            // Re-process to separate text and numbers
+                            const numMatch = value.match(/\d+$/);
+                            if (numMatch) {
+                                numberPart = numMatch[0];
+                                textPart = value.substring(0, value.length - numberPart.length);
+                            } else {
+                                textPart = value;
+                                numberPart = '';
+                            }
+                        } else {
+                            textPart = value;
+                            numberPart = '';
+                        }
+                    } else {
+                        textPart = value;
+                        numberPart = '';
+                    }
+                    
+                    // Limit text part to 60 characters
+                    if (textPart.length > 60) {
+                        textPart = textPart.substring(0, 60);
+                    }
+                    
+                    // Limit numbers to 4 digits
+                    if (numberPart.length > 4) {
+                        numberPart = numberPart.substring(0, 4);
+                    }
+                    
+                    return {
+                        value: textPart + numberPart,
+                        textPart: textPart,
+                        numberPart: numberPart
+                    };
+                }
+                
+                function showError(message) {
+                    validationErrorMsg.textContent = message;
+                    validationError.style.display = 'flex';
+                    input.classList.add('border-red-500');
+                }
+                
+                function hideError() {
+                    validationError.style.display = 'none';
+                    input.classList.remove('border-red-500');
+                }
+                
+                // Initialize with current value (if any, e.g., after validation error)
+                if (input.value) {
+                    const result = validateInput(input.value);
+                    input.value = result.value;
+                    letterCountEl.textContent = result.textPart.length;
+                    numberCountEl.textContent = result.numberPart.length;
+                    
+                    const lettersOnly = result.textPart.replace(/[\s0-9]/g, '');
+                    if (result.value && lettersOnly.length < 1) {
+                        showError('El nombre debe contener al menos 1 letra (sin contar espacios y números)');
+                    }
+                }
+                
+                input.addEventListener('input', function(e) {
+                    const cursorPosition = this.selectionStart;
+                    const oldValue = this.value;
+                    
+                    const result = validateInput(this.value);
+                    const newValue = result.value;
+                    
+                    this.value = newValue;
+                    lastValidValue = newValue;
+                    
+                    // Update counters
+                    letterCountEl.textContent = result.textPart.length;
+                    numberCountEl.textContent = result.numberPart.length;
+                    
+                    // Check if has at least 1 letter
+                    const lettersOnly = result.textPart.replace(/[\s0-9]/g, '');
+                    if (newValue && lettersOnly.length < 1) {
+                        showError('El nombre debe contener al menos 1 letra (sin contar espacios y números)');
+                    } else {
+                        hideError();
+                    }
+                    
+                    // Restore cursor position
+                    const diff = oldValue.length - newValue.length;
+                    const newCursorPosition = Math.max(0, cursorPosition - diff);
+                    this.setSelectionRange(newCursorPosition, newCursorPosition);
+                });
+                
+                // Validate on paste
+                input.addEventListener('paste', function(e) {
+                    e.preventDefault();
+                    const pastedText = (e.clipboardData || window.clipboardData).getData('text');
+                    const currentValue = this.value;
+                    const cursorPosition = this.selectionStart;
+                    
+                    // Insert pasted text at cursor position
+                    const newValue = currentValue.substring(0, cursorPosition) + pastedText + currentValue.substring(this.selectionEnd);
+                    
+                    // Validate the new value
+                    const result = validateInput(newValue);
+                    this.value = result.value;
+                    
+                    // Trigger input event to update counters
+                    this.dispatchEvent(new Event('input'));
+                });
+            });
+        </script>
     </body>
 @endsection

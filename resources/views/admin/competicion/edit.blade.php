@@ -73,10 +73,24 @@
                                 <label for="competition-name" class="block text-sm font-medium text-gray-700 mb-2">
                                     Nombre de la Competencia
                                 </label>
-                                <input type="text" id="competition-name" name="name" x-model="competitionName"
-                                    placeholder="Ej: Olimpiada Nacional de Ciencias"
+                                <input type="text" id="competition-name" name="name"
+                                    value="{{ old('name', $competicion->name) }}"
+                                    placeholder="Ej: Olimpiada Nacional de Ciencias 2025"
                                     class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                    maxlength="64"
+                                    title="Debe contener al menos 1 letra. Máximo 60 letras y 4 números. No se permiten caracteres especiales ni más de 2 caracteres idénticos consecutivos."
                                     required>
+                                <div class="mt-1 flex justify-between text-xs">
+                                    <span class="text-gray-500">Mínimo 1 letra. Máximo 60 letras y 4 números. No más de 2 caracteres idénticos consecutivos.</span>
+                                    <span class="text-gray-600">
+                                        Letras: <span id="letter-count" class="font-semibold">0</span>/60 | 
+                                        Números: <span id="number-count" class="font-semibold">0</span>/4
+                                    </span>
+                                </div>
+                                <div id="validation-error" class="mt-1 text-xs text-red-600 flex items-center gap-1" style="display: none;">
+                                    <i class="fas fa-exclamation-circle"></i>
+                                    <span id="validation-error-message"></span>
+                                </div>
                             </div>
                             <div>
                                 <label for="competition-description" class="block text-sm font-medium text-gray-700 mb-2">
@@ -392,5 +406,173 @@
                 <input type="hidden" name="fechaFin" :value="endDate">
             </form>
         </div>
+
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                const input = document.getElementById('competition-name');
+                const letterCountEl = document.getElementById('letter-count');
+                const numberCountEl = document.getElementById('number-count');
+                const validationError = document.getElementById('validation-error');
+                const validationErrorMsg = document.getElementById('validation-error-message');
+                
+                let lastValidValue = '';
+                
+                function removeConsecutiveDuplicates(str) {
+                    // Remove more than 2 consecutive identical characters
+                    return str.replace(/(.)\1{2,}/g, '$1$1');
+                }
+                
+                function validateInput(value) {
+                    // Remove special characters, only allow letters, spaces, and numbers
+                    value = value.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s0-9]/g, '');
+                    
+                    // Remove double spaces
+                    value = value.replace(/\s{2,}/g, ' ');
+                    
+                    // Remove more than 2 consecutive identical characters
+                    value = removeConsecutiveDuplicates(value);
+                    
+                    // Separate text and numbers - Remove anything after numbers
+                    let textPart = '';
+                    let numberPart = '';
+                    
+                    // Find where numbers start at the end
+                    let lastNumberIndex = -1;
+                    for (let i = value.length - 1; i >= 0; i--) {
+                        if (/[0-9]/.test(value[i])) {
+                            lastNumberIndex = i;
+                        } else if (lastNumberIndex !== -1) {
+                            // Found a non-number after finding numbers at the end
+                            // This means there's text after numbers - remove everything after the first number block
+                            break;
+                        }
+                    }
+                    
+                    // Separate if there are numbers at the end
+                    if (lastNumberIndex !== -1 && /[0-9]$/.test(value)) {
+                        let firstNumberIndex = lastNumberIndex;
+                        for (let i = lastNumberIndex; i >= 0; i--) {
+                            if (/[0-9]/.test(value[i])) {
+                                firstNumberIndex = i;
+                            } else {
+                                break;
+                            }
+                        }
+                        textPart = value.substring(0, firstNumberIndex);
+                        numberPart = value.substring(firstNumberIndex);
+                        
+                        // Remove any text that might be after the numbers
+                        // By only taking characters up to and including the last number
+                    } else if (value.match(/\d/)) {
+                        // If there are numbers but not at the end, remove everything after the first number sequence
+                        const match = value.match(/^([^0-9]*\d+)/);
+                        if (match) {
+                            value = match[1];
+                            // Re-process to separate text and numbers
+                            const numMatch = value.match(/\d+$/);
+                            if (numMatch) {
+                                numberPart = numMatch[0];
+                                textPart = value.substring(0, value.length - numberPart.length);
+                            } else {
+                                textPart = value;
+                                numberPart = '';
+                            }
+                        } else {
+                            textPart = value;
+                            numberPart = '';
+                        }
+                    } else {
+                        textPart = value;
+                        numberPart = '';
+                    }
+                    
+                    // Limit text part to 60 characters
+                    if (textPart.length > 60) {
+                        textPart = textPart.substring(0, 60);
+                    }
+                    
+                    // Limit numbers to 4 digits
+                    if (numberPart.length > 4) {
+                        numberPart = numberPart.substring(0, 4);
+                    }
+                    
+                    return {
+                        value: textPart + numberPart,
+                        textPart: textPart,
+                        numberPart: numberPart
+                    };
+                }
+                
+                function showError(message) {
+                    validationErrorMsg.textContent = message;
+                    validationError.style.display = 'flex';
+                    input.classList.add('border-red-500');
+                }
+                
+                function hideError() {
+                    validationError.style.display = 'none';
+                    input.classList.remove('border-red-500');
+                }
+                
+                // Initialize with current value
+                if (input.value) {
+                    const result = validateInput(input.value);
+                    input.value = result.value;
+                    letterCountEl.textContent = result.textPart.length;
+                    numberCountEl.textContent = result.numberPart.length;
+                    
+                    const lettersOnly = result.textPart.replace(/[\s0-9]/g, '');
+                    if (result.value && lettersOnly.length < 1) {
+                        showError('El nombre debe contener al menos 1 letra (sin contar espacios y números)');
+                    }
+                }
+                
+                input.addEventListener('input', function(e) {
+                    const cursorPosition = this.selectionStart;
+                    const oldValue = this.value;
+                    
+                    const result = validateInput(this.value);
+                    const newValue = result.value;
+                    
+                    this.value = newValue;
+                    lastValidValue = newValue;
+                    
+                    // Update counters
+                    letterCountEl.textContent = result.textPart.length;
+                    numberCountEl.textContent = result.numberPart.length;
+                    
+                    // Check if has at least 1 letter
+                    const lettersOnly = result.textPart.replace(/[\s0-9]/g, '');
+                    if (newValue && lettersOnly.length < 1) {
+                        showError('El nombre debe contener al menos 1 letra (sin contar espacios y números)');
+                    } else {
+                        hideError();
+                    }
+                    
+                    // Restore cursor position
+                    const diff = oldValue.length - newValue.length;
+                    const newCursorPosition = Math.max(0, cursorPosition - diff);
+                    this.setSelectionRange(newCursorPosition, newCursorPosition);
+                });
+                
+                // Validate on paste
+                input.addEventListener('paste', function(e) {
+                    e.preventDefault();
+                    const pastedText = (e.clipboardData || window.clipboardData).getData('text');
+                    const currentValue = this.value;
+                    const cursorPosition = this.selectionStart;
+                    
+                    // Insert pasted text at cursor position
+                    const newValue = currentValue.substring(0, cursorPosition) + pastedText + currentValue.substring(this.selectionEnd);
+                    
+                    // Validate the new value
+                    const result = validateInput(newValue);
+                    this.value = result.value;
+                    
+                    // Trigger input event to update counters
+                    this.dispatchEvent(new Event('input'));
+                });
+            });
+        </script>
     </body>
 @endsection
