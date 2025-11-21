@@ -26,6 +26,8 @@
                     <i class="fas fa-arrow-left mr-2"></i> Atrás
                 </a>
             </div>
+            
+            {{-- texto de prueba --}}
 
             <form method="POST" action="{{ route('admin.competicion.store') }}" onsubmit="return validateForm()">
                 @csrf
