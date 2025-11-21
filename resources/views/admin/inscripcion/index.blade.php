@@ -159,11 +159,15 @@
                 <div class="form-column">
                   <div class="input-group">
                     <label for="m_area">Área*:</label>
-                    <input type="text" id="m_area" name="m_area" placeholder="Física, Química..." required>
+                    <select id="m_area" name="m_area" required>
+                      <option value="" selected disabled>Cargando áreas...</option>
+                    </select>
                   </div>
                   <div class="input-group">
                     <label for="m_categoria">Categoría*:</label>
-                    <input type="text" id="m_categoria" name="m_categoria" placeholder="Individual" required>
+                    <select id="m_categoria" name="m_categoria" required>
+                      <option value="" selected disabled>Cargando categorías...</option>
+                    </select>
                   </div>
                   <div class="input-group">
                     <label for="m_codigo">Código de usuario*:</label>
@@ -204,27 +208,66 @@
 <script>
 (function(){
   const cmb = document.getElementById('cmbCompeticiones');
-  const metaBox = document.getElementById('competitionMeta');
-  const emptyMsg = metaBox.querySelector('[data-empty]');
+  const emptyMsg = document.querySelector('#competitionMeta [data-empty]');
   const grid = document.getElementById('catAreaGrid');
+  const selCat = document.getElementById('m_categoria');
+  const selArea = document.getElementById('m_area');
+  let categoriasCompData = []; // categorías por competición
 
-  function clear(){
-    grid.innerHTML='';
-    emptyMsg.classList.remove('hidden');
+  function loadAreas(){
+    if(!selArea) return;
+    selArea.innerHTML = '<option value="" selected disabled>Cargando áreas...</option>';
+    fetch('/dashboard/admin/inscripcion/get-areas')
+      .then(r=>r.json())
+      .then(data=>{
+        selArea.innerHTML = '<option value="" disabled selected>Selecciona área</option>';
+        if(!data.success) return;
+        (data.areas||[]).forEach(a=>{
+          const opt = document.createElement('option');
+          opt.value = a.id;
+          opt.textContent = a.name;
+          selArea.appendChild(opt);
+        });
+      })
+      .catch(()=>{
+        selArea.innerHTML = '<option value="" disabled selected>Error cargando áreas</option>';
+      });
+  }
+
+  function loadCategoriasGlobal(){
+    if(!selCat) return;
+    selCat.innerHTML = '<option value="" selected disabled>Cargando categorías...</option>';
+    fetch('/dashboard/admin/inscripcion/get-categorias')
+      .then(r=>r.json())
+      .then(data=>{
+        selCat.innerHTML = '<option value="" disabled selected>Selecciona categoría</option>';
+        if(!data.success) return;
+        (data.categorias||[]).forEach(c=>{
+          const opt = document.createElement('option');
+            opt.value = c.id;
+            opt.textContent = c.nombre;
+            selCat.appendChild(opt);
+        });
+      })
+      .catch(()=>{
+        selCat.innerHTML = '<option value="" disabled selected>Error cargando categorías</option>';
+      });
   }
 
   cmb?.addEventListener('change', ()=>{
     const id = cmb.value;
-    clear();
+    grid.innerHTML='';
+    emptyMsg.classList.remove('hidden');
+    categoriasCompData = [];
     if(!id) return;
     fetch(`/dashboard/admin/inscripcion/competition/${id}/areas-categorias`)
       .then(r=>r.json())
       .then(data=>{
         if(!data.success) return;
-        const categorias = data.categorias || [];
-        if(!categorias.length) return;
+        categoriasCompData = data.categorias || [];
+        if(!categoriasCompData.length) return;
         emptyMsg.classList.add('hidden');
-        categorias.forEach(cat=>{
+        categoriasCompData.forEach(cat=>{
           const card = document.createElement('div');
           card.className='min-w-[140px] flex-shrink-0 border rounded-md bg-white shadow-sm p-2';
           const title = document.createElement('h4');
@@ -251,6 +294,10 @@
       })
       .catch(err=>console.error('Error cargando categorías/áreas', err));
   });
+
+  // Inicial: cargar listas globales
+  loadAreas();
+  loadCategoriasGlobal();
 })();
 </script>
 <script src="{{ asset('js/inscripcion.js') }}"></script>

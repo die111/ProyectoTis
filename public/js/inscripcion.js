@@ -225,6 +225,29 @@ function cargarCSV(csvText){
   }
 }
 
+// Helper SweetAlert bonito
+function showMsg({title='Mensaje', html='', icon='info', confirmText='Aceptar', color='#091c47'}){
+  Swal.fire({
+    title,
+    html: `<div style="font-size:13px;line-height:1.5">${html}</div>`,
+    icon,
+    confirmButtonText: confirmText,
+    buttonsStyling: false,
+    showCloseButton: true,
+    customClass: {
+      popup: 'swal2-rounded swal2-shadow',
+      confirmButton: 'px-4 py-2 text-white rounded-md text-sm font-medium',
+    },
+    didRender: () => {
+      const btn = document.querySelector('.swal2-confirm');
+      if(btn) btn.style.background = color;
+      if(btn) btn.onmouseenter = () => btn.style.filter='brightness(1.15)';
+      if(btn) btn.onmouseleave = () => btn.style.filter='none';
+    },
+    backdrop: 'rgba(0,0,0,0.35)'
+  });
+}
+
 // Exportar
 btnExport.addEventListener('click', () => {
   const filas = [...tbody.querySelectorAll('tr')]
@@ -247,7 +270,13 @@ btnExport.addEventListener('click', () => {
   // Guardar en base de datos
   const competitionId = cmbCompeticiones?.value || '';
   if (!competitionId) {
-    alert('Seleccione una competición antes de guardar.');
+    showMsg({
+      title: '⚠️ Falta competición',
+      html: 'Selecciona una competición activa antes de guardar.',
+      icon: 'warning',
+      confirmText: 'Entendido',
+      color: '#f59e0b'
+    });
     return;
   }
 
@@ -284,7 +313,12 @@ btnExport.addEventListener('click', () => {
     .filter(e => e !== null);
 
   if(estudiantes.length === 0){
-    alert('No hay estudiantes con área y categoría permitidas para esta competición.');
+    showMsg({
+      title: '🙈 Sin estudiantes válidos',
+      html: 'No hay estudiantes con área y categoría permitidas para esta competición.',
+      icon: 'info',
+      color: '#6366f1'
+    });
     return;
   }
 
@@ -299,32 +333,35 @@ btnExport.addEventListener('click', () => {
   .then(res => res.json())
   .then((data) => {
     if (data.success) {
-      Swal.fire({
-        title: '¡Éxito!',
-        text: data.message || 'Estudiantes e inscripciones guardados correctamente.',
+      // Procesar mensaje en líneas
+      const parts = (data.message || '').split(',').map(p=>p.trim()).filter(p=>p.length);
+      const listHtml = parts.length ? `<ul style="margin:6px 0;padding-left:18px;text-align:left">${parts.map(li=>`<li style=\"margin:3px 0;\">✅ ${li}</li>`).join('')}</ul>` : 'Operación completada.';
+      showMsg({
+        title: '🎉 Guardado correcto',
+        html: listHtml,
         icon: 'success',
-        confirmButtonText: 'Aceptar'
+        color: '#091c47'
       });
     } else {
-      Swal.fire({
-        title: 'Error',
-        text: 'Error al guardar: ' + (data.error || 'Error desconocido'),
+      showMsg({
+        title: '❌ Error al guardar',
+        html: (data.error || 'Error desconocido'),
         icon: 'error',
-        confirmButtonText: 'Aceptar'
+        color: '#dc2626'
       });
       console.error('Error del servidor:', data);
     }
   })
   .catch(error => {
     console.error('Error de conexión:', error);
-    Swal.fire({
-      title: 'Error de Conexión',
-      text: 'No se pudo conectar con el servidor. Revisa tu conexión a internet.',
-      icon: 'error',
-      confirmButtonText: 'Aceptar'
+    showMsg({
+      title: '🌐 Error de Conexión',
+      html: 'No se pudo conectar con el servidor.<br>Revisa tu conexión a internet.',
+      icon: 'warning',
+      color: '#d97706'
     });
   });
-  if (filas.length === 0) { alert('No hay datos para exportar.'); return; }
+  if (filas.length === 0) { showMsg({title:'📄 Sin datos', html:'No hay datos para exportar.', icon:'info', color:'#6366f1'}); return; }
 
   const encabezado = 'NOMBRE,APELLIDO PATERNO,APELLIDO MATERNO,EMAIL,AREA,CATEGORIA,CODIGO USUARIO,CONTRASEÑA';
   const csv = [encabezado, ...filas].join('\n');
@@ -522,31 +559,34 @@ document.getElementById('frmAdd').addEventListener('submit', (e)=>{
   const ap_materno      = document.getElementById('m_materno').value.trim();
   const ci              = document.getElementById('m_ci').value.trim();
   const email           = document.getElementById('m_email').value.trim();
-  const area            = document.getElementById('m_area').value.trim();
-  const categoria       = document.getElementById('m_categoria').value.trim();
+
+  const areaSelect = document.getElementById('m_area');
+  const categoriaSelect = document.getElementById('m_categoria');
+  const areaValue = areaSelect?.value.trim() || '';
+  const categoriaValue = categoriaSelect?.value.trim() || '';
+  // Guardar NOMBRES visibles en la tabla
+  const areaNombre = areaSelect && areaSelect.selectedIndex > -1 ? areaSelect.options[areaSelect.selectedIndex].text.trim() : '';
+  const categoriaNombre = categoriaSelect && categoriaSelect.selectedIndex > -1 ? categoriaSelect.options[categoriaSelect.selectedIndex].text.trim() : '';
+
   const codigo_usuario  = document.getElementById('m_codigo').value.trim();
   const password        = document.getElementById('m_password').value.trim();
 
-  if (!nombre || !ap_paterno || !ap_materno || !ci || !email || !area || !categoria || !codigo_usuario || !password){
+  if (!nombre || !ap_paterno || !ap_materno || !ci || !email || !areaValue || !categoriaValue || !codigo_usuario || !password){
     alert('Completa todos los campos obligatorios.');
     return;
   }
-  
   nuevaFila({ 
     nombre, 
     ap_paterno, 
     ap_materno, 
     ci, 
     email, 
-    area, 
-    categoria, 
+    area: areaNombre, 
+    categoria: categoriaNombre, 
     codigo_usuario, 
     password 
   });
-  
   closeModal();
-  
-  // Limpiar todos los campos del formulario
   ['m_nombre','m_paterno','m_materno','m_ci','m_email','m_area','m_categoria','m_codigo','m_password']
     .forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
 });

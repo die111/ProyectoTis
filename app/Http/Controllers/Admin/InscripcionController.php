@@ -38,6 +38,18 @@ class InscripcionController extends Controller
         }
     }
 
+    // Nuevo: obtener categorías activas
+    public function getCategorias()
+    {
+        try {
+            $categorias = Categoria::select('id','nombre')->where('is_active', true)->orderBy('nombre')->get();
+            return response()->json(['success' => true, 'categorias' => $categorias]);
+        } catch (\Exception $e) {
+            Log::error('Error al obtener categorías: ' . $e->getMessage());
+            return response()->json(['success' => false, 'error' => $e->getMessage()], 500);
+        }
+    }
+
     public function getCompeticiones()
     {
         try {
