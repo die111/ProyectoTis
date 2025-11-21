@@ -27,14 +27,45 @@ class EvaluacionController extends \App\Http\Controllers\Controller
     const ESTADO_NO_CLASIFICADO = 'no_clasificado';
     const ESTADO_DESCLASIFICADO = 'desclasificado';
 
-    public function index()
+    public function index(Request $request)
     {
-        $competiciones = Competicion::with(['area', 'phases'])
-            ->orderBy('fechaInicio', 'desc')
-            ->get();
+        $query = Competicion::with(['area', 'phases', 'categorias'])
+            ->orderBy('fechaInicio', 'desc');
+        
+        // Aplicar búsqueda si existe
+        if ($request->has('search') && $request->search != '') {
+            $search = $request->search;
+            
+            // Normalizar el término de búsqueda (eliminar tildes)
+            $searchNormalized = $this->removeAccents($search);
+            
+            // Buscar de forma flexible (insensible a tildes y mayúsculas)
+            $query->whereRaw("LOWER(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(
+                name, 'á', 'a'), 'é', 'e'), 'í', 'i'), 'ó', 'o'), 'ú', 'u')) 
+                LIKE ?", ['%' . strtolower($searchNormalized) . '%']);
+        }
+        
+        $competiciones = $query->paginate(6)->appends(['search' => $request->search]);
             
         return view('admin.evaluacion.index', compact('competiciones'));
     }
+    
+    /**
+     * Eliminar tildes de un texto
+     */
+    private function removeAccents($string)
+    {
+        $unwanted_array = [
+            'á'=>'a', 'Á'=>'a', 'à'=>'a', 'À'=>'a', 'ã'=>'a', 'Ã'=>'a', 'â'=>'a', 'Â'=>'a',
+            'é'=>'e', 'É'=>'e', 'è'=>'e', 'È'=>'e', 'ê'=>'e', 'Ê'=>'e',
+            'í'=>'i', 'Í'=>'i', 'ì'=>'i', 'Ì'=>'i', 'î'=>'i', 'Î'=>'i',
+            'ó'=>'o', 'Ó'=>'o', 'ò'=>'o', 'Ò'=>'o', 'õ'=>'o', 'Õ'=>'o', 'ô'=>'o', 'Ô'=>'o',
+            'ú'=>'u', 'Ú'=>'u', 'ù'=>'u', 'Ù'=>'u', 'û'=>'u', 'Û'=>'u',
+            'ñ'=>'n', 'Ñ'=>'n'
+        ];
+        return strtr($string, $unwanted_array);
+    }
+    
     /**
      * Cargar inscripciones desde CSV
      */
@@ -510,12 +541,20 @@ class EvaluacionController extends \App\Http\Controllers\Controller
         if (request('categoria')) { $query->where('categoria_id', request('categoria')); }
         if (request('area')) { $query->where('area_id', request('area')); }
         if (request('search')) {
-            $search = request('search');
+            $search = $this->removeAccents(request('search'));
             $query->whereHas('user', function($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('last_name_father', 'like', "%{$search}%")
-                  ->orWhere('last_name_mother', 'like', "%{$search}%")
-                  ->orWhere('school', 'like', "%{$search}%");
+                $q->whereRaw("LOWER(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(
+                    name, 'á', 'a'), 'é', 'e'), 'í', 'i'), 'ó', 'o'), 'ú', 'u')) 
+                    LIKE ?", ['%' . strtolower($search) . '%'])
+                  ->orWhereRaw("LOWER(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(
+                    last_name_father, 'á', 'a'), 'é', 'e'), 'í', 'i'), 'ó', 'o'), 'ú', 'u')) 
+                    LIKE ?", ['%' . strtolower($search) . '%'])
+                  ->orWhereRaw("LOWER(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(
+                    last_name_mother, 'á', 'a'), 'é', 'e'), 'í', 'i'), 'ó', 'o'), 'ú', 'u')) 
+                    LIKE ?", ['%' . strtolower($search) . '%'])
+                  ->orWhereRaw("LOWER(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(
+                    school, 'á', 'a'), 'é', 'e'), 'í', 'i'), 'ó', 'o'), 'ú', 'u')) 
+                    LIKE ?", ['%' . strtolower($search) . '%']);
             });
         }
         $estudiantes = $query->paginate(10)->appends(request()->query());
@@ -549,12 +588,20 @@ class EvaluacionController extends \App\Http\Controllers\Controller
         else { $query->where('is_active', true); }
         if (request('area')) { $query->where('area_id', request('area')); }
         if (request('search')) {
-            $search = request('search');
+            $search = $this->removeAccents(request('search'));
             $query->whereHas('user', function($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('last_name_father', 'like', "%{$search}%")
-                  ->orWhere('last_name_mother', 'like', "%{$search}%")
-                  ->orWhere('school', 'like', "%{$search}%")
+                $q->whereRaw("LOWER(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(
+                    name, 'á', 'a'), 'é', 'e'), 'í', 'i'), 'ó', 'o'), 'ú', 'u')) 
+                    LIKE ?", ['%' . strtolower($search) . '%'])
+                  ->orWhereRaw("LOWER(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(
+                    last_name_father, 'á', 'a'), 'é', 'e'), 'í', 'i'), 'ó', 'o'), 'ú', 'u')) 
+                    LIKE ?", ['%' . strtolower($search) . '%'])
+                  ->orWhereRaw("LOWER(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(
+                    last_name_mother, 'á', 'a'), 'é', 'e'), 'í', 'i'), 'ó', 'o'), 'ú', 'u')) 
+                    LIKE ?", ['%' . strtolower($search) . '%'])
+                  ->orWhereRaw("LOWER(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(
+                    school, 'á', 'a'), 'é', 'e'), 'í', 'i'), 'ó', 'o'), 'ú', 'u')) 
+                    LIKE ?", ['%' . strtolower($search) . '%'])
                   ->orWhere('ci', 'like', "%{$search}%");
             });
         }

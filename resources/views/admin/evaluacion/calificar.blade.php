@@ -2,15 +2,15 @@
 @section('title', 'Calificar Estudiantes · Admin')
 
 @section('content')
-<div class="mx-auto max-w-7xl px-5 py-8">
+<div class="mx-auto max-w-full px-8 py-8">
   <!-- Título -->
   <header class="mb-6">
-    <div class="flex items-center justify-between">
-      <div>
+    <div class="flex flex-col items-center justify-center">
+      <div class="text-center">
         <h1 class="text-3xl font-semibold tracking-tight">Calificar Estudiantes</h1>
         <p class="text-sm text-gray-600 mt-2">{{ $fase->name }} - {{ $competicion->name }}</p>
       </div>
-      <a href="{{ route('admin.evaluacion.fase.estudiantes', ['competicion' => $competicion->id, 'fase' => $fase->id, 'fase_n' => $numeroFase]) }}" class="rounded-full bg-gray-500 px-4 py-2 text-white text-sm shadow hover:bg-gray-600">
+      <a href="{{ route('admin.evaluacion.fase.estudiantes', ['competicion' => $competicion->id, 'fase' => $fase->id, 'fase_n' => $numeroFase]) }}" class="rounded-full bg-gray-500 px-4 py-2 text-white text-sm shadow hover:bg-gray-600 mt-4">
         ← Volver a Estudiantes
       </a>
     </div>
@@ -267,15 +267,7 @@
   <!-- Sección de acciones adicionales -->
   <section class="mt-8 bg-gray-50 rounded-lg p-6">
     <h4 class="text-lg font-medium text-gray-900 mb-4">Acciones Adicionales</h4>
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-      <div class="bg-white rounded-lg p-4 border border-gray-200">
-        <h5 class="font-medium text-gray-900 mb-2">Generar Reporte</h5>
-        <p class="text-sm text-gray-600 mb-3">Exportar reporte de calificaciones</p>
-        <button type="button" class="w-full rounded-md bg-blue-600 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700">
-          Generar PDF
-        </button>
-      </div>
-      
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div class="bg-white rounded-lg p-4 border border-gray-200">
         <h5 class="font-medium text-gray-900 mb-2">Finalizar Fase</h5>
         <p class="text-sm text-gray-600 mb-1">Cerrar la fase y procesar resultados</p>
@@ -290,16 +282,67 @@
         @else
           <p class="text-xs text-amber-700 mb-3">Criterio: No configurado en esta fase</p>
         @endif
-        <form method="POST" action="{{ route('admin.evaluacion.finalizar-fase', ['competicion' => $competicion->id, 'fase' => $fase->id]) }}?fase_n={{ $numeroFase }}" onsubmit="return confirm('Esta acción clasificará estudiantes a la siguiente fase según el criterio configurado. ¿Deseas continuar?');">
+        <form id="finalizarFaseForm" method="POST" action="{{ route('admin.evaluacion.finalizar-fase', ['competicion' => $competicion->id, 'fase' => $fase->id]) }}?fase_n={{ $numeroFase }}">
           @csrf
           <input type="hidden" name="fase_n" value="{{ $numeroFase }}">
-          <button type="submit" class="w-full rounded-md bg-red-600 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-red-700">
+          <button type="button" onclick="mostrarModalConfirmacion()" class="w-full rounded-md bg-red-600 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-red-700">
             Finalizar Fase
           </button>
         </form>
       </div>
     </div>
   </section>
+</div>
+
+<!-- Modal de Confirmación -->
+<div id="modalConfirmacion" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50 flex items-center justify-center">
+  <div class="relative mx-auto p-8 border w-full max-w-md shadow-2xl rounded-2xl bg-white transform transition-all">
+    <!-- Icono de advertencia -->
+    <div class="flex items-center justify-center mb-4">
+      <div class="rounded-full bg-red-100 p-3">
+        <svg class="h-12 w-12 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+        </svg>
+      </div>
+    </div>
+    
+    <!-- Título -->
+    <h3 class="text-xl font-bold text-gray-900 text-center mb-2">¿Finalizar Fase?</h3>
+    
+    <!-- Mensaje -->
+    <p class="text-sm text-gray-600 text-center mb-6">
+      Esta acción clasificará estudiantes a la siguiente fase según el criterio configurado. 
+      <span class="font-semibold text-red-600">Esta acción no se puede deshacer.</span>
+    </p>
+    
+    <!-- Información del criterio -->
+    @php
+      $notaMinima = $fase->pivot->classification_nota_minima ?? null;
+      $cupo = $fase->pivot->classification_cupo ?? null;
+    @endphp
+    <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-6">
+      <p class="text-sm text-blue-800 text-center">
+        <span class="font-semibold">Criterio de clasificación:</span><br>
+        @if($notaMinima !== null)
+          Nota mínima >= {{ rtrim(rtrim(number_format($notaMinima, 2, '.', ''), '0'), '.') }}
+        @elseif($cupo !== null)
+          Top {{ $cupo }} mejores con nota >= 51 (incluye empates)
+        @else
+          No configurado
+        @endif
+      </p>
+    </div>
+    
+    <!-- Botones -->
+    <div class="flex gap-3">
+      <button type="button" onclick="cerrarModalConfirmacion()" class="flex-1 rounded-lg bg-gray-200 px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400 transition-colors">
+        Cancelar
+      </button>
+      <button type="button" onclick="confirmarFinalizarFase()" class="flex-1 rounded-lg bg-red-600 px-4 py-3 text-sm font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 transition-colors">
+        Sí, Finalizar
+      </button>
+    </div>
+  </div>
 </div>
 
 <!-- Scripts -->
@@ -311,6 +354,35 @@
       if (value < 0) this.value = 0;
       if (value > 100) this.value = 100;
     });
+  });
+
+  // Funciones para el modal de confirmación
+  function mostrarModalConfirmacion() {
+    const modal = document.getElementById('modalConfirmacion');
+    modal.classList.remove('hidden');
+    // Agregar animación
+    setTimeout(() => {
+      modal.querySelector('.relative').classList.add('scale-100', 'opacity-100');
+    }, 10);
+  }
+
+  function cerrarModalConfirmacion() {
+    const modal = document.getElementById('modalConfirmacion');
+    modal.querySelector('.relative').classList.remove('scale-100', 'opacity-100');
+    setTimeout(() => {
+      modal.classList.add('hidden');
+    }, 200);
+  }
+
+  function confirmarFinalizarFase() {
+    document.getElementById('finalizarFaseForm').submit();
+  }
+
+  // Cerrar modal al hacer clic fuera de él
+  document.getElementById('modalConfirmacion')?.addEventListener('click', function(e) {
+    if (e.target === this) {
+      cerrarModalConfirmacion();
+    }
   });
 </script>
 @endsection

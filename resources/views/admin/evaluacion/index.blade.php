@@ -2,7 +2,7 @@
 @section('title', 'Competicion · Admin')
 
 @section('content')
-<div class="mx-auto max-w-6xl px-5 py-8">
+<div class="mx-auto max-w-full px-8 py-8">
   <!-- Título -->
   <header class="mb-6">
     <h1 class="text-center text-3xl font-semibold tracking-tight">Gestion de Evaluacion</h1>
@@ -10,21 +10,25 @@
 
   <!-- Buscador -->
   <section class="mb-8">
-    <div class="mx-auto flex max-w-2xl items-stretch gap-2">
+    <form method="GET" action="{{ route('admin.evaluacion.index') }}" class="mx-auto flex max-w-2xl items-stretch gap-2">
       <div class="relative flex-1">
         <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
           <!-- icono lupa -->
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="h-5 w-5 text-slate-400">
             <path fill-rule="evenodd" d="M10 2a8 8 0 105.293 14.293l3.707 3.707a1 1 0 001.414-1.414l-3.707-3.707A8 8 0 0010 2zm-6 8a6 6 0 1110.392 3.906.997.997 0 00-.116.116A6 6 0 014 10z" clip-rule="evenodd" />
           </svg>
-        </span>          <input id="searchInput" type="text" placeholder="Buscar competición..." class="w-full rounded-full border border-slate-300 bg-white py-2.5 pl-10 pr-4 text-sm placeholder:text-slate-400 shadow-sm focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-200" />
+        </span>
+        <input name="search" type="text" placeholder="Buscar competición..." value="{{ request('search') }}" class="w-full rounded-full border border-slate-300 bg-white py-2.5 pl-10 pr-4 text-sm placeholder:text-slate-400 shadow-sm focus:border-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-200" />
       </div>
-      <button id="searchBtn" class="rounded-full bg-slate-700 px-5 text-sm font-medium text-white shadow hover:bg-slate-800 active:scale-[.98]">Buscar</button>
-    </div>
+      <button type="submit" class="rounded-full bg-slate-700 px-5 text-sm font-medium text-white shadow hover:bg-slate-800 active:scale-[.98]">Buscar</button>
+      @if(request('search'))
+        <a href="{{ route('admin.evaluacion.index') }}" class="rounded-full bg-gray-500 px-5 text-sm font-medium text-white shadow hover:bg-gray-600 active:scale-[.98] flex items-center">Limpiar</a>
+      @endif
+    </form>
   </section>
 
   <!-- Grid de tarjetas -->
-  <section id="grid" class="grid grid-cols-1 gap-6 md:grid-cols-2">
+  <section id="grid" class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
     @forelse($competiciones as $index => $competicion)
       @php
         $colors = ['bg-red-600', 'bg-blue-600', 'bg-green-600', 'bg-purple-600', 'bg-yellow-600', 'bg-pink-600'];
@@ -54,11 +58,11 @@
       @endphp
       
       <!-- Competición {{ $competicion->name }} -->
-      <article class="phase-card rounded-2xl bg-white shadow ring-2 ring-{{ str_replace('bg-', '', $colors[$colorIndex]) }} overflow-hidden transition-all duration-200 hover:shadow-lg hover:scale-[1.02] hover:ring-4 cursor-pointer" data-phase="{{ strtolower($competicion->name) }}">
+      <article class="phase-card rounded-xl bg-white shadow ring-2 ring-{{ str_replace('bg-', '', $colors[$colorIndex]) }} overflow-hidden transition-all duration-200 hover:shadow-lg hover:scale-[1.02] hover:ring-4 cursor-pointer" data-phase="{{ strtolower($competicion->name) }}">
         
-        <div class="h-1.5 {{ $colors[$colorIndex] }}"></div>
-        <div class="brush relative px-8 pt-6">
-          <svg viewBox="0 0 360 120" class="w-full">
+        <div class="h-1 {{ $colors[$colorIndex] }}"></div>
+        <div class="brush relative px-4 pt-3">
+          <svg viewBox="0 0 360 90" class="w-full">
             <defs>
               <filter id="cloudShadow{{ $index }}">
                 <feDropShadow dx="2" dy="3" stdDeviation="4" flood-opacity="0.2"/>
@@ -66,39 +70,39 @@
             </defs>
             <!-- Nube orgánica con círculos superpuestos -->
             <!-- Base principal de la nube -->
-            <ellipse cx="180" cy="55" rx="120" ry="25" 
+            <ellipse cx="180" cy="45" rx="100" ry="20" 
                      fill="{{ $svgColors[$colorIndex] }}" 
                      filter="url(#cloudShadow{{ $index }})"
                      opacity="0.9"/>
             
             <!-- Círculos para crear la forma de nube -->
             <!-- Lado izquierdo -->
-            <circle cx="80" cy="50" r="35" fill="{{ $svgColors[$colorIndex] }}" opacity="0.85"/>
-            <circle cx="110" cy="40" r="28" fill="{{ $svgColors[$colorIndex] }}" opacity="0.8"/>
-            <circle cx="95" cy="65" r="22" fill="{{ $svgColors[$colorIndex] }}" opacity="0.75"/>
+            <circle cx="90" cy="40" r="28" fill="{{ $svgColors[$colorIndex] }}" opacity="0.85"/>
+            <circle cx="115" cy="32" r="22" fill="{{ $svgColors[$colorIndex] }}" opacity="0.8"/>
+            <circle cx="100" cy="55" r="18" fill="{{ $svgColors[$colorIndex] }}" opacity="0.75"/>
             
             <!-- Centro superior -->
-            <circle cx="150" cy="35" r="25" fill="{{ $svgColors[$colorIndex] }}" opacity="0.8"/>
-            <circle cx="180" cy="30" r="30" fill="{{ $svgColors[$colorIndex] }}" opacity="0.85"/>
-            <circle cx="210" cy="35" r="25" fill="{{ $svgColors[$colorIndex] }}" opacity="0.8"/>
+            <circle cx="155" cy="28" r="20" fill="{{ $svgColors[$colorIndex] }}" opacity="0.8"/>
+            <circle cx="180" cy="25" r="24" fill="{{ $svgColors[$colorIndex] }}" opacity="0.85"/>
+            <circle cx="205" cy="28" r="20" fill="{{ $svgColors[$colorIndex] }}" opacity="0.8"/>
             
             <!-- Lado derecho -->
-            <circle cx="280" cy="50" r="35" fill="{{ $svgColors[$colorIndex] }}" opacity="0.85"/>
-            <circle cx="250" cy="40" r="28" fill="{{ $svgColors[$colorIndex] }}" opacity="0.8"/>
-            <circle cx="265" cy="65" r="22" fill="{{ $svgColors[$colorIndex] }}" opacity="0.75"/>
+            <circle cx="270" cy="40" r="28" fill="{{ $svgColors[$colorIndex] }}" opacity="0.85"/>
+            <circle cx="245" cy="32" r="22" fill="{{ $svgColors[$colorIndex] }}" opacity="0.8"/>
+            <circle cx="260" cy="55" r="18" fill="{{ $svgColors[$colorIndex] }}" opacity="0.75"/>
             
             <!-- Detalles inferiores -->
-            <circle cx="140" cy="70" r="18" fill="{{ $svgColors[$colorIndex] }}" opacity="0.7"/>
-            <circle cx="180" cy="75" r="20" fill="{{ $svgColors[$colorIndex] }}" opacity="0.7"/>
-            <circle cx="220" cy="70" r="18" fill="{{ $svgColors[$colorIndex] }}" opacity="0.7"/>
+            <circle cx="145" cy="58" r="15" fill="{{ $svgColors[$colorIndex] }}" opacity="0.7"/>
+            <circle cx="180" cy="62" r="16" fill="{{ $svgColors[$colorIndex] }}" opacity="0.7"/>
+            <circle cx="215" cy="58" r="15" fill="{{ $svgColors[$colorIndex] }}" opacity="0.7"/>
           </svg>
-          <div class="pointer-events-none absolute inset-0 flex items-center justify-center px-4">
-            <span class="select-none text-lg md:text-xl lg:text-2xl font-extrabold tracking-wide text-white drop-shadow-lg text-center leading-tight max-w-full">
+          <div class="pointer-events-none absolute inset-0 flex items-center justify-center px-3">
+            <span class="select-none text-base md:text-lg font-extrabold tracking-wide text-white drop-shadow-lg text-center leading-tight max-w-full">
               {{ Str::upper($competicion->name) }}
             </span>
           </div>
         </div>
-        <div class="space-y-2 px-8 pb-6 pt-2 text-sm">
+        <div class="space-y-1.5 px-4 pb-4 pt-2 text-xs">
           <p><span class="font-semibold">Estado:</span> {{ $estadoTexto }}</p>
           
           @if($competicion->area)
@@ -122,16 +126,16 @@
           @endif
           
           @if($competicion->description)
-            <p class="text-xs text-gray-600 mt-2">{{ Str::limit($competicion->description, 80) }}</p>
+            <p class="text-xs text-gray-600 mt-1 line-clamp-2">{{ Str::limit($competicion->description, 60) }}</p>
           @endif
           
-          <div class="pt-2">
+          <div class="pt-1.5">
             @if($competicion->state === 'activa')
-              <a href="{{ route('admin.evaluacion.fases', $competicion->id) }}" class="inline-block rounded-full bg-slate-700 px-4 py-1.5 text-white text-sm shadow hover:bg-slate-800 no-underline">
+              <a href="{{ route('admin.evaluacion.fases', $competicion->id) }}" class="inline-block rounded-full bg-slate-700 px-5 py-2 text-white text-sm shadow hover:bg-slate-800 no-underline">
                 {{ $btnTexto }}
               </a>
             @else
-              <button class="rounded-full bg-slate-700 px-4 py-1.5 text-white text-sm shadow hover:bg-slate-800" onclick="gestionarCompeticion({{ $competicion->id }}, '{{ $competicion->state }}')">
+              <button class="rounded-full bg-slate-700 px-5 py-2 text-white text-sm shadow hover:bg-slate-800" onclick="gestionarCompeticion({{ $competicion->id }}, '{{ $competicion->state }}')">
                 {{ $btnTexto }}
               </button>
             @endif
@@ -150,32 +154,17 @@
       </div>
     @endforelse
   </section>
+
+  <!-- Paginación -->
+  @if($competiciones->hasPages())
+    <div class="mt-8">
+      {{ $competiciones->links() }}
+    </div>
+  @endif
 </div>
 
-<!-- Búsqueda básica por texto: filtra por nombre de competición -->
+<!-- Script para gestionar competiciones -->
 <script>
-  const input = document.getElementById('searchInput');
-  const btn = document.getElementById('searchBtn');
-  const cards = Array.from(document.querySelectorAll('.phase-card'));
-
-  function applyFilter() {
-    const q = input.value.trim().toLowerCase();
-    cards.forEach(card => {
-      const competicionName = card.dataset.phase || '';
-      const cardText = card.textContent.toLowerCase();
-      const matches = competicionName.includes(q) || cardText.includes(q) || q === '';
-      card.classList.toggle('hidden', !matches);
-    });
-  }
-
-  btn.addEventListener('click', applyFilter);
-  input.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') applyFilter();
-  });
-  
-  // Búsqueda en tiempo real
-  input.addEventListener('input', applyFilter);
-
   // Función para gestionar competición según su estado
   function gestionarCompeticion(competicionId, estado) {
     switch(estado) {
