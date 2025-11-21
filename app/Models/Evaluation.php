@@ -11,6 +11,7 @@ class Evaluation extends Model
         'stage_id',
         'evaluator_id',
         'nota',
+        'promedio',
         'estado',
         'observaciones_evaluador',
         'is_active',

@@ -147,7 +147,10 @@
           Crear Lista Clasificados
         </a>
         <a href="{{ route('admin.evaluacion.calificar', ['competicion' => $competicion->id, 'fase' => $fase->id, 'fase_n' => $numeroFase]) }}" class="rounded-md px-6 py-2 text-sm font-medium text-white shadow-sm hover:opacity-90" style="background-color: #091C47;">
-          Iniciar Calificación
+          Iniciar Calificación Individual
+        </a>
+        <a href="{{ route('admin.evaluacion.calificar.grupal', ['competicion' => $competicion->id, 'fase' => $fase->id, 'fase_n' => $numeroFase]) }}" class="rounded-md px-6 py-2 text-sm font-medium text-white shadow-sm hover:opacity-90" style="background-color: #7C3AED;">
+          Iniciar Calificación Grupal
         </a>
       </div>
     </div>

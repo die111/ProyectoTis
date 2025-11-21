@@ -2,7 +2,7 @@
 @section('title', 'Inscripción · Admin')
 
 @section('content')
-  <div class="max-w-6xl mx-auto">
+  <div class="w-full px-4">
     <h2 class="text-2xl font-semibold text-gray-800 mb-2 text-center">Registrar Estudiante</h2>
     <p class="text-sm text-gray-500 mb-6">Datos con * son importantes</p>
 
@@ -78,6 +78,7 @@
                 <th class="px-3 py-3 text-left">Email</th>
                 <th class="px-3 py-3 text-left">Área</th>
                 <th class="px-3 py-3 text-left">Categoría</th>
+                <th class="px-3 py-3 text-left">Nombre grupo</th>
                 <th class="px-3 py-3 text-left">Código de usuario</th>
                 <th class="px-3 py-3 text-left">Contraseña</th>
               </tr>
@@ -168,6 +169,10 @@
                     <select id="m_categoria" name="m_categoria" required>
                       <option value="" selected disabled>Cargando categorías...</option>
                     </select>
+                  </div>
+                  <div class="input-group">
+                    <label for="m_nombre_grupo">Nombre grupo:</label>
+                    <input type="text" id="m_nombre_grupo" name="m_nombre_grupo" placeholder="Ej: Grupo Alfa">
                   </div>
                   <div class="input-group">
                     <label for="m_codigo">Código de usuario*:</label>

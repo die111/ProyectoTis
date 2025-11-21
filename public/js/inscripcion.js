@@ -151,6 +151,7 @@ function nuevaFila(data = {}) {
     'email',
     'area',
     'categoria',
+    'nombre_grupo',
     'codigo_usuario',
     'password'
   ].forEach(k => {
@@ -207,7 +208,7 @@ function cargarCSV(csvText){
 
   for (let i=startIndex;i<filas.length;i++){
     const cols = parseLine(filas[i]).map(c => (c || '').trim());
-    // Orden esperado del CSV: nombre(0), ap_paterno(1), ap_materno(2), ci(3), email(4), area(5), categoria(6), codigo_usuario(7), password(8)
+    // Orden esperado del CSV: nombre(0), ap_paterno(1), ap_materno(2), ci(3), email(4), area(5), categoria(6), nombre_grupo(7), codigo_usuario(8), password(9)
     const data = {
       nombre: cols[0] || '',
       ap_paterno: cols[1] || '',
@@ -216,8 +217,9 @@ function cargarCSV(csvText){
       email: cols[4] || '',
       area: cols[5] || '',
       categoria: cols[6] || '',
-      codigo_usuario: cols[7] || '',
-      password: cols[8] || ''
+      nombre_grupo: cols[7] || 'N/A',
+      codigo_usuario: cols[8] || '',
+      password: cols[9] || ''
     };
 
     if (Object.values(data).every(v => v === '')) continue;
@@ -262,8 +264,9 @@ btnExport.addEventListener('click', () => {
         tds[4]?.textContent?.trim() || '', // email
         tds[5]?.textContent?.trim() || '', // area
         tds[6]?.textContent?.trim() || '', // categoria
-        tds[7]?.textContent?.trim() || '', // codigo_usuario
-        tds[8]?.textContent?.trim() || ''  // password
+        tds[7]?.textContent?.trim() || '', // nombre_grupo
+        tds[8]?.textContent?.trim() || '', // codigo_usuario
+        tds[9]?.textContent?.trim() || ''  // password
       ].join(',');
     });
 
@@ -302,12 +305,13 @@ btnExport.addEventListener('click', () => {
         last_name_mother: (tds[2]?.textContent || '').trim(),
         ci: (tds[3]?.textContent || '').trim(),
         email: (tds[4]?.textContent || '').trim(),
-        password: (tds[8]?.textContent || '').trim(),
+        password: (tds[9]?.textContent || '').trim(),
         role: 'Estudiante',
         area_id: (areaId ?? areaNombre),
-        user_code: (tds[7]?.textContent || '').trim(),
+        user_code: (tds[8]?.textContent || '').trim(),
         is_active: true,
-        categoria: categoriaNombre
+        categoria: categoriaNombre,
+        nombre_grupo: (tds[7]?.textContent || 'N/A').trim()
       };
     })
     .filter(e => e !== null);
@@ -363,7 +367,7 @@ btnExport.addEventListener('click', () => {
   });
   if (filas.length === 0) { showMsg({title:'📄 Sin datos', html:'No hay datos para exportar.', icon:'info', color:'#6366f1'}); return; }
 
-  const encabezado = 'NOMBRE,APELLIDO PATERNO,APELLIDO MATERNO,EMAIL,AREA,CATEGORIA,CODIGO USUARIO,CONTRASEÑA';
+  const encabezado = 'NOMBRE,APELLIDO PATERNO,APELLIDO MATERNO,CI,EMAIL,AREA,CATEGORIA,NOMBRE GRUPO,CODIGO USUARIO,CONTRASEÑA';
   const csv = [encabezado, ...filas].join('\n');
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
@@ -395,7 +399,8 @@ function filtrarTabla(q) {
     area:5,
     categoria:6, cat:6,
     codigo:7, usercode:7, usuario:7,
-    contraseña:8, password:8, pass:8
+    contraseña:8, password:8, pass:8,
+    grupo:7, nombre_grupo:7, nombregrupo:7
   };
 
   // Normalizar y tokenizar la consulta (soporta comillas para frases)
@@ -570,6 +575,7 @@ document.getElementById('frmAdd').addEventListener('submit', (e)=>{
 
   const codigo_usuario  = document.getElementById('m_codigo').value.trim();
   const password        = document.getElementById('m_password').value.trim();
+  const nombre_grupo    = (document.getElementById('m_nombre_grupo')?.value.trim() || 'N/A');
 
   if (!nombre || !ap_paterno || !ap_materno || !ci || !email || !areaValue || !categoriaValue || !codigo_usuario || !password){
     alert('Completa todos los campos obligatorios.');
@@ -583,6 +589,7 @@ document.getElementById('frmAdd').addEventListener('submit', (e)=>{
     email, 
     area: areaNombre, 
     categoria: categoriaNombre, 
+    nombre_grupo,
     codigo_usuario, 
     password 
   });

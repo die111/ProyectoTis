@@ -93,7 +93,7 @@ class EvaluacionController extends \App\Http\Controllers\Controller
                     'level_id' => $this->obtenerNivelId($datos['nivel']),
                     'estado' => 'confirmada',
                     'es_grupal' => $datos['es_grupal'] ?? false,
-                    'grupo_nombre' => $datos['grupo_nombre'] ?? null,
+                    'name_grupo' => $datos['grupo_nombre'] ?? 'N/A',
                 ]);
                 
                 $inscripcionesCargadas++;
@@ -583,6 +583,8 @@ class EvaluacionController extends \App\Http\Controllers\Controller
         $query = Inscription::with(['user', 'area', 'categoria']);
         $query->where('competition_id', $competicion->id);
         $query->where('fase', $numeroFase);
+        // Excluir estudiantes con categoría Grupal (ID 3)
+        $query->where('categoria_id', '!=', 3);
         if (request('estado_activo') === 'inactivo') { $query->where('is_active', false); }
         elseif (request('estado_activo') === 'todos') { /* no-op */ }
         else { $query->where('is_active', true); }
@@ -646,6 +648,91 @@ class EvaluacionController extends \App\Http\Controllers\Controller
         return view('admin.evaluacion.calificar', compact('competicion', 'fase', 'estudiantes', 'areas', 'categorias', 'numeroFase'));
     }
 
+    /**
+     * Vista de calificación grupal (calificar múltiples estudiantes a la vez)
+     */
+    public function calificarGrupal(Competicion $competicion, $faseId)
+    {
+        $fase = $competicion->phases()->findOrFail($faseId);
+        $todasLasFases = $competicion->phases()->orderBy('competition_phase.id')->get();
+        
+        // Leer ?fase_n o ?fase
+        $numeroFase = (int) request('fase_n', request('fase'));
+        if ($numeroFase <= 0) {
+            foreach ($todasLasFases as $index => $f) {
+                if ($f->id == $faseId) { $numeroFase = $index + 1; break; }
+            }
+            if ($numeroFase <= 0) { $numeroFase = 1; }
+        } else {
+            $maxFases = max(1, $todasLasFases->count());
+            if ($numeroFase > $maxFases) { $numeroFase = $maxFases; }
+        }
+
+        $categorias = \App\Models\Categoria::where('is_active', true)->get();
+        $areas = \App\Models\Area::where('is_active', true)->get();
+        
+        $query = Inscription::with(['user', 'area', 'categoria', 'evaluations']);
+        $query->where('competition_id', $competicion->id);
+        $query->where('fase', $numeroFase);
+        // Solo mostrar estudiantes con categoría Grupal (ID 3)
+        $query->where('categoria_id', 3);
+        
+        if (request('estado_activo') === 'inactivo') { 
+            $query->where('is_active', false); 
+        } elseif (request('estado_activo') === 'todos') { 
+            /* no-op */ 
+        } else { 
+            $query->where('is_active', true); 
+        }
+        
+        if (request('categoria')) { 
+            $query->where('categoria_id', request('categoria')); 
+        }
+        
+        if (request('area')) { 
+            $query->where('area_id', request('area')); 
+        }
+        
+        if (request('search')) {
+            $search = $this->removeAccents(request('search'));
+            $query->where(function($q) use ($search) {
+                $q->whereHas('user', function($subQ) use ($search) {
+                    $subQ->whereRaw("LOWER(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(
+                        name, 'á', 'a'), 'é', 'e'), 'í', 'i'), 'ó', 'o'), 'ú', 'u')) 
+                        LIKE ?", ['%' . strtolower($search) . '%'])
+                      ->orWhereRaw("LOWER(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(
+                        last_name_father, 'á', 'a'), 'é', 'e'), 'í', 'i'), 'ó', 'o'), 'ú', 'u')) 
+                        LIKE ?", ['%' . strtolower($search) . '%'])
+                      ->orWhereRaw("LOWER(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(
+                        last_name_mother, 'á', 'a'), 'é', 'e'), 'í', 'i'), 'ó', 'o'), 'ú', 'u')) 
+                        LIKE ?", ['%' . strtolower($search) . '%'])
+                      ->orWhereRaw("LOWER(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(
+                        school, 'á', 'a'), 'é', 'e'), 'í', 'i'), 'ó', 'o'), 'ú', 'u')) 
+                        LIKE ?", ['%' . strtolower($search) . '%'])
+                      ->orWhere('ci', 'like', "%{$search}%");
+                })
+                // Agregar búsqueda por nombre de grupo
+                ->orWhereRaw("LOWER(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(
+                    name_grupo, 'á', 'a'), 'é', 'e'), 'í', 'i'), 'ó', 'o'), 'ú', 'u')) 
+                    LIKE ?", ['%' . strtolower($search) . '%']);
+            });
+        }
+        
+        // Ordenar por nombre de grupo para agrupar estudiantes del mismo grupo
+        $query->orderBy('name_grupo', 'asc');
+        
+        $estudiantes = $query->paginate(20)->appends(request()->query());
+        
+        return view('admin.evaluacion.calificar-grupal', compact(
+            'fase', 
+            'competicion', 
+            'categorias', 
+            'areas', 
+            'estudiantes', 
+            'numeroFase'
+        ));
+    }
+
     public function guardarCalificaciones(Request $request, Competicion $competicion, $faseId)
     {
         $request->validate([
@@ -657,6 +744,7 @@ class EvaluacionController extends \App\Http\Controllers\Controller
         $fase = $competicion->phases()->findOrFail($faseId);
         $evaluadorId = \Illuminate\Support\Facades\Auth::id();
         $calificacionesGuardadas = 0;
+        $gruposActualizados = []; // Para rastrear grupos que necesitan verificación
 
         try {
             DB::beginTransaction();
@@ -672,20 +760,43 @@ class EvaluacionController extends \App\Http\Controllers\Controller
                     ->first();
 
                 if ($inscripcion) {
+                    // Preparar los datos para crear o actualizar
+                    $evaluacionData = [
+                        'evaluator_id' => $evaluadorId,
+                        'nota' => $datos['puntaje'],
+                        'observaciones_evaluador' => $datos['observaciones'] ?? null,
+                        'estado' => $this->determinarEstado($datos['puntaje']),
+                        'is_active' => true,
+                    ];
+                    
                     // Crear o actualizar evaluación sin usar stage_id
                     Evaluation::updateOrCreate(
                         ['inscription_id' => $inscripcionId],
-                        [
-                            'evaluator_id' => $evaluadorId,
-                            'nota' => $datos['puntaje'],
-                            'observaciones_evaluador' => $datos['observaciones'] ?? null,
-                            'estado' => $this->determinarEstado($datos['puntaje']),
-                            'is_active' => true,
-                        ]
+                        $evaluacionData
                     );
 
                     $calificacionesGuardadas++;
+                    
+                    // Si es categoría grupal, marcar grupo para verificación
+                    if ($inscripcion->name_grupo && $inscripcion->name_grupo !== 'N/A') {
+                        $grupoKey = $inscripcion->name_grupo . '|' . $inscripcion->fase;
+                        if (!isset($gruposActualizados[$grupoKey])) {
+                            $gruposActualizados[$grupoKey] = [
+                                'nombre' => $inscripcion->name_grupo,
+                                'fase' => $inscripcion->fase
+                            ];
+                        }
+                    }
                 }
+            }
+            
+            // Verificar y actualizar promedios de grupos completos
+            foreach ($gruposActualizados as $grupoInfo) {
+                $this->actualizarPromedioSiGrupoCompleto(
+                    $competicion->id, 
+                    $grupoInfo['nombre'], 
+                    $grupoInfo['fase']
+                );
             }
 
             DB::commit();
@@ -699,6 +810,54 @@ class EvaluacionController extends \App\Http\Controllers\Controller
         } catch (\Exception $e) {
             DB::rollback();
             return redirect()->back()->with('error', 'Error al guardar las calificaciones: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Actualiza el promedio del grupo solo si TODOS los miembros están calificados
+     */
+    private function actualizarPromedioSiGrupoCompleto($competicionId, $nombreGrupo, $fase)
+    {
+        // Obtener todas las inscripciones del grupo en esta fase
+        $inscripcionesGrupo = Inscription::where('competition_id', $competicionId)
+            ->where('name_grupo', $nombreGrupo)
+            ->where('fase', $fase)
+            ->with('evaluations')
+            ->get();
+        
+        if ($inscripcionesGrupo->isEmpty()) {
+            return;
+        }
+        
+        // Verificar si TODOS tienen evaluación con nota
+        $todosCalificados = true;
+        $sumaNotas = 0;
+        $contadorNotas = 0;
+        
+        foreach ($inscripcionesGrupo as $inscripcion) {
+            $evaluacion = $inscripcion->evaluations->first();
+            
+            if (!$evaluacion || $evaluacion->nota === null) {
+                $todosCalificados = false;
+                break;
+            }
+            
+            $sumaNotas += $evaluacion->nota;
+            $contadorNotas++;
+        }
+        
+        // Solo actualizar si TODOS están calificados
+        if ($todosCalificados && $contadorNotas > 0) {
+            $promedioGrupo = $sumaNotas / $contadorNotas;
+            
+            // Actualizar el promedio para todos los miembros del grupo
+            foreach ($inscripcionesGrupo as $inscripcion) {
+                $evaluacion = $inscripcion->evaluations->first();
+                if ($evaluacion) {
+                    $evaluacion->promedio = $promedioGrupo;
+                    $evaluacion->save();
+                }
+            }
         }
     }
 
@@ -769,7 +928,7 @@ class EvaluacionController extends \App\Http\Controllers\Controller
                         'estado' => 'confirmada',
                         'is_active' => true,
                         'fase' => $faseSiguiente,
-                        'grupo_nombre' => $inscripcionOriginal->grupo_nombre,
+                        'name_grupo' => $inscripcionOriginal->name_grupo ?? 'N/A',
                     ]);
                     
                     $clasificados++;
@@ -841,7 +1000,7 @@ class EvaluacionController extends \App\Http\Controllers\Controller
                         'estado' => 'confirmada',
                         'is_active' => true,
                         'fase' => $faseSiguiente,
-                        'grupo_nombre' => $inscripcionOriginal->grupo_nombre,
+                        'name_grupo' => $inscripcionOriginal->name_grupo ?? 'N/A',
                     ]);
                     
                     $clasificados++;
@@ -925,13 +1084,44 @@ class EvaluacionController extends \App\Http\Controllers\Controller
                 }
             }
 
+            // Obtener los IDs de los estudiantes listados (si están filtrados en la vista)
+            $estudiantesListados = $request->input('estudiantes_listados', []);
+            
+            // Determinar si estamos en categoría grupal revisando la primera inscripción
+            $esGrupal = false;
+            if (!empty($estudiantesListados)) {
+                $primeraInscripcion = Inscription::whereIn('id', $estudiantesListados)->first();
+                $esGrupal = $primeraInscripcion && $primeraInscripcion->categoria_id == 3;
+            }
+            
             $evaluacionesQuery = Evaluation::where('is_active', true)
-                ->whereHas('inscription', function($q) use ($competicion, $numeroFase) {
+                ->whereHas('inscription', function($q) use ($competicion, $numeroFase, $estudiantesListados) {
                     $q->where('competition_id', $competicion->id)
-                      ->where('fase', $numeroFase);
+                      ->where('fase', $numeroFase)
+                      ->where('categoria_id', '!=', 3); // Excluir categoría Grupal (ID 3)
+                    
+                    // Si hay estudiantes listados (filtrados), solo considerar esos
+                    if (!empty($estudiantesListados)) {
+                        $q->whereIn('inscriptions.id', $estudiantesListados);
+                    }
                 })
                 ->with('inscription')
                 ->orderBy('nota', 'DESC');
+            
+            // Query para categoría grupal (usa promedio en lugar de nota)
+            $evaluacionesGrupalQuery = Evaluation::where('is_active', true)
+                ->whereHas('inscription', function($q) use ($competicion, $numeroFase, $estudiantesListados) {
+                    $q->where('competition_id', $competicion->id)
+                      ->where('fase', $numeroFase)
+                      ->where('categoria_id', '=', 3); // Solo categoría Grupal (ID 3)
+                    
+                    // Si hay estudiantes listados (filtrados), solo considerar esos
+                    if (!empty($estudiantesListados)) {
+                        $q->whereIn('inscriptions.id', $estudiantesListados);
+                    }
+                })
+                ->with('inscription')
+                ->orderBy('promedio', 'DESC');
 
             $evaluaciones = collect();
 
@@ -940,46 +1130,87 @@ class EvaluacionController extends \App\Http\Controllers\Controller
                     DB::rollBack();
                     return redirect()->back()->with('error', 'No se configuró la nota mínima para esta fase.');
                 }
-                $evaluaciones = (clone $evaluacionesQuery)
-                    ->where('nota', '>=', $notaMinima)
-                    ->get();
+                
+                if ($esGrupal) {
+                    // Para grupos, usar promedio
+                    $evaluaciones = (clone $evaluacionesGrupalQuery)
+                        ->where('promedio', '>=', $notaMinima)
+                        ->get();
+                } else {
+                    // Para individuales, usar nota
+                    $evaluaciones = (clone $evaluacionesQuery)
+                        ->where('nota', '>=', $notaMinima)
+                        ->get();
+                }
             } elseif ($tipo === 'cupo') {
                 if (empty($cupo) || (int)$cupo < 1) {
                     DB::rollBack();
                     return redirect()->back()->with('error', 'No se configuró un cupo válido para esta fase.');
                 }
-                // Filtrar solo estudiantes con nota >= 51
-                $top = (clone $evaluacionesQuery)
-                    ->where('nota', '>=', 51)
-                    ->take((int)$cupo)
-                    ->get();
-                    
-                if ($top->isEmpty()) {
-                    DB::rollBack();
-                    return redirect()->back()->with('error', 'No se encontraron estudiantes con nota >= 51 para clasificar.');
-                }
                 
-                $evaluaciones = $top;
-                $ultimaNota = optional($top->last())->nota;
-                
-                // Incluir empates solo si también tienen nota >= 51
-                if ($ultimaNota !== null && $ultimaNota >= 51) {
-                    $empatados = (clone $evaluacionesQuery)
-                        ->where('nota', '=', $ultimaNota)
-                        ->where('nota', '>=', 51)
+                if ($esGrupal) {
+                    // Para grupos, filtrar por promedio >= 51
+                    $top = (clone $evaluacionesGrupalQuery)
+                        ->where('promedio', '>=', 51)
+                        ->take((int)$cupo)
                         ->get();
-                    $evaluaciones = $evaluaciones->merge($empatados)
-                        ->unique('inscription_id')
-                        ->values();
+                        
+                    if ($top->isEmpty()) {
+                        DB::rollBack();
+                        return redirect()->back()->with('error', 'No se encontraron grupos con promedio >= 51 para clasificar.');
+                    }
+                    
+                    $evaluaciones = $top;
+                    $ultimoPromedio = optional($top->last())->promedio;
+                    
+                    // Incluir empates solo si también tienen promedio >= 51
+                    if ($ultimoPromedio !== null && $ultimoPromedio >= 51) {
+                        $empatados = (clone $evaluacionesGrupalQuery)
+                            ->where('promedio', '=', $ultimoPromedio)
+                            ->where('promedio', '>=', 51)
+                            ->get();
+                        $evaluaciones = $evaluaciones->merge($empatados)
+                            ->unique('inscription_id')
+                            ->values();
+                    }
+                } else {
+                    // Para individuales, filtrar por nota >= 51
+                    $top = (clone $evaluacionesQuery)
+                        ->where('nota', '>=', 51)
+                        ->take((int)$cupo)
+                        ->get();
+                        
+                    if ($top->isEmpty()) {
+                        DB::rollBack();
+                        return redirect()->back()->with('error', 'No se encontraron estudiantes con nota >= 51 para clasificar.');
+                    }
+                    
+                    $evaluaciones = $top;
+                    $ultimaNota = optional($top->last())->nota;
+                    
+                    // Incluir empates solo si también tienen nota >= 51
+                    if ($ultimaNota !== null && $ultimaNota >= 51) {
+                        $empatados = (clone $evaluacionesQuery)
+                            ->where('nota', '=', $ultimaNota)
+                            ->where('nota', '>=', 51)
+                            ->get();
+                        $evaluaciones = $evaluaciones->merge($empatados)
+                            ->unique('inscription_id')
+                            ->values();
+                    }
                 }
             }
 
             if ($evaluaciones->isEmpty()) {
                 DB::rollBack();
-                return redirect()->back()->with('error', 'No hay estudiantes que cumplan los criterios de clasificación.');
+                $mensaje = $esGrupal 
+                    ? 'No hay grupos que cumplan los criterios de clasificación.'
+                    : 'No hay estudiantes que cumplan los criterios de clasificación.';
+                return redirect()->back()->with('error', $mensaje);
             }
 
             $clasificados = 0;
+            $gruposClasificados = []; // Para contar grupos únicos
             $faseSiguiente = null;
 
             foreach ($evaluaciones as $evaluacion) {
@@ -1003,17 +1234,31 @@ class EvaluacionController extends \App\Http\Controllers\Controller
                         'estado' => 'confirmada',
                         'is_active' => true,
                         'fase' => $faseSiguiente,
-                        'grupo_nombre' => $inscripcionOriginal->grupo_nombre,
+                        'name_grupo' => $inscripcionOriginal->name_grupo ?? 'N/A',
                     ]);
                     $clasificados++;
+                    
+                    // Si es grupal, rastrear grupos únicos
+                    if ($esGrupal && $inscripcionOriginal->name_grupo && $inscripcionOriginal->name_grupo !== 'N/A') {
+                        if (!in_array($inscripcionOriginal->name_grupo, $gruposClasificados)) {
+                            $gruposClasificados[] = $inscripcionOriginal->name_grupo;
+                        }
+                    }
                 }
             }
 
             DB::commit();
 
-            $mensaje = $tipo === 'notas_altas'
-                ? "Clasificados {$clasificados} estudiantes con nota >= {$notaMinima} a la fase {$faseSiguiente}."
-                : "Clasificados {$clasificados} mejores puntajes con nota >= 51 (incluye empates) a la fase {$faseSiguiente}.";
+            if ($esGrupal) {
+                $cantidadGrupos = count($gruposClasificados);
+                $mensaje = $tipo === 'notas_altas'
+                    ? "Clasificados {$cantidadGrupos} " . ($cantidadGrupos == 1 ? 'grupo' : 'grupos') . " con promedio >= {$notaMinima} a la fase {$faseSiguiente}."
+                    : "Clasificados {$cantidadGrupos} " . ($cantidadGrupos == 1 ? 'mejor grupo' : 'mejores grupos') . " con promedio >= 51 (incluye empates) a la fase {$faseSiguiente}.";
+            } else {
+                $mensaje = $tipo === 'notas_altas'
+                    ? "Clasificados {$clasificados} " . ($clasificados == 1 ? 'estudiante' : 'estudiantes') . " con nota >= {$notaMinima} a la fase {$faseSiguiente}."
+                    : "Clasificados {$clasificados} mejores puntajes con nota >= 51 (incluye empates) a la fase {$faseSiguiente}.";
+            }
 
             return redirect()->back()->with('success', $mensaje);
 
@@ -1311,6 +1556,7 @@ class EvaluacionController extends \App\Http\Controllers\Controller
             $inscripcionPrevia = $inscripcionesPreviasKeyed->get($estudiante->user_id);
             $evaluacionPrevia = $inscripcionPrevia ? $inscripcionPrevia->evaluations->first() : null;
             $notaPrevia = $evaluacionPrevia && $evaluacionPrevia->nota !== null ? $evaluacionPrevia->nota : null;
+
             
             return $notaPrevia ?? -1; // -1 para que los sin nota vayan al final
         })->values();

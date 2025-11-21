@@ -77,6 +77,9 @@ Route::middleware(['auth'])->prefix('dashboard/admin')->name('admin.')->group(fu
     // Ruta para calificar estudiantes de una fase específica
     Route::get('evaluacion/{competicion}/fase/{fase}/calificar', [EvaluacionController::class, 'calificar'])->name('evaluacion.calificar');
 
+    // Ruta para calificación grupal
+    Route::get('evaluacion/{competicion}/fase/{fase}/calificar-grupal', [EvaluacionController::class, 'calificarGrupal'])->name('evaluacion.calificar.grupal');
+
     // Ruta para guardar calificaciones
     Route::post('evaluacion/{competicion}/fase/{fase}/calificar', [EvaluacionController::class, 'guardarCalificaciones'])->name('evaluacion.guardar-calificaciones');
 

@@ -269,6 +269,9 @@ class InscripcionController extends Controller
                 $password = $est['password'] ?? null;
                 $userCode = $est['user_code'] ?? null;
                 $isActive = $est['is_active'] ?? true;
+                $nombreGrupo = isset($est['nombre_grupo']) && trim((string)$est['nombre_grupo']) !== ''
+                    ? trim((string)$est['nombre_grupo'])
+                    : 'N/A';
 
                 // Si no hay email no podemos crear usuario (email es identificador)
                 if (empty($email)) {
@@ -330,6 +333,7 @@ class InscripcionController extends Controller
                         'fase' => 1,
                         'estado' => 'confirmada',
                         'is_active' => true,
+                        'name_grupo' => $nombreGrupo,
                     ]);
                     $createdInscriptions++;
                 }

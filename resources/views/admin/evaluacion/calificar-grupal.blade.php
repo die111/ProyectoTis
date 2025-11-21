@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Calificar Estudiantes · Admin')
+@section('title', 'Calificación Grupal · Admin')
 
 @section('content')
 <div class="mx-auto max-w-full px-8 py-8">
@@ -7,7 +7,7 @@
   <header class="mb-6">
     <div class="flex flex-col items-center justify-center">
       <div class="text-center">
-        <h1 class="text-3xl font-semibold tracking-tight">Calificar Estudiantes</h1>
+        <h1 class="text-3xl font-semibold tracking-tight">Calificar Estudiantes (Grupal)</h1>
         <p class="text-sm text-gray-600 mt-2">{{ $fase->name }} - {{ $competicion->name }}</p>
       </div>
       <a href="{{ route('admin.evaluacion.fase.estudiantes', ['competicion' => $competicion->id, 'fase' => $fase->id, 'fase_n' => $numeroFase]) }}" class="rounded-full bg-gray-500 px-4 py-2 text-white text-sm shadow hover:bg-gray-600 mt-4">
@@ -17,34 +17,34 @@
   </header>
 
   <!-- Información de la competición y fase -->
-  <section class="mb-8 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg p-4 border border-green-200">
+  <section class="mb-8 bg-gradient-to-r from-purple-50 to-indigo-50 rounded-lg p-4 border border-purple-200">
     <div class="grid grid-cols-1 md:grid-cols-5 gap-4 text-sm">
       <div>
-        <span class="font-semibold text-green-800">Competición:</span>
-        <span class="text-green-700">{{ $competicion->name }}</span>
+        <span class="font-semibold text-purple-800">Competición:</span>
+        <span class="text-purple-700">{{ $competicion->name }}</span>
       </div>
       <div>
-        <span class="font-semibold text-green-800">Fase:</span>
-        <span class="text-green-700">{{ $fase->name }} (Nivel {{ $numeroFase }})</span>
+        <span class="font-semibold text-purple-800">Fase:</span>
+        <span class="text-purple-700">{{ $fase->name }} (Nivel {{ $numeroFase }})</span>
       </div>
       <div>
-        <span class="font-semibold text-green-800">Estado:</span>
-        <span class="text-green-700">{{ ucfirst($competicion->state) }}</span>
+        <span class="font-semibold text-purple-800">Estado:</span>
+        <span class="text-purple-700">{{ ucfirst($competicion->state) }}</span>
       </div>
       <div>
-        <span class="font-semibold text-green-800">Total Estudiantes:</span>
-        <span class="text-green-700">{{ $estudiantes->count() }}</span>
+        <span class="font-semibold text-purple-800">Total Estudiantes:</span>
+        <span class="text-purple-700">{{ $estudiantes->total() }}</span>
       </div>
       <div>
-        <span class="font-semibold text-green-800">Nivel de Fase:</span>
-        <span class="text-green-700">{{ $numeroFase }}</span>
+        <span class="font-semibold text-purple-800">Nivel de Fase:</span>
+        <span class="text-purple-700">{{ $numeroFase }}</span>
       </div>
     </div>
   </section>
 
   <!-- Buscador -->
   <section class="mb-6">
-    <form method="GET" action="{{ route('admin.evaluacion.calificar', ['competicion' => $competicion->id, 'fase' => $fase->id]) }}" class="flex items-center gap-3 justify-center">
+    <form method="GET" action="{{ route('admin.evaluacion.calificar.grupal', ['competicion' => $competicion->id, 'fase' => $fase->id]) }}" class="flex items-center gap-3 justify-center">
       <input type="hidden" name="fase_n" value="{{ $numeroFase }}">
       <div class="relative flex-1 max-w-md w-full flex justify-center">
         <span class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
@@ -52,9 +52,9 @@
             <path fill-rule="evenodd" d="M10 2a8 8 0 105.293 14.293l3.707 3.707a1 1 0 001.414-1.414l-3.707-3.707A8 8 0 0010 2zm-6 8a6 6 0 1110.392 3.906.997.997 0 00-.116.116A6 6 0 014 10z" clip-rule="evenodd" />
           </svg>
         </span>
-        <input type="text" name="search" value="{{ request('search') }}" placeholder="Buscar por nombre, apellido, unidad educativa o CI..." class="w-full rounded-md border border-gray-300 bg-white py-2 pl-10 pr-4 text-sm placeholder:text-gray-400 shadow-sm focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500" />
+        <input type="text" name="search" value="{{ request('search') }}" placeholder="Buscar por nombre, apellido, unidad educativa o CI..." class="w-full rounded-md border border-gray-300 bg-white py-2 pl-10 pr-4 text-sm placeholder:text-gray-400 shadow-sm focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500" />
       </div>
-      <button type="submit" class="rounded-md px-4 py-2 text-sm font-medium text-white shadow-sm hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2" style="background-color: #091C47;">
+      <button type="submit" class="rounded-md px-4 py-2 text-sm font-medium text-white shadow-sm hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2" style="background-color: #7C3AED;">
         Buscar
       </button>
     </form>
@@ -90,9 +90,9 @@
   <section class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
     <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
       <div>
-        <h3 class="text-lg font-medium text-gray-900">Calificación de Estudiantes</h3>
+        <h3 class="text-lg font-medium text-gray-900">Calificación de Estudiantes (Categoría Grupal)</h3>
         <p class="mt-1 text-sm text-gray-500">
-          Mostrando {{ $estudiantes->count() }} estudiantes
+          Mostrando {{ $estudiantes->count() }} de {{ $estudiantes->total() }} estudiantes
         </p>
       </div>
       <div class="flex space-x-3">
@@ -107,76 +107,51 @@
         <table class="min-w-full divide-y divide-gray-200">
           <thead class="bg-gray-50">
             <tr>
-              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                <a href="{{ route('admin.evaluacion.calificar', array_merge(['competicion' => $competicion->id, 'fase' => $fase->id], request()->except(['fase']), ['sort_by' => 'nombre', 'sort_order' => (request('sort_by') === 'nombre' && request('sort_order') === 'asc') ? 'desc' : 'asc', 'fase_n' => $numeroFase])) }}" class="flex items-center hover:text-gray-700">
-                  Estudiante
-                  @if(request('sort_by') === 'nombre')
-                    @if(request('sort_order') === 'asc')
-                      <svg class="ml-1 h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M5.293 9.707a1 1 0 010-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 01-1.414 1.414L11 7.414V15a1 1 0 11-2 0V7.414L6.707 9.707a1 1 0 01-1.414 0z"/>
-                      </svg>
-                    @else
-                      <svg class="ml-1 h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M14.707 10.293a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L9 12.586V5a1 1 0 012 0v7.586l2.293-2.293a1 1 0 011.414 0z"/>
-                      </svg>
-                    @endif
-                  @else
-                    <svg class="ml-1 h-4 w-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-                      <path d="M5 12a1 1 0 102 0V6.414l1.293 1.293a1 1 0 001.414-1.414l-3-3a1 1 0 00-1.414 0l-3 3a1 1 0 001.414 1.414L5 6.414V12zM15 8a1 1 0 10-2 0v5.586l-1.293-1.293a1 1 0 00-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L15 13.586V8z"/>
-                    </svg>
-                  @endif
-                </a>
-              </th>
-              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Área
-              </th>
-              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Categoría
-              </th>
-              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                CI
-              </th>
-              <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                <a href="{{ route('admin.evaluacion.calificar', array_merge(['competicion' => $competicion->id, 'fase' => $fase->id], request()->except(['fase']), ['sort_by' => 'nota', 'sort_order' => (request('sort_by') === 'nota' && request('sort_order') === 'desc') ? 'asc' : 'desc', 'fase_n' => $numeroFase])) }}" class="flex items-center justify-center hover:text-gray-700">
-                  Puntaje (0-100)
-                  @if(request('sort_by') === 'nota')
-                    @if(request('sort_order') === 'desc')
-                      <svg class="ml-1 h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M14.707 10.293a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L9 12.586V5a1 1 0 012 0v7.586l2.293-2.293a1 1 0 011.414 0z"/>
-                      </svg>
-                    @else
-                      <svg class="ml-1 h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M5.293 9.707a1 1 0 010-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 01-1.414 1.414L11 7.414V15a1 1 0 11-2 0V7.414L6.707 9.707a1 1 0 01-1.414 0z"/>
-                      </svg>
-                    @endif
-                  @else
-                    <svg class="ml-1 h-4 w-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-                      <path d="M5 12a1 1 0 102 0V6.414l1.293 1.293a1 1 0 001.414-1.414l-3-3a1 1 0 00-1.414 0l-3 3a1 1 0 001.414 1.414L5 6.414V12zM15 8a1 1 0 10-2 0v5.586l-1.293-1.293a1 1 0 00-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L15 13.586V8z"/>
-                    </svg>
-                  @endif
-                </a>
-              </th>
-              <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Observaciones
-              </th>
-              <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Estado Calificación
-              </th>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estudiante</th>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Área</th>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Categoría</th>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre de Grupo</th>
+              <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">CI</th>
+              <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Puntaje (0-100)</th>
+              <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Observaciones</th>
+              <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Promedio</th>
+              <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Estado Calificación</th>
             </tr>
           </thead>
           <tbody class="bg-white divide-y divide-gray-200">
+            @php
+              $grupoAnterior = null;
+            @endphp
             @foreach($estudiantes as $estudiante)
               @php
                 $evaluacion = $estudiante->evaluations->first();
                 $estaCalificado = $evaluacion && $evaluacion->nota !== null;
+                $grupoActual = $estudiante->name_grupo ?? 'Sin nombre';
+              @endphp
+              
+              <!-- Separador de grupo -->
+              @if($grupoAnterior === null || $grupoAnterior !== $grupoActual)
+                <tr class="bg-purple-100">
+                  <td colspan="9" class="px-6 py-3">
+                    <div class="flex items-center justify-center">
+                      <div class="flex-grow border-t-2 border-purple-300"></div>
+                      <span class="px-4 text-sm font-semibold text-purple-700">Grupo: {{ $grupoActual }}</span>
+                      <div class="flex-grow border-t-2 border-purple-300"></div>
+                    </div>
+                  </td>
+                </tr>
+              @endif
+              
+              @php
+                $grupoAnterior = $grupoActual;
               @endphp
               
               <tr class="hover:bg-gray-50 {{ $estaCalificado ? 'bg-gray-50/50' : '' }}">
                 <td class="px-6 py-4 whitespace-nowrap">
                   <div class="flex items-center">
                     <div class="flex-shrink-0 h-10 w-10">
-                      <div class="h-10 w-10 rounded-full bg-green-100 flex items-center justify-center">
-                        <span class="text-sm font-medium text-green-700">
+                      <div class="h-10 w-10 rounded-full bg-purple-100 flex items-center justify-center">
+                        <span class="text-sm font-medium text-purple-700">
                           {{ substr($estudiante->user->name ?? 'N', 0, 1) }}{{ substr($estudiante->user->last_name_father ?? 'A', 0, 1) }}
                         </span>
                       </div>
@@ -198,6 +173,9 @@
                   {{ $estudiante->categoria->nombre ?? 'No asignada' }}
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  <span class="font-medium text-purple-700">{{ $estudiante->name_grupo ?? 'Sin nombre' }}</span>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                   {{ $estudiante->user->ci ?? 'N/A' }}
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-center">
@@ -212,7 +190,7 @@
                          max="100"
                          step="0.1"
                          placeholder="0.0"
-                         class="w-20 rounded-md border border-gray-300 px-2 py-1 text-sm text-center focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500">
+                         class="w-20 rounded-md border border-gray-300 px-2 py-1 text-sm text-center focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500">
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-center">
                   @php
@@ -222,7 +200,11 @@
                             name="calificaciones[{{ $estudiante->id }}][observaciones]"
                             rows="1"
                             placeholder="Observaciones..."
-                            class="w-32 rounded-md border border-gray-300 px-2 py-1 text-sm resize-none focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500">{{ $observacionesExistentes }}</textarea>
+                            class="w-32 rounded-md border border-gray-300 px-2 py-1 text-sm resize-none focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500">{{ $observacionesExistentes }}</textarea>
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-center">
+                  @php $promedioValor = $evaluacion && $evaluacion->promedio !== null ? number_format($evaluacion->promedio, 2) : ''; @endphp
+                  <input type="number" value="{{ $promedioValor }}" class="w-20 rounded-md border border-gray-300 px-2 py-1 text-sm text-center bg-gray-100 text-indigo-700" readonly tabindex="-1" style="pointer-events:none;">
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-center">
                   @php
@@ -242,7 +224,7 @@
                   @if(!$estaCalificado)
                     <form id="calif-{{ $estudiante->id }}" method="POST" action="{{ route('admin.evaluacion.guardar-calificaciones', ['competicion' => $competicion->id, 'fase' => $fase->id]) }}" class="mt-2 inline-block">
                       @csrf
-                      <button type="submit" class="rounded-md px-3 py-1.5 text-xs font-medium text-white shadow-sm hover:opacity-90" style="background-color: #091C47;">
+                      <button type="submit" class="rounded-md px-3 py-1.5 text-xs font-medium text-white shadow-sm hover:opacity-90" style="background-color: #7C3AED;">
                         Calificar
                       </button>
                     </form>
@@ -252,6 +234,11 @@
             @endforeach
           </tbody>
         </table>
+      </div>
+
+      <!-- Paginación -->
+      <div class="px-6 py-4 border-t border-gray-200">
+        {{ $estudiantes->appends(request()->query())->links() }}
       </div>
     @else
       <div class="text-center py-12">
@@ -313,8 +300,14 @@
     <h3 class="text-xl font-bold text-gray-900 text-center mb-2">¿Finalizar Fase?</h3>
     
     <!-- Mensaje -->
+    @php
+      // Contar grupos únicos
+      $gruposUnicos = $estudiantes->pluck('name_grupo')->unique()->filter(function($grupo) {
+        return $grupo !== null && $grupo !== 'N/A';
+      })->count();
+    @endphp
     <p class="text-sm text-gray-600 text-center mb-6">
-      Esta acción clasificará a la siguiente fase <span class="font-semibold text-blue-600">solo los {{ $estudiantes->count() }} estudiantes listados actualmente</span> que cumplan el criterio configurado. 
+      Esta acción clasificará a la siguiente fase <span class="font-semibold text-blue-600">solo los {{ $gruposUnicos }} {{ $gruposUnicos == 1 ? 'grupo listado' : 'grupos listados' }} actualmente</span> que cumplan el criterio configurado. 
       <span class="font-semibold text-red-600">Esta acción no se puede deshacer.</span>
     </p>
     
@@ -350,25 +343,14 @@
 
 <!-- Scripts -->
 <script>
-  // Validación de puntajes (clamp 0-100)
-  document.querySelectorAll('input[type="number"]').forEach(function(input) {
-    input.addEventListener('input', function() {
-      const value = parseFloat(this.value);
-      if (value < 0) this.value = 0;
-      if (value > 100) this.value = 100;
-    });
-  });
-
   // Funciones para el modal de confirmación
   function mostrarModalConfirmacion() {
     const modal = document.getElementById('modalConfirmacion');
     modal.classList.remove('hidden');
-    // Agregar animación
     setTimeout(() => {
       modal.querySelector('.relative').classList.add('scale-100', 'opacity-100');
     }, 10);
   }
-
   function cerrarModalConfirmacion() {
     const modal = document.getElementById('modalConfirmacion');
     modal.querySelector('.relative').classList.remove('scale-100', 'opacity-100');
@@ -376,12 +358,9 @@
       modal.classList.add('hidden');
     }, 200);
   }
-
   function confirmarFinalizarFase() {
     document.getElementById('finalizarFaseForm').submit();
   }
-
-  // Cerrar modal al hacer clic fuera de él
   document.getElementById('modalConfirmacion')?.addEventListener('click', function(e) {
     if (e.target === this) {
       cerrarModalConfirmacion();
