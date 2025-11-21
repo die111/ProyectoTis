@@ -3,7 +3,7 @@
 
 @section('content')
 <div class="p-6">
-    <div class="max-w-5xl mx-auto">
+    <div class="w-full">
         <!-- Breadcrumb -->
         <div class="mb-6">
             <nav class="flex" aria-label="Breadcrumb">
