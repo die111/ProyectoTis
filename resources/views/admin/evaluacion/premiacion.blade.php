@@ -86,13 +86,13 @@
                     Posición
                   </th>
                   <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Estudiante
+                    Estudiante / Grupo
                   </th>
                   <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Unidad Educativa
                   </th>
                   <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Nota
+                    Nota / Promedio
                   </th>
                   <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Premio
@@ -116,6 +116,7 @@
                       'mencion_honor' => '🎖️ Mención de Honor',
                       default => ucfirst($row['premio'] ?? '—')
                     };
+                    $esGrupal = isset($row['es_grupal']) && $row['es_grupal'] === true;
                   @endphp
                   <tr class="hover:bg-gray-50">
                     <td class="px-6 py-4 whitespace-nowrap">
@@ -129,16 +130,37 @@
                         </div>
                       </div>
                     </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                      <div class="text-sm font-medium text-gray-900">
-                        {{ $row['nombre_completo'] }}
-                      </div>
+                    <td class="px-6 py-4">
+                      @if($esGrupal)
+                        <!-- Mostrar grupo con integrantes -->
+                        <div class="text-sm font-medium text-purple-900 mb-2">
+                          <span class="inline-flex items-center px-2 py-1 rounded-md bg-purple-100 text-purple-800">
+                            👥 {{ $row['nombre_grupo'] ?? 'Sin nombre' }}
+                          </span>
+                        </div>
+                        <div class="text-sm text-gray-900">
+                          @if(isset($row['integrantes']) && is_array($row['integrantes']))
+                            <ul class="list-disc list-inside">
+                              @foreach($row['integrantes'] as $integrante)
+                                <li>{{ $integrante }}</li>
+                              @endforeach
+                            </ul>
+                          @endif
+                        </div>
+                      @else
+                        <!-- Mostrar estudiante individual -->
+                        <div class="text-sm font-medium text-gray-900">
+                          {{ $row['nombre_completo'] ?? 'N/A' }}
+                        </div>
+                      @endif
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                       {{ $row['unidad_educativa'] }}
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      <span class="font-semibold">{{ number_format($row['nota'] ?? 0, 2) }}</span>
+                      <span class="font-semibold">
+                        {{ number_format($row['promedio'] ?? $row['nota'] ?? 0, 2) }}
+                      </span>
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap">
                       <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full {{ $badge }}">

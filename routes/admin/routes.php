@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\UsuarioController;
 use App\Http\Controllers\Admin\EvaluacionController;
 use App\Http\Controllers\Admin\CategoriaController;
+use App\Http\Controllers\Admin\PromedioGrupalController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth'])->prefix('dashboard/admin')->name('admin.')->group(function () {
@@ -103,6 +104,19 @@ Route::middleware(['auth'])->prefix('dashboard/admin')->name('admin.')->group(fu
 
     // Nueva ruta: PDF de premiación por grupo (área y nivel)
     Route::get('evaluacion/{competicion}/premiacion/pdf', [EvaluacionController::class, 'generarPdfPremiacion'])->name('evaluacion.premiacion.pdf');
+
+    // ==========================================
+    // Rutas para Promedios Grupales
+    // ==========================================
+    
+    // Actualizar promedios de todos los grupos de una fase
+    Route::post('promedio-grupal/{competicion}/fase/{fase}/actualizar-todos', [PromedioGrupalController::class, 'actualizarTodosLosPromedios'])->name('promedio-grupal.actualizar-todos');
+    
+    // Recalcular todos los promedios de una fase
+    Route::post('promedios/recalcular', [PromedioGrupalController::class, 'recalcularPromedios'])->name('promedios.recalcular');
+    
+    // Obtener reporte de promedios por fase
+    Route::get('promedios/reporte', [PromedioGrupalController::class, 'obtenerReportePromedios'])->name('promedios.reporte');
 
     // Futuras rutas de áreas (descomentar cuando estén listas)
     // Route::resource('areas', App\Http\Controllers\Admin\AreaController::class);

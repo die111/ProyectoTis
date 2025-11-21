@@ -203,8 +203,7 @@
                             class="w-32 rounded-md border border-gray-300 px-2 py-1 text-sm resize-none focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500">{{ $observacionesExistentes }}</textarea>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-center">
-                  @php $promedioValor = $evaluacion && $evaluacion->promedio !== null ? number_format($evaluacion->promedio, 2) : ''; @endphp
-                  <input type="number" value="{{ $promedioValor }}" class="w-20 rounded-md border border-gray-300 px-2 py-1 text-sm text-center bg-gray-100 text-indigo-700" readonly tabindex="-1" style="pointer-events:none;">
+                  {{ $evaluacion && $evaluacion->promedio !== null ? $evaluacion->promedio : '' }}
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-center">
                   @php
@@ -279,6 +278,14 @@
             Finalizar Fase
           </button>
         </form>
+      </div>
+      <div class="bg-white rounded-lg p-4 border border-gray-200 flex flex-col justify-center items-center">
+        <h5 class="font-medium text-gray-900 mb-2">Promediar</h5>
+        <p class="text-sm text-gray-600 mb-4">Calcular y guardar el promedio grupal de todos los grupos</p>
+        <button type="button" onclick="calcularYGuardarPromedios()" class="w-full rounded-md bg-indigo-600 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700">
+          PROMEDIO
+        </button>
+        <span class="mt-2 text-xs text-gray-500 text-center">Esto calculará el promedio de cada grupo y lo guardará en la base de datos.</span>
       </div>
     </div>
   </section>
@@ -361,6 +368,86 @@
   function confirmarFinalizarFase() {
     document.getElementById('finalizarFaseForm').submit();
   }
+  
+  // Función para calcular y guardar promedios grupales
+  async function calcularYGuardarPromedios() {
+    try {
+      // Agrupar estudiantes por nombre de grupo
+      const grupos = {};
+      
+      @foreach($estudiantes as $estudiante)
+        @php
+          $evaluacion = $estudiante->evaluations->first();
+          $nota = $evaluacion ? $evaluacion->nota : null;
+          $nombreGrupo = $estudiante->name_grupo ?? 'Sin nombre';
+        @endphp
+        
+        @if($nota !== null)
+          const grupoKey_{{ $estudiante->id }} = '{{ $nombreGrupo }}';
+          if (!grupos[grupoKey_{{ $estudiante->id }}]) {
+            grupos[grupoKey_{{ $estudiante->id }}] = {
+              nombre: '{{ $nombreGrupo }}',
+              inscripciones: [],
+              notas: []
+            };
+          }
+          grupos[grupoKey_{{ $estudiante->id }}].inscripciones.push({{ $estudiante->id }});
+          grupos[grupoKey_{{ $estudiante->id }}].notas.push({{ $nota }});
+        @endif
+      @endforeach
+      
+      // Calcular promedios y preparar datos para enviar
+      const promediosCalculados = [];
+      for (const [nombreGrupo, datos] of Object.entries(grupos)) {
+        if (datos.notas.length > 0) {
+          const suma = datos.notas.reduce((a, b) => a + b, 0);
+          const promedio = suma / datos.notas.length;
+          
+          promediosCalculados.push({
+            nombre_grupo: datos.nombre,
+            inscripciones: datos.inscripciones,
+            promedio: promedio.toFixed(2)
+          });
+        }
+      }
+      
+      if (promediosCalculados.length === 0) {
+        alert('No hay notas disponibles para calcular promedios.');
+        return;
+      }
+      
+      // Confirmar acción
+      const confirmacion = confirm(`Se calcularán y guardarán los promedios de ${promediosCalculados.length} grupo(s). ¿Desea continuar?`);
+      if (!confirmacion) return;
+      
+      // Enviar datos al servidor
+      const response = await fetch('{{ route('admin.promedio-grupal.actualizar-todos', ['competicion' => $competicion->id, 'fase' => $fase->id]) }}', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-TOKEN': '{{ csrf_token() }}',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({
+          promedios: promediosCalculados
+        })
+      });
+      
+      const result = await response.json();
+      
+      if (response.ok) {
+        alert(result.message || 'Promedios guardados exitosamente');
+        location.reload(); // Recargar la página para mostrar los nuevos promedios
+      } else {
+        alert('Error: ' + (result.message || 'No se pudieron guardar los promedios'));
+      }
+      
+    } catch (error) {
+      console.error('Error:', error);
+      alert('Error al procesar los promedios: ' + error.message);
+    }
+  }
+  
   document.getElementById('modalConfirmacion')?.addEventListener('click', function(e) {
     if (e.target === this) {
       cerrarModalConfirmacion();

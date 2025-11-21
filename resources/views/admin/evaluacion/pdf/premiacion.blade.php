@@ -177,9 +177,9 @@
         <thead>
             <tr>
                 <th class="posicion">Pos.</th>
-                <th>Estudiante</th>
+                <th>Estudiante / Grupo</th>
                 <th>Unidad Educativa</th>
-                <th style="text-align: center;">Nota</th>
+                <th style="text-align: center;">Nota / Promedio</th>
                 <th style="text-align: center;">Premio</th>
             </tr>
         </thead>
@@ -214,12 +214,29 @@
                         'mencion_honor' => 'MENCIÓN',
                         default => strtoupper($row['premio'] ?? '—')
                     };
+                    $esGrupal = isset($row['es_grupal']) && $row['es_grupal'] === true;
                 @endphp
                 <tr>
                     <td class="posicion">{{ $row['posicion'] }}</td>
-                    <td>{{ $row['nombre_completo'] }}</td>
+                    <td>
+                        @if($esGrupal)
+                            <!-- Mostrar grupo con integrantes -->
+                            <strong style="color: #7c3aed;">👥 {{ $row['nombre_grupo'] ?? 'Sin nombre' }}</strong>
+                            @if(isset($row['integrantes']) && is_array($row['integrantes']))
+                                <br>
+                                <span style="font-size: 9px; color: #666;">
+                                    Integrantes: {{ implode(', ', $row['integrantes']) }}
+                                </span>
+                            @endif
+                        @else
+                            <!-- Mostrar estudiante individual -->
+                            {{ $row['nombre_completo'] ?? 'N/A' }}
+                        @endif
+                    </td>
                     <td>{{ $row['unidad_educativa'] }}</td>
-                    <td style="text-align: center; font-weight: bold;">{{ number_format($row['nota'] ?? 0, 2) }}</td>
+                    <td style="text-align: center; font-weight: bold;">
+                        {{ number_format($row['promedio'] ?? $row['nota'] ?? 0, 2) }}
+                    </td>
                     <td style="text-align: center;">
                         <span class="badge {{ $badgeClass }}">
                             <span class="medalla-icon {{ $medallaClass }}">{{ $medallaNum }}</span>
