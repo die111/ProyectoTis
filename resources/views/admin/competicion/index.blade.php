@@ -75,7 +75,6 @@
                   const tokens = query.length ? query.split(/\s+/).filter(Boolean) : [];
                   competitionCards.forEach(card => {
                       const status = card.getAttribute('data-status');
-                      // Sólo usar el nombre (en el h3) para la búsqueda
                       const nameText = normalize(card.querySelector('h3')?.textContent || '');
                       const matchesFilter = (currentFilter === 'all' || status === currentFilter);
                       const matchesSearch = !tokens.length || tokens.every(t => nameText.includes(t));
@@ -83,36 +82,17 @@
                   });
               }
 
+              // Ajustado: no cambiar colores originales, solo manejar clase 'active'
               filterButtons.forEach(button => {
                   button.addEventListener('click', function() {
-                      const filter = this.getAttribute('data-filter');
-                      currentFilter = filter;
-
-                      filterButtons.forEach(btn => {
-                          btn.classList.remove('bg-primary','text-primary-foreground','bg-emerald-500','bg-blue-500','bg-red-500','text-white','active');
-                          btn.classList.add('border','border-border','text-foreground','hover:bg-secondary','bg-transparent');
-                      });
-
-                      this.classList.remove('border','border-border','text-foreground','hover:bg-secondary','bg-transparent');
-                      if (filter === 'activa') {
-                          this.classList.add('bg-emerald-500','text-white');
-                      } else if (filter === 'completada') {
-                          this.classList.add('bg-blue-500','text-white');
-                      } else if (filter === 'cancelada') {
-                          this.classList.add('bg-red-500','text-white');
-                      } else {
-                          this.classList.add('bg-primary','text-primary-foreground');
-                      }
-                      this.classList.add('active');
-
+                      currentFilter = this.getAttribute('data-filter');
+                      filterButtons.forEach(btn => btn.classList.remove('active'));
+                      this.classList.add('active'); // mantiene sus clases originales de color
                       applyFilters();
                   });
               });
 
-              searchInput.addEventListener('input', function(){
-                  applyFilters();
-              });
-
+              searchInput.addEventListener('input', applyFilters);
               applyFilters();
           });
       </script>
