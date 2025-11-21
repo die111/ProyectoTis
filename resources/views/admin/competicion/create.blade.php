@@ -15,11 +15,13 @@
 
     <body class="bg-gray-50 min-h-screen p-6 md:p-12">
         <div class="max-w-5xl mx-auto" x-data="competitionForm()" x-init="init()">
-            <div class="mb-8 flex items-center justify-between">
-                <div>
-                    <h1 class="text-3xl font-semibold text-gray-900 mb-2">Crear Competencia</h1>
-                    <p class="text-gray-600">Configura una nueva competencia académica con fases y áreas de conocimiento</p>
-                </div>
+            <!-- Título y descripción centrados -->
+            <div class="mb-8">
+                <h1 class="text-3xl font-semibold text-gray-900 mb-2 text-center">Crear Competencia</h1>
+                <p class="text-gray-600 text-center">Configura una nueva competencia académica con fases y áreas de conocimiento</p>
+            </div>
+            <!-- Botón 'Atrás' alineado a la derecha -->
+            <div class="mb-8 flex items-center justify-end">
                 <a href="{{ route('admin.competicion.index') }}" class="inline-flex items-center px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition-colors">
                     <i class="fas fa-arrow-left mr-2"></i> Atrás
                 </a>
