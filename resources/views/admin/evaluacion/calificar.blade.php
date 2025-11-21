@@ -60,30 +60,17 @@
     </form>
   </section>
 
-  <!-- Mensajes de alerta -->
+  <!-- Mensajes de alerta (ocultos, se mostrarán como notificaciones flotantes) -->
   @if(session('success'))
-    <div class="mb-6 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded relative" role="alert">
-      <strong class="font-bold">¡Éxito!</strong>
-      <span class="block sm:inline">{{ session('success') }}</span>
-    </div>
+    <div id="session-success" data-message="{{ e(session('success')) }}" style="display: none;"></div>
   @endif
 
   @if(session('error'))
-    <div class="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative" role="alert">
-      <strong class="font-bold">¡Error!</strong>
-      <span class="block sm:inline">{{ session('error') }}</span>
-    </div>
+    <div id="session-error" data-message="{{ e(session('error')) }}" style="display: none;"></div>
   @endif
 
   @if($errors->any())
-    <div class="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative" role="alert">
-      <strong class="font-bold">¡Errores de validación!</strong>
-      <ul class="mt-2 list-disc list-inside">
-        @foreach($errors->all() as $error)
-          <li>{{ $error }}</li>
-        @endforeach
-      </ul>
-    </div>
+    <div id="session-errors" data-message="{{ e(implode(' | ', $errors->all())) }}" style="display: none;"></div>
   @endif
 
   <!-- Tabla de Calificación -->
@@ -350,6 +337,161 @@
 
 <!-- Scripts -->
 <script>
+  // Función para mostrar notificaciones flotantes
+  function mostrarNotificacion(mensaje, tipo = 'success') {
+    console.log('⚡ Creando notificación:', tipo, mensaje);
+    
+    // Crear el contenedor de la notificación
+    const notificacion = document.createElement('div');
+    
+    // Definir colores según el tipo
+    const colores = {
+      success: {
+        bg: '#f0fdf4',
+        border: '#86efac',
+        iconColor: '#16a34a',
+        textColor: '#166534',
+        iconSvg: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />'
+      },
+      error: {
+        bg: '#fef2f2',
+        border: '#fca5a5',
+        iconColor: '#dc2626',
+        textColor: '#991b1b',
+        iconSvg: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />'
+      },
+      warning: {
+        bg: '#fefce8',
+        border: '#fde047',
+        iconColor: '#ca8a04',
+        textColor: '#854d0e',
+        iconSvg: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />'
+      },
+      info: {
+        bg: '#eff6ff',
+        border: '#93c5fd',
+        iconColor: '#2563eb',
+        textColor: '#1e40af',
+        iconSvg: '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />'
+      }
+    };
+    
+    const color = colores[tipo] || colores.info;
+    
+    // Aplicar estilos inline
+    notificacion.style.cssText = `
+      position: fixed;
+      top: 1rem;
+      right: 1rem;
+      z-index: 9999;
+      max-width: 28rem;
+      width: 100%;
+      transform: translateX(100%);
+      opacity: 0;
+      transition: all 0.5s ease-out;
+    `;
+    
+    notificacion.innerHTML = `
+      <div style="
+        background-color: ${color.bg};
+        border: 2px solid ${color.border};
+        border-radius: 0.5rem;
+        padding: 1rem;
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+      ">
+        <div style="display: flex; align-items: flex-start;">
+          <div style="flex-shrink: 0;">
+            <svg style="width: 1.5rem; height: 1.5rem; color: ${color.iconColor};" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              ${color.iconSvg}
+            </svg>
+          </div>
+          <div style="margin-left: 0.75rem; flex: 1;">
+            <p style="font-size: 0.875rem; font-weight: 500; color: ${color.textColor}; margin: 0;">
+              ${mensaje}
+            </p>
+          </div>
+          <div style="margin-left: 1rem; flex-shrink: 0;">
+            <button onclick="this.closest('div[style*=\\'position: fixed\\']').remove()" style="
+              display: inline-flex;
+              color: ${color.textColor};
+              background: none;
+              border: none;
+              cursor: pointer;
+              padding: 0;
+            ">
+              <svg style="width: 1.25rem; height: 1.25rem;" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+    
+    document.body.appendChild(notificacion);
+    console.log('✓ Notificación agregada al DOM');
+    
+    // Animar entrada
+    setTimeout(() => {
+      notificacion.style.transform = 'translateX(0)';
+      notificacion.style.opacity = '1';
+      console.log('✓ Animación de entrada iniciada');
+    }, 10);
+    
+    // Auto-cerrar después de 5 segundos
+    setTimeout(() => {
+      notificacion.style.transform = 'translateX(100%)';
+      notificacion.style.opacity = '0';
+      setTimeout(() => {
+        notificacion.remove();
+        console.log('✓ Notificación eliminada');
+      }, 500);
+    }, 5000);
+  }
+
+  // Mostrar notificaciones de sesión al cargar la página
+  function verificarMensajesSesion() {
+    console.log('Página cargada, verificando mensajes de sesión...');
+    
+    // Verificar si hay mensaje de éxito
+    const sessionSuccess = document.getElementById('session-success');
+    if (sessionSuccess) {
+      const mensaje = sessionSuccess.getAttribute('data-message');
+      console.log('Mensaje de éxito encontrado:', mensaje);
+      if (mensaje && mensaje.trim() !== '') {
+        mostrarNotificacion(mensaje, 'success');
+      }
+    }
+
+    // Verificar si hay mensaje de error
+    const sessionError = document.getElementById('session-error');
+    if (sessionError) {
+      const mensaje = sessionError.getAttribute('data-message');
+      console.log('Mensaje de error encontrado:', mensaje);
+      if (mensaje && mensaje.trim() !== '') {
+        mostrarNotificacion(mensaje, 'error');
+      }
+    }
+
+    // Verificar si hay errores de validación
+    const sessionErrors = document.getElementById('session-errors');
+    if (sessionErrors) {
+      const mensaje = sessionErrors.getAttribute('data-message');
+      console.log('Errores de validación encontrados:', mensaje);
+      if (mensaje && mensaje.trim() !== '') {
+        mostrarNotificacion(mensaje, 'error');
+      }
+    }
+  }
+
+  // Ejecutar cuando el DOM esté listo
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', verificarMensajesSesion);
+  } else {
+    // El DOM ya está listo, ejecutar inmediatamente
+    verificarMensajesSesion();
+  }
+
   // Validación de puntajes (clamp 0-100)
   document.querySelectorAll('input[type="number"]').forEach(function(input) {
     input.addEventListener('input', function() {
