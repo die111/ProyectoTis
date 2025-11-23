@@ -5,39 +5,39 @@
 <div class="mx-auto max-w-full px-8 py-8">
   <!-- Título -->
   <header class="mb-6">
-    <div class="flex flex-col items-center justify-center">
-      <div class="text-center">
-        <h1 class="text-3xl font-semibold tracking-tight">Calificar Estudiantes (Grupal)</h1>
-        <p class="text-sm text-gray-600 mt-2">{{ $fase->name }} - {{ $competicion->name }}</p>
+    <div class="flex items-center justify-between">
+      <div class="flex-1">
+        <h1 class="text-center text-3xl font-semibold tracking-tight">Calificar Estudiantes (Grupal)</h1>
+        <p class="text-center text-sm text-gray-600 mt-2">{{ $fase->name }} - {{ $competicion->name }}</p>
       </div>
-      <a href="{{ route('admin.evaluacion.fase.estudiantes', ['competicion' => $competicion->id, 'fase' => $fase->id, 'fase_n' => $numeroFase]) }}" class="rounded-full bg-gray-500 px-4 py-2 text-white text-sm shadow hover:bg-gray-600 mt-4">
+      <a href="{{ route('admin.evaluacion.fase.estudiantes', ['competicion' => $competicion->id, 'fase' => $fase->id, 'fase_n' => $numeroFase]) }}" class="rounded-full bg-gray-500 px-4 py-2 text-white text-sm shadow hover:bg-gray-600">
         ← Volver a Estudiantes
       </a>
     </div>
   </header>
 
   <!-- Información de la competición y fase -->
-  <section class="mb-8 bg-gradient-to-r from-purple-50 to-indigo-50 rounded-lg p-4 border border-purple-200">
+  <section class="mb-8 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-4 border border-blue-200">
     <div class="grid grid-cols-1 md:grid-cols-5 gap-4 text-sm">
       <div>
-        <span class="font-semibold text-purple-800">Competición:</span>
-        <span class="text-purple-700">{{ $competicion->name }}</span>
+        <span class="font-semibold text-blue-800">Competición:</span>
+        <span class="text-blue-700">{{ $competicion->name }}</span>
       </div>
       <div>
-        <span class="font-semibold text-purple-800">Fase:</span>
-        <span class="text-purple-700">{{ $fase->name }} (Nivel {{ $numeroFase }})</span>
+        <span class="font-semibold text-blue-800">Fase:</span>
+        <span class="text-blue-700">{{ $fase->name }} (Nivel {{ $numeroFase }})</span>
       </div>
       <div>
-        <span class="font-semibold text-purple-800">Estado:</span>
-        <span class="text-purple-700">{{ ucfirst($competicion->state) }}</span>
+        <span class="font-semibold text-blue-800">Estado:</span>
+        <span class="text-blue-700">{{ ucfirst($competicion->state) }}</span>
       </div>
       <div>
-        <span class="font-semibold text-purple-800">Total Estudiantes:</span>
-        <span class="text-purple-700">{{ $estudiantes->total() }}</span>
+        <span class="font-semibold text-blue-800">Total Estudiantes:</span>
+        <span class="text-blue-700">{{ $estudiantes->total() }}</span>
       </div>
       <div>
-        <span class="font-semibold text-purple-800">Nivel de Fase:</span>
-        <span class="text-purple-700">{{ $numeroFase }}</span>
+        <span class="font-semibold text-blue-800">Nivel de Fase:</span>
+        <span class="text-blue-700">{{ $numeroFase }}</span>
       </div>
     </div>
   </section>
@@ -54,7 +54,7 @@
         </span>
         <input type="text" name="search" value="{{ request('search') }}" placeholder="Buscar por nombre, apellido, unidad educativa o CI..." class="w-full rounded-md border border-gray-300 bg-white py-2 pl-10 pr-4 text-sm placeholder:text-gray-400 shadow-sm focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500" />
       </div>
-      <button type="submit" class="rounded-md px-4 py-2 text-sm font-medium text-white shadow-sm hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2" style="background-color: #7C3AED;">
+      <button type="submit" class="rounded-md px-4 py-2 text-sm font-medium text-white shadow-sm hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2" style="background-color: #091c47;">
         Buscar
       </button>
     </form>
@@ -144,12 +144,12 @@
               
               <!-- Separador de grupo -->
               @if($grupoAnterior === null || $grupoAnterior !== $grupoActual)
-                <tr class="bg-purple-100">
+                <tr class="bg-blue-100">
                   <td colspan="9" class="px-6 py-3">
                     <div class="flex items-center justify-center">
-                      <div class="flex-grow border-t-2 border-purple-300"></div>
-                      <span class="px-4 text-sm font-semibold text-purple-700">Grupo: {{ $grupoActual }}</span>
-                      <div class="flex-grow border-t-2 border-purple-300"></div>
+                      <div class="flex-grow border-t-2 border-blue-300"></div>
+                      <span class="px-4 text-sm font-semibold style="color: #091c47;">Grupo: {{ $grupoActual }}</span>
+                      <div class="flex-grow border-t-2 border-blue-300"></div>
                     </div>
                   </td>
                 </tr>
@@ -186,7 +186,7 @@
                   {{ $estudiante->categoria->nombre ?? 'No asignada' }}
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  <span class="font-medium text-purple-700">{{ $estudiante->name_grupo ?? 'Sin nombre' }}</span>
+                  <span class="font-medium text-blue-700">{{ $estudiante->name_grupo ?? 'Sin nombre' }}</span>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                   {{ $estudiante->user->ci ?? 'N/A' }}
@@ -236,7 +236,7 @@
                   @if(!$estaCalificado)
                     <form id="calif-{{ $estudiante->id }}" method="POST" action="{{ route('admin.evaluacion.guardar-calificaciones', ['competicion' => $competicion->id, 'fase' => $fase->id]) }}" class="mt-2 inline-block">
                       @csrf
-                      <button type="submit" class="rounded-md px-3 py-1.5 text-xs font-medium text-white shadow-sm hover:opacity-90" style="background-color: #7C3AED;">
+                      <button type="submit" class="rounded-md px-3 py-1.5 text-xs font-medium text-white shadow-sm hover:opacity-90" style="background-color: #091c47;">
                         Calificar
                       </button>
                     </form>
@@ -295,9 +295,15 @@
       <div class="bg-white rounded-lg p-4 border border-gray-200 flex flex-col justify-center items-center">
         <h5 class="font-medium text-gray-900 mb-2">Promediar</h5>
         <p class="text-sm text-gray-600 mb-4">Calcular y guardar el promedio grupal de todos los grupos</p>
-        <button type="button" onclick="calcularYGuardarPromedios()" class="w-full rounded-md bg-indigo-600 px-3 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700">
-          PROMEDIO
+        <button 
+            type="button"
+            onclick="calcularYGuardarPromedios()"
+            class="w-full rounded-md px-3 py-2 text-sm font-medium text-white shadow-sm"
+            style="background-color: #091c47;"
+        >
+            PROMEDIO
         </button>
+
         <span class="mt-2 text-xs text-gray-500 text-center">Esto calculará el promedio de cada grupo y lo guardará en la base de datos.</span>
       </div>
     </div>
@@ -667,6 +673,17 @@
       mostrarNotificacion('Error al procesar los promedios: ' + error.message, 'error');
     }
   }
+  
+  // Limitar puntaje a 0-100 en todos los inputs de tipo number
+  document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('input[type="number"][name^="calificaciones"]').forEach(function(input) {
+      input.addEventListener('input', function() {
+        let value = parseFloat(this.value);
+        if (isNaN(value) || value < 0) this.value = 0;
+        if (value > 100) this.value = 100;
+      });
+    });
+  });
   
   document.getElementById('modalConfirmacion')?.addEventListener('click', function(e) {
     if (e.target === this) {

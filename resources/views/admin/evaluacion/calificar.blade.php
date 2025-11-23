@@ -5,39 +5,39 @@
 <div class="mx-auto max-w-full px-8 py-8">
   <!-- Título -->
   <header class="mb-6">
-    <div class="flex flex-col items-center justify-center">
-      <div class="text-center">
-        <h1 class="text-3xl font-semibold tracking-tight">Calificar Estudiantes</h1>
-        <p class="text-sm text-gray-600 mt-2">{{ $fase->name }} - {{ $competicion->name }}</p>
+    <div class="flex items-center justify-between">
+      <div class="flex-1">
+        <h1 class="text-center text-3xl font-semibold tracking-tight">Calificar Estudiantes</h1>
+        <p class="text-center text-sm text-gray-600 mt-2">{{ $fase->name }} - {{ $competicion->name }}</p>
       </div>
-      <a href="{{ route('admin.evaluacion.fase.estudiantes', ['competicion' => $competicion->id, 'fase' => $fase->id, 'fase_n' => $numeroFase]) }}" class="rounded-full bg-gray-500 px-4 py-2 text-white text-sm shadow hover:bg-gray-600 mt-4">
+      <a href="{{ route('admin.evaluacion.fase.estudiantes', ['competicion' => $competicion->id, 'fase' => $fase->id, 'fase_n' => $numeroFase]) }}" class="rounded-full bg-gray-500 px-4 py-2 text-white text-sm shadow hover:bg-gray-600">
         ← Volver a Estudiantes
       </a>
     </div>
   </header>
 
   <!-- Información de la competición y fase -->
-  <section class="mb-8 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg p-4 border border-green-200">
+  <section class="mb-8 bg-gradient-to-r from-blue-50 to-emerald-50 rounded-lg p-4 border border-blue-200">
     <div class="grid grid-cols-1 md:grid-cols-5 gap-4 text-sm">
       <div>
-        <span class="font-semibold text-green-800">Competición:</span>
-        <span class="text-green-700">{{ $competicion->name }}</span>
+        <span class="font-semibold text-blue-800">Competición:</span>
+        <span class="text-blue-700">{{ $competicion->name }}</span>
       </div>
       <div>
-        <span class="font-semibold text-green-800">Fase:</span>
-        <span class="text-green-700">{{ $fase->name }} (Nivel {{ $numeroFase }})</span>
+        <span class="font-semibold text-blue-800">Fase:</span>
+        <span class="text-blue-700">{{ $fase->name }} (Nivel {{ $numeroFase }})</span>
       </div>
       <div>
-        <span class="font-semibold text-green-800">Estado:</span>
-        <span class="text-green-700">{{ ucfirst($competicion->state) }}</span>
+        <span class="font-semibold text-blue-800">Estado:</span>
+        <span class="text-blue-700">{{ ucfirst($competicion->state) }}</span>
       </div>
       <div>
-        <span class="font-semibold text-green-800">Total Estudiantes:</span>
-        <span class="text-green-700">{{ $estudiantes->count() }}</span>
+        <span class="font-semibold text-blue-800">Total Estudiantes:</span>
+        <span class="text-blue-700">{{ $estudiantes->count() }}</span>
       </div>
       <div>
-        <span class="font-semibold text-green-800">Nivel de Fase:</span>
-        <span class="text-green-700">{{ $numeroFase }}</span>
+        <span class="font-semibold text-blue-800">Nivel de Fase:</span>
+        <span class="text-blue-700">{{ $numeroFase }}</span>
       </div>
     </div>
   </section>

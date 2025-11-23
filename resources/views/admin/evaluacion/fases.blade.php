@@ -6,9 +6,9 @@
   <!-- Título -->
   <header class="mb-6">
     <div class="flex items-center justify-between">
-      <div>
+      <div class="flex-1">
         <h1 class="text-center text-3xl font-semibold tracking-tight">Fases de {{ $competicion->name }}</h1>
-        <p class="text-sm text-gray-600 mt-2">Gestión de fases para la competición</p>
+        <p class="text-center text-sm text-gray-600 mt-2">Gestión de fases para la competición</p>
       </div>
       <a href="{{ route('admin.evaluacion.index') }}" class="rounded-full bg-gray-500 px-4 py-2 text-white text-sm shadow hover:bg-gray-600">
         ← Volver a Competiciones

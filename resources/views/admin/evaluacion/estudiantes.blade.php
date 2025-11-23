@@ -5,12 +5,12 @@
 <div class="mx-auto max-w-full px-8 py-8">
   <!-- Título -->
   <header class="mb-6">
-    <div class="flex flex-col items-center justify-center">
-      <div class="text-center">
-        <h1 class="text-3xl font-semibold tracking-tight">{{ $fase->name }}</h1>
-        <p class="text-sm text-gray-600 mt-2">Gestión de estudiantes - {{ $competicion->name }}</p>
+    <div class="flex items-center justify-between">
+      <div class="flex-1">
+        <h1 class="text-center text-3xl font-semibold tracking-tight">{{ $fase->name }}</h1>
+        <p class="text-center text-sm text-gray-600 mt-2">Gestión de estudiantes - {{ $competicion->name }}</p>
       </div>
-      <a href="{{ route('admin.evaluacion.fases', $competicion->id) }}" class="rounded-full bg-gray-500 px-4 py-2 text-white text-sm shadow hover:bg-gray-600 mt-4">
+      <a href="{{ route('admin.evaluacion.fases', $competicion->id) }}" class="rounded-full bg-gray-500 px-4 py-2 text-white text-sm shadow hover:bg-gray-600">
         ← Volver a Fases
       </a>
     </div>
@@ -149,7 +149,7 @@
         <a href="{{ route('admin.evaluacion.calificar', ['competicion' => $competicion->id, 'fase' => $fase->id, 'fase_n' => $numeroFase]) }}" class="rounded-md px-6 py-2 text-sm font-medium text-white shadow-sm hover:opacity-90" style="background-color: #091C47;">
           Iniciar Calificación Individual
         </a>
-        <a href="{{ route('admin.evaluacion.calificar.grupal', ['competicion' => $competicion->id, 'fase' => $fase->id, 'fase_n' => $numeroFase]) }}" class="rounded-md px-6 py-2 text-sm font-medium text-white shadow-sm hover:opacity-90" style="background-color: #7C3AED;">
+        <a href="{{ route('admin.evaluacion.calificar.grupal', ['competicion' => $competicion->id, 'fase' => $fase->id, 'fase_n' => $numeroFase]) }}" class="rounded-md px-6 py-2 text-sm font-medium text-white shadow-sm hover:opacity-90" style="background-color: #091c47;">
           Iniciar Calificación Grupal
         </a>
       </div>
