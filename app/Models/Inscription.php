@@ -16,6 +16,7 @@ class Inscription extends Model
         'fase',
         'estado',
         'grupo_nombre',
+        'name_grupo',
         'observaciones_estudiante',
         'motivo_rechazo',
         'is_active'

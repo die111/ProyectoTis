@@ -4,9 +4,9 @@
 
 @section('content')
 <div class="p-6">
-    <div class="max-w-7xl mx-auto">
+    <div class="w-full">
         <!-- Header -->
-        <div class="mb-6">
+        <div class="mb-6 text-center">
             <h1 class="text-3xl font-bold text-gray-900 mb-2">
                 Solicitudes de Inscripción
             </h1>

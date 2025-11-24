@@ -37,7 +37,7 @@ class CompeticionController extends Controller
     public function create()
     {
         $areasCatalog = Area::all();
-        $fasesCatalog = Phase::all();
+        $fasesCatalog = Phase::where('is_active', true)->get();
         $categoriasCatalog = Categoria::all();
         return view('admin.competicion.create', compact('areasCatalog', 'fasesCatalog', 'categoriasCatalog'));
     }
@@ -50,7 +50,7 @@ class CompeticionController extends Controller
     {
         $competiciones = Competicion::with(['areas', 'phases', 'categorias', 'categoryAreas.categoria', 'categoryAreas.area'])->paginate(10);
         $areasCatalog = Area::all();
-        $fasesCatalog = Phase::all();
+        $fasesCatalog = Phase::where('is_active', true)->get();
         $categoriasCatalog = Categoria::all();
         return view('admin.competicion.index', compact('competiciones', 'areasCatalog', 'fasesCatalog', 'categoriasCatalog'));
     }
@@ -80,6 +80,7 @@ class CompeticionController extends Controller
             'phases.*.start_date' => 'required|date|after_or_equal:fechaInicio',
             'phases.*.end_date' => 'required|date|before_or_equal:fechaFin|after_or_equal:phases.*.start_date',
             'phases.*.clasificados' => 'nullable|integer|min:1',
+            'phases.*.color' => 'nullable|string|max:7',
             'phases.*.classification.type' => 'nullable|in:cupo,notas_altas',
             'phases.*.classification.cupo' => 'nullable|integer|min:1',
             'phases.*.classification.nota_minima' => 'nullable|numeric|min:0|max:100',
@@ -175,6 +176,7 @@ class CompeticionController extends Controller
                 'start_date' => $phase['start_date'],
                 'end_date' => $phase['end_date'],
                 'clasificados' => $phase['clasificados'] ?? null,
+                'color' => $phase['color'] ?? null,
                 'classification_type' => $type,
                 'classification_cupo' => $cupo,
                 'classification_nota_minima' => $notaMin,
@@ -195,7 +197,7 @@ class CompeticionController extends Controller
     {
         $competicion = Competicion::with(['areas', 'phases', 'categorias'])->findOrFail($id);
         $areasCatalog = Area::all();
-        $fasesCatalog = Phase::all();
+        $fasesCatalog = Phase::where('is_active', true)->get();
         $categoriasCatalog = Categoria::all();
         return view('admin.competicion.edit', compact('competicion', 'areasCatalog', 'fasesCatalog', 'categoriasCatalog'));
     }
@@ -225,6 +227,7 @@ class CompeticionController extends Controller
             'phases.*.start_date' => 'required|date|after_or_equal:fechaInicio',
             'phases.*.end_date' => 'required|date|before_or_equal:fechaFin|after_or_equal:phases.*.start_date',
             'phases.*.clasificados' => 'nullable|integer|min:1',
+            'phases.*.color' => 'nullable|string|max:7',
             'phases.*.classification.type' => 'nullable|in:cupo,notas_altas',
             'phases.*.classification.cupo' => 'nullable|integer|min:1',
             'phases.*.classification.nota_minima' => 'nullable|numeric|min:0|max:100',
@@ -320,6 +323,7 @@ class CompeticionController extends Controller
                 'start_date' => $phase['start_date'],
                 'end_date' => $phase['end_date'],
                 'clasificados' => $phase['clasificados'] ?? null,
+                'color' => $phase['color'] ?? null,
                 'classification_type' => $type,
                 'classification_cupo' => $cupo,
                 'classification_nota_minima' => $notaMin,

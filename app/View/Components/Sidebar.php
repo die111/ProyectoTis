@@ -37,11 +37,12 @@ class Sidebar extends Component
         $role = $user->role;
         $permissions = $role ? $role->permissions->pluck('name')->toArray() : [];
         $menuConfig = [
+            // Dashboard: también marcar activo si la ruta es 'dashboard'
             'dashboard' => [
                 'name' => 'Panel de Control',
                 'route' => 'admin.dashboard',
                 'icon' => 'fas fa-tachometer-alt',
-                'active' => $this->isRouteActive(['admin.dashboard'])
+                'active' => $this->isRouteActive(['admin.dashboard', 'dashboard'])
             ],
             'competicion' => [
                 'name' => 'Competición',
@@ -78,12 +79,6 @@ class Sidebar extends Component
                         'icon' => 'fas fa-envelope-open-text',
                         'active' => $this->isRouteActive(['admin.inscripcion.solicitud'])
                     ] : null,
-                    // in_array('inscripcion', $permissions) ? [
-                    //     'name' => 'Guardar Estudiantes',
-                    //     'route' => 'admin.inscripcion.guardarEstudiantes',
-                    //     'icon' => 'fas fa-user-plus',
-                    //     'active' => $this->isRouteActive(['admin.inscripcion.guardarEstudiantes'])
-                    // ] : null,
                 ])
             ],
             'fases' => [
@@ -199,10 +194,12 @@ class Sidebar extends Component
 
     public function render(): View
     {
-        // Populate menu items lazily and defensively; fail closed on errors
+        // Recalcular siempre para refrescar estados activos al cambiar de sección
         try {
-            if (empty($this->menuItems) && $this->user) {
+            if ($this->user) {
                 $this->menuItems = $this->getMenuItems();
+            } else {
+                $this->menuItems = [];
             }
         } catch (\Throwable $e) {
             $this->menuItems = [];

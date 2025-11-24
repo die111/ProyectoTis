@@ -8,11 +8,33 @@ function competitionForm() {
         levels: [],
         editingPhase: null,
         currentDate: new Date(), // Mes actual
+        inscripcionInicio: '',
+        inscripcionFin: '',
+        evaluacionInicio: '',
+        evaluacionFin: '',
+        premiacionInicio: '',
+        premiacionFin: '',
 
         init() {
             this.addArea();
             this.addLevel();
             // Eliminar la línea que fija septiembre 2025
+        },
+
+        get inscripcionCompleta() {
+            return this.inscripcionInicio && this.inscripcionFin;
+        },
+
+        get evaluacionCompleta() {
+            return this.evaluacionInicio && this.evaluacionFin;
+        },
+
+        get premiacionCompleta() {
+            return this.premiacionInicio && this.premiacionFin;
+        },
+
+        get todasEtapasCompletas() {
+            return this.inscripcionCompleta && this.evaluacionCompleta && this.premiacionCompleta;
         },
 
         get currentMonth() {
@@ -217,6 +239,9 @@ function competitionForm() {
             
             if (!timelineStartDate || !timelineEndDate) return;
 
+            // Generar un color aleatorio para la fase
+            const randomColor = '#' + Math.floor(Math.random()*16777215).toString(16).padStart(6, '0');
+
             const newPhase = {
                 id: 'phase-' + Date.now(),
                 name: 'Fase ' + (this.phases.length + 1),
@@ -224,6 +249,7 @@ function competitionForm() {
                 start_date: timelineStartDate,
                 end_date: this.calculateDefaultEndDate(timelineStartDate),
                 clasificados: '',
+                color: randomColor,
                 errors: []
             };
 

@@ -25,7 +25,7 @@
     @stack('styles')
 </head>
 
-<body class="bg-gray-100 font-sans antialiased">
+<body class="bg-gray-100 font-sans antialiased overflow-x-hidden">
     <!-- Navbar -->
     <x-nav-header :guest="false" />
 

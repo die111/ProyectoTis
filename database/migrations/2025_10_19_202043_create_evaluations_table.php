@@ -14,6 +14,7 @@ return new class extends Migration
             $table->foreignId('stage_id')->nullable()->constrained('stages')->onDelete('set null');
             $table->foreignId('evaluator_id')->constrained('users')->onDelete('cascade'); // Usuario como evaluador
             $table->decimal('nota', 5, 2); // Nota con decimales
+            $table->decimal('promedio', 5, 2)->default(0.00); // Promedio del grupo
             $table->enum('estado', ['clasificado', 'no_clasificado', 'desclasificado']);
             $table->text('observaciones_evaluador')->nullable();
             $table->boolean('is_active')->default(true);
