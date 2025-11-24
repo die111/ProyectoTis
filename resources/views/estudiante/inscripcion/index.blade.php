@@ -134,7 +134,7 @@
                                     {{ $inscripcion->created_at->format('d/m/Y H:i') }}
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm">
-                                    <button onclick="verDetalleInscripcion({{ $inscripcion->id }})" 
+                                    <button onclick="window.location.href='{{ route('estudiante.inscripcion.detalle', $inscripcion->id) }}'" 
                                             class="text-blue-600 hover:text-blue-800 font-medium">
                                         <i class="fas fa-eye mr-1"></i>Ver Detalle
                                     </button>
@@ -206,7 +206,7 @@
         document.getElementById('tabCompetencias').classList.add('border-transparent', 'text-gray-500');
     });
 
-    // Función para ver detalle de inscripción
+    // Función para ver detalle de inscripción (incluye notas por fase y reclamos)
     function verDetalleInscripcion(id) {
         const inscripcion = inscripciones.find(i => i.id === id);
         if (!inscripcion) return;
@@ -251,6 +251,29 @@
                         <p class="text-sm text-gray-900">${new Date(inscripcion.created_at).toLocaleString('es-BO')}</p>
                     </div>
                 </div>
+
+                <div id="inscripcion-evaluaciones-${inscripcion.id}" class="mt-4">
+                    <p class="text-sm font-semibold text-gray-700 mb-2">Notas por Fase:</p>
+                    <div class="bg-gray-50 border border-gray-200 rounded p-3">
+                        <p class="text-sm text-gray-600">Cargando notas...</p>
+                    </div>
+                </div>
+
+                <div id="inscripcion-reclamo-${inscripcion.id}" class="mt-4">
+                    <p class="text-sm font-semibold text-gray-700 mb-2">¿Deseas reclamar una nota?</p>
+                    <form id="form-reclamo-${inscripcion.id}" method="POST" action="/inscripcion/${inscripcion.id}/reclamar">
+                        <input type="hidden" name="_token" value="{{ csrf_token() }}">
+                        <input type="hidden" name="fase_id" value="">
+                        <input type="hidden" name="evaluation_id" value="">
+                        <div class="mb-2">
+                            <textarea name="mensaje" rows="3" class="w-full border rounded p-2" placeholder="Describe tu reclamo o indica que no se subió la nota"></textarea>
+                        </div>
+                        <div class="flex justify-end">
+                            <button type="submit" class="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white rounded">Enviar Reclamo</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
         `;
 
         // Agregar observaciones del estudiante si existen
@@ -277,14 +300,62 @@
             `;
         }
 
-        html += `</div>`;
-
         document.getElementById('contenidoDetalleInscripcion').innerHTML = html;
         document.getElementById('modalDetalleInscripcion').classList.remove('hidden');
+
+        // Cargar evaluaciones vía AJAX
+        fetch(`/inscripcion/${inscripcion.id}/evaluaciones`)
+            .then(r => r.json())
+            .then(data => {
+                const container = document.getElementById(`inscripcion-evaluaciones-${inscripcion.id}`);
+                if (!data.phases || data.phases.length === 0) {
+                    container.innerHTML = `<div class="bg-gray-50 border border-gray-200 rounded p-3"><p class="text-sm text-gray-600">No hay fases o notas disponibles.</p></div>`;
+                    return;
+                }
+
+                let htmlFases = '<div class="space-y-3">';
+                data.phases.forEach(p => {
+                    htmlFases += `<div class="p-3 border rounded">`;
+                    htmlFases += `<div class="flex justify-between items-center mb-2"><div class="font-medium text-sm">Fase ${p.fase_numero} - ${p.fase_nombre}</div>`;
+                    if (p.evaluacion) {
+                        htmlFases += `<div class="text-sm text-gray-700">Nota: <strong>${p.evaluacion.nota}</strong> — Estado: ${p.evaluacion.estado}</div>`;
+                    } else {
+                        htmlFases += `<div class="text-sm text-gray-500">No se subió la nota aún</div>`;
+                    }
+                    htmlFases += `</div>`;
+
+                    if (p.evaluacion && p.evaluacion.observaciones_evaluador) {
+                        htmlFases += `<div class="text-sm text-gray-600 mb-2">Observaciones del evaluador: ${p.evaluacion.observaciones_evaluador}</div>`;
+                    }
+
+                    // Botones para rellenar el form de reclamo (si existe nota o no)
+                    htmlFases += `<div class="flex gap-2">`;
+                    htmlFases += `<button type="button" class="px-3 py-1 bg-blue-500 text-white rounded text-sm" onclick="abrirReclamoForm(${inscripcion.id}, ${p.fase_id}, ${p.evaluacion ? p.evaluacion.id : 'null'})">Reclamar</button>`;
+                    htmlFases += `</div>`;
+
+                    htmlFases += `</div>`;
+                });
+                htmlFases += '</div>';
+                container.innerHTML = htmlFases;
+            })
+            .catch(() => {
+                const container = document.getElementById(`inscripcion-evaluaciones-${inscripcion.id}`);
+                container.innerHTML = `<div class="bg-gray-50 border border-gray-200 rounded p-3"><p class="text-sm text-gray-600">Error al cargar las notas.</p></div>`;
+            });
     }
 
     function cerrarModalDetalle() {
         document.getElementById('modalDetalleInscripcion').classList.add('hidden');
+    }
+
+    // Abrir formulario de reclamo y llenar campos ocultos
+    function abrirReclamoForm(inscripcionId, faseId, evaluationId) {
+        const form = document.getElementById(`form-reclamo-${inscripcionId}`);
+        if (!form) return;
+        form.querySelector('input[name="fase_id"]').value = faseId || '';
+        form.querySelector('input[name="evaluation_id"]').value = evaluationId || '';
+        // Scroll al form
+        document.getElementById(`inscripcion-reclamo-${inscripcionId}`).scrollIntoView({ behavior: 'smooth' });
     }
 
     // Cerrar modal al hacer clic fuera

@@ -6,9 +6,11 @@ use App\Http\Controllers\Admin\CompeticionController;
 use App\Http\Controllers\Admin\EtapaController;
 use App\Http\Controllers\Admin\InscripcionController;
 use App\Http\Controllers\Admin\RoleController;
+use App\Http\Controllers\Admin\ReclamoController;
 use App\Http\Controllers\Admin\UsuarioController;
 use App\Http\Controllers\Admin\EvaluacionController;
 use App\Http\Controllers\Admin\CategoriaController;
+use App\Http\Controllers\Admin\AuditController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth'])->prefix('dashboard/admin')->name('admin.')->group(function () {
@@ -57,6 +59,10 @@ Route::middleware(['auth'])->prefix('dashboard/admin')->name('admin.')->group(fu
     Route::get('inscripcion/get-competiciones', [InscripcionController::class, 'getCompeticiones'])->name('inscripcion.getCompeticiones');
 
     Route::resource('inscripcion', InscripcionController::class); // ->middleware('permission:inscripcion')
+    // Rutas para reclamos (lista y detalle)
+    Route::get('reclamos', [ReclamoController::class, 'index'])->name('reclamos.index')->middleware('permission:reclamos');
+    Route::get('reclamos/{reclamo}', [ReclamoController::class, 'show'])->name('reclamos.show')->middleware('permission:reclamos');
+    Route::post('reclamos/{reclamo}', [ReclamoController::class, 'update'])->name('reclamos.update')->middleware('permission:reclamos');
     Route::resource('phases', EtapaController::class)->names('phases'); // ->middleware('permission:fases')
     Route::patch('phases/{id}/habilitar', [EtapaController::class, 'habilitar'])->name('phases.habilitar'); // ->middleware('permission:fases')
 
@@ -89,6 +95,10 @@ Route::middleware(['auth'])->prefix('dashboard/admin')->name('admin.')->group(fu
 
     // Ruta para generar PDF de inscritos
     Route::get('evaluacion/{competicion}/fase/{fase}/estudiantes/pdf', [EvaluacionController::class, 'generarPdfInscritos'])->name('evaluacion.fase.estudiantes.pdf');
+
+    // Audits (bitácora)
+    Route::get('audits', [AuditController::class, 'index'])->name('audits.index');
+    Route::get('audits/{audit}', [AuditController::class, 'show'])->name('audits.show');
 
     // Futuras rutas de áreas (descomentar cuando estén listas)
     // Route::resource('areas', App\Http\Controllers\Admin\AreaController::class);

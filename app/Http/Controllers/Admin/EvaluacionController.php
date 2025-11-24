@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Admin;
 use App\Models\{
     Competicion, 
     Etapa, 
+    Stage,
     Inscription, 
     Evaluation, 
     EvaluationLog,
@@ -221,7 +222,7 @@ class EvaluacionController extends \App\Http\Controllers\Controller
             }
             
             // Actualizar estado del stage
-            $stage = Etapa::find($stageId);
+            $stage = Stage::find($stageId);
             // Aquí podrías agregar un campo 'estado' a la tabla stages
             
             // Si es etapa de clasificación, preparar para la final
@@ -259,7 +260,7 @@ class EvaluacionController extends \App\Http\Controllers\Controller
      */
     public function generarReporte($competicionId, $stageId, $tipoReporte)
     {
-    $stage = Etapa::findOrFail($stageId);
+    $stage = Stage::findOrFail($stageId);
         
         $query = Evaluation::with(['inscription.user', 'inscription.area', 'inscription.level'])
             ->where('stage_id', $stageId)
