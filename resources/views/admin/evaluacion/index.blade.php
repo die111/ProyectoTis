@@ -49,6 +49,10 @@
             $estadoTexto = 'Finalizada';
             $btnTexto = 'Ver Resultados';
             break;
+          case 'completada':
+            $estadoTexto = 'Completada';
+            $btnTexto = 'Imprimir Reporte';
+            break;
           case 'pendiente':
           default:
             $estadoTexto = 'Pendiente';
@@ -132,6 +136,10 @@
           <div class="pt-1.5">
             @if($competicion->state === 'activa')
               <a href="{{ route('admin.evaluacion.fases', $competicion->id) }}" class="inline-block rounded-full bg-slate-700 px-5 py-2 text-white text-sm shadow hover:bg-slate-800 no-underline">
+                {{ $btnTexto }}
+              </a>
+            @elseif($competicion->state === 'completada')
+              <a href="{{ route('admin.evaluacion.premiacion.pdf', $competicion->id) }}" target="_blank" class="inline-block rounded-full bg-green-600 px-5 py-2 text-white text-sm shadow hover:bg-green-700 no-underline">
                 {{ $btnTexto }}
               </a>
             @else
