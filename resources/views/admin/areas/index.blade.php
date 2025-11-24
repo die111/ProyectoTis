@@ -28,7 +28,7 @@
 
         {{-- Buscador --}}
         <form method="GET" action="{{ route('admin.areas.index') }}"
-            class="mx-auto mb-6 flex w-full max-w-2xl items-center gap-3" onsubmit="return flexibleAreaSearch(event)">
+            class="mx-auto mb-6 flex w-full items-center gap-3" onsubmit="return flexibleAreaSearch(event)">
             <div class="relative flex-1">
                 <input type="text" name="q" id="areaSearchInput" value="{{ request('q') }}" placeholder="Buscar Área"
                     class="w-full rounded-lg border border-slate-300 bg-slate-200/70 pl-10 pr-3 py-2.5 text-sm text-slate-800 placeholder-slate-500 focus:border-slate-500 focus:outline-none focus:ring-2 focus:ring-slate-500/20">
@@ -42,9 +42,10 @@
 
 
         {{-- Tabla de Áreas --}}
-        <div class="mx-auto w-full max-w-5xl rounded bg-slate-100 p-6">
-            <div class="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
-                <table class="min-w-full divide-y divide-slate-200">
+        <div class="-mx-4 lg:-mx-6 w-full">
+            <div class="px-4 lg:px-6 w-full rounded bg-slate-100 p-6">
+                <div class="overflow-auto rounded-lg border border-slate-200 bg-white shadow-sm w-full">
+                    <table class="w-full divide-y divide-slate-200">
                     <thead style="background-color: #949BA2;">
                         <tr class="text-left text-xs font-semibold uppercase tracking-wider text-white">
                             <th class="px-6 py-4">Nombre de Área</th>

@@ -105,6 +105,12 @@ class Sidebar extends Component
                 'icon' => 'fas fa-clipboard-check',
                 'active' => $this->isRouteActive(['admin.evaluacion.*'])
             ],
+            'audits' => [
+                'name' => 'Bitácora',
+                'route' => 'admin.audits.index',
+                'icon' => 'fas fa-file-alt',
+                'active' => $this->isRouteActive(['admin.audits.*'])
+            ],
             'inscripcion_competencia' => [
                 'name' => 'Inscripción a Competencias',
                 'route' => 'estudiante.inscripcion.index',
@@ -113,23 +119,41 @@ class Sidebar extends Component
             ],
         ];
         foreach ($menuConfig as $perm => $item) {
-            if (in_array($perm, $permissions)) {
-                // Si tiene submenú, filtra los submenús por permisos
-                if (isset($item['submenu'])) {
-                    $submenu = array_filter($item['submenu'], function($sub) use ($permissions) {
-                        // Si quieres permisos separados por subítem, aquí puedes personalizar
-                        return $sub !== null;
-                    });
-                    if (count($submenu)) {
-                        $item['submenu'] = $submenu;
-                        $items[] = $item;
-                    }
-                } else {
+            if (!$this->canShow($perm, $permissions, $user)) {
+                continue;
+            }
+
+            // Si tiene submenú, filtra los submenús por permisos
+            if (isset($item['submenu'])) {
+                $submenu = array_filter($item['submenu'], function($sub) use ($permissions) {
+                    return $sub !== null;
+                });
+                if (count($submenu)) {
+                    $item['submenu'] = $submenu;
                     $items[] = $item;
                 }
+            } else {
+                $items[] = $item;
             }
         }
         return $items;
+    }
+
+    private function canShow(string $perm, array $permissions, $user): bool
+    {
+        // Special case for audits: permission name is 'view_audits'
+        if ($perm === 'audits') {
+            if ($user && method_exists($user, 'hasPermissionTo') && $user->hasPermissionTo('view_audits')) {
+                return true;
+            }
+            // Fallback: role containing 'admin'
+            if ($user && $user->role && str_contains(strtolower($user->role->name), 'admin')) {
+                return true;
+            }
+            return false;
+        }
+
+        return in_array($perm, $permissions);
     }
 
     /**

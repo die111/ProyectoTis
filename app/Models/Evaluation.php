@@ -3,9 +3,11 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Traits\Auditable;
 
 class Evaluation extends Model
 {
+    use Auditable;
     protected $fillable = [
         'inscription_id',
         'stage_id',
@@ -30,7 +32,7 @@ class Evaluation extends Model
      */
     public function stage()
     {
-        return $this->belongsTo(Etapa::class, 'stage_id');
+        return $this->belongsTo(Stage::class, 'stage_id');
     }
 
     /**

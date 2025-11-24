@@ -38,8 +38,8 @@ class EtapaController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'name' => 'required|string|max:255|unique:phases,name',
-            'description' => 'nullable|string',
+            'name' => 'required|string|max:20|unique:phases,name',
+            'description' => 'nullable|string|max:30',
         ]);
         Phase::create($request->only(['name', 'description']));
         return redirect()->route('admin.phases.index')->with([
@@ -59,8 +59,8 @@ class EtapaController extends Controller
     public function update(Request $request, $id)
     {
         $request->validate([
-            'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
+            'name' => 'required|string|max:20|unique:phases,name,' . $id,
+            'description' => 'nullable|string|max:30',
         ]);
         $phase = Phase::findOrFail($id);
         $phase->update($request->only(['name', 'description']));

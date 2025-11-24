@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Carbon\Carbon;
 
-class Etapa extends Model
+class Stage extends Model
 {
     /**
      * Nombre de la tabla
@@ -14,9 +14,9 @@ class Etapa extends Model
     protected $table = 'stages';
 
     /**
-     * Clave primaria personalizada
+     * Use default primary key 'id' (migration creates 'id')
      */
-    protected $primaryKey = 'id_stage';
+    protected $primaryKey = 'id';
 
     /**
      * Asignación masiva permitida
@@ -34,8 +34,7 @@ class Etapa extends Model
     protected $casts = [
         'fechaInicio' => 'datetime',
         'fechaFin' => 'datetime',
-        'id_etapa' => 'integer',
-        'id_competicion' => 'integer',
+        'id_competition' => 'integer',
     ];
 
     /**
@@ -67,7 +66,7 @@ class Etapa extends Model
      */
     public function competicion(): BelongsTo
     {
-        return $this->belongsTo(Competicion::class, 'id_competicion', 'id_competicion');
+        return $this->belongsTo(Competicion::class, 'id_competition', 'id');
     }
 
     /* ========== SCOPES ========== */

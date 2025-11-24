@@ -58,6 +58,13 @@
 
         <!-- Bottom section -->
         <div class="border-t border-gray-700/50 p-4 space-y-2 mt-auto">
+            @if(auth()->check() && method_exists(auth()->user(), 'hasPermissionTo') && auth()->user()->hasPermissionTo('reclamos'))
+            <a href="{{ route('admin.reclamos.index') }}" class="sidebar-item flex items-center px-4 py-2 text-sm font-medium text-gray-300 rounded-md hover:bg-primary-800 hover:text-white transition-all duration-200 {{ request()->routeIs('admin.reclamos.*') ? 'sidebar-item-active' : '' }}">
+                <i class="fas fa-exclamation-circle w-6 h-6 mr-3 text-lg"></i>
+                <span class="hide-on-collapse">Reclamos</span>
+            </a>
+            @endif
+
             <a href="{{ route('notifications.index') }}" class="sidebar-item flex items-center px-4 py-2 text-sm font-medium text-gray-300 rounded-md hover:bg-primary-800 hover:text-white transition-all duration-200 {{ request()->routeIs('notifications.*') ? 'sidebar-item-active' : '' }}">
                 <div class="relative">
                     <i class="fas fa-bell w-6 h-6 mr-3 text-lg"></i>
