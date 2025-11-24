@@ -4,7 +4,7 @@
 
 @section('content')
 <div class="min-h-[80vh] bg-gray-100">
-  <div class="mx-auto max-w-6xl px-6 py-10">
+  <div class="w-full px-6 py-10">
 
     {{-- Modal de notificación de éxito --}}
     @if(session('success'))
@@ -68,7 +68,7 @@
 
     {{-- Encabezado + botón Crear --}}
     <div class="mb-8 flex items-center justify-between">
-      <h1 class="text-3xl font-semibold text-slate-700">Categoria</h1>
+      <h1 class="text-3xl font-semibold text-slate-700 w-full text-center">Categoria</h1>
       <a href="{{ route('admin.categorias.create') }}"
          class="inline-flex items-center gap-2 rounded-full bg-[#0B2049] px-5 py-2 text-sm font-medium text-white shadow hover:brightness-110 active:scale-[.98]">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor">
@@ -92,9 +92,9 @@
       <button class="rounded-full bg-[#0B2049] px-5 text-sm font-medium text-white shadow hover:brightness-110">Buscar</button>
     </form>
     {{-- Tabla dentro de panel con scroll --}}
-    <div class="rounded-2xl bg-gray-100 p-8 shadow-sm ring-1 ring-gray-200">
+    <div>
       <div class="overflow-x-auto">
-        <div class="min-w-[640px] overflow-hidden rounded-md ring-1 ring-gray-300">
+        <div class="overflow-hidden rounded-md">
           <table class="w-full border-separate border-spacing-0">
             <thead>
               <tr class="bg-gray-500 text-left text-white">

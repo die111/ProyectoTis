@@ -1,25 +1,25 @@
 @extends('layouts.app')
 @section('title', 'Crear Categoría')
 @section('content')
-<div class="min-h-[80vh] bg-gray-100 flex flex-col items-center justify-center">
+<div class="min-h-[80vh] bg-gray-100 px-6 py-10">
   <h1 class="text-3xl font-semibold text-center text-slate-700 mb-8">Crear Categoría</h1>
   
   <!-- Mensajes de éxito o error -->
   @if(session('success'))
-    <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-6 max-w-2xl w-full">
+    <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-6 w-full">
       {{ session('success') }}
     </div>
   @endif
   
   @if(session('error'))
-    <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6 max-w-2xl w-full">
+    <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6 w-full">
       {{ session('error') }}
     </div>
   @endif
   
   <!-- Errores de validación -->
   @if($errors->any())
-    <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6 max-w-2xl w-full">
+    <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6 w-full">
       <ul class="list-disc list-inside">
         @foreach($errors->all() as $error)
           <li>{{ $error }}</li>
@@ -28,28 +28,28 @@
     </div>
   @endif
   
-  <div class="bg-[#F1F1F1] rounded-2xl shadow-lg p-10 w-full max-w-2xl">
+  <div class="bg-[#F1F1F1] rounded-2xl shadow-lg p-10 w-full">
     <form action="{{ route('admin.categorias.store') }}" method="POST" class="space-y-6">
       @csrf
       <div>
         <label class="block text-sm font-medium text-gray-700 mb-1">Nombre:</label>
-        <input type="text" name="nombre" value="{{ old('nombre') }}" class="w-full rounded-md border border-gray-300 px-4 py-2 focus:border-blue-900 focus:ring-2 focus:ring-blue-100 outline-none" placeholder="Responsable de Área" required>
+        <input type="text" name="nombre" id="nombre-input" value="{{ old('nombre') }}" maxlength="30" class="w-full rounded-md border border-gray-300 px-4 py-2 focus:border-blue-900 focus:ring-2 focus:ring-blue-100 outline-none" placeholder="Nombre de Categoría" required>
       </div>
       <div>
         <label class="block text-sm font-medium text-gray-700 mb-1">Descripción:</label>
-        <textarea name="descripcion" rows="2" class="w-full rounded-md border border-gray-300 px-4 py-2 focus:border-blue-900 focus:ring-2 focus:ring-blue-100 outline-none" placeholder="Se encarga de administrar una área en específico" required>{{ old('descripcion') }}</textarea>
+        <textarea name="descripcion" rows="2" class="w-full rounded-md border border-gray-300 px-4 py-2 focus:border-blue-900 focus:ring-2 focus:ring-blue-100 outline-none" placeholder="Descripción de la categoría" required>{{ old('descripcion') }}</textarea>
       </div>
       <div>
         <label class="block text-sm font-medium text-gray-700 mb-1">Nivel:</label>
         <div class="flex items-center gap-2">
           <select id="nivel-select" name="nivel_temp" class="flex-1 rounded-md border border-gray-300 px-4 py-2 focus:border-blue-900 focus:ring-2 focus:ring-blue-100 outline-none">
             <option value="">Seleccione un nivel</option>
-            <option value="primero">Primero de Secundario</option>
-            <option value="segundo">Segundo de Secundario</option>
-            <option value="tercero">Tercero de Secundario</option>
-            <option value="cuarto">Cuarto de Secundario</option>
-            <option value="quinto">Quinto de Secundario</option>
-            <option value="sexto">Sexto de Secundario</option>
+            <option value="primero">Primero de Secundaria</option>
+            <option value="segundo">Segundo de Secundaria</option>
+            <option value="tercero">Tercero de Secundaria</option>
+            <option value="cuarto">Cuarto de Secundaria</option>
+            <option value="quinto">Quinto de Secundaria</option>
+            <option value="sexto">Sexto de Secundaria</option>
           </select>
           <button type="button" id="agregar-nivel" class="rounded-full px-4 py-2 bg-[#091C47] text-white font-semibold hover:brightness-110 disabled:bg-gray-400 disabled:text-gray-200" disabled>Agregar</button>
         </div>
@@ -91,6 +91,18 @@
   let nivelesSeleccionados = [];
 
   document.addEventListener('DOMContentLoaded', function() {
+    // Validación del campo nombre
+    const nombreInput = document.getElementById('nombre-input');
+    if (nombreInput) {
+      nombreInput.addEventListener('input', function(e) {
+        // Evitar espacios en blanco seguidos
+        this.value = this.value.replace(/\s{2,}/g, ' ');
+        
+        // Evitar más de 2 letras iguales seguidas
+        this.value = this.value.replace(/(.)\1{2,}/gi, '$1$1');
+      });
+    }
+
     const agregarBtn = document.getElementById('agregar-nivel');
     const select = document.getElementById('nivel-select');
     const form = document.querySelector('form');
@@ -125,6 +137,14 @@
     // Validar formulario antes de enviar
     if (form) {
       form.addEventListener('submit', function(e) {
+        // Validar campo nombre
+        const nombreValue = nombreInput ? nombreInput.value.trim() : '';
+        if (nombreValue.length === 0) {
+          e.preventDefault();
+          alert('El nombre de la categoría no puede estar vacío');
+          return false;
+        }
+        
         if (nivelesSeleccionados.length === 0) {
           e.preventDefault();
           alert('Debe seleccionar al menos un nivel para la categoría');

@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\UsuarioController;
 use App\Http\Controllers\Admin\EvaluacionController;
 use App\Http\Controllers\Admin\CategoriaController;
+use App\Http\Controllers\Admin\PromedioGrupalController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth'])->prefix('dashboard/admin')->name('admin.')->group(function () {
@@ -54,7 +55,9 @@ Route::middleware(['auth'])->prefix('dashboard/admin')->name('admin.')->group(fu
 
     // Endpoints JSON de inscripción (deben ir antes del resource para evitar colisión con {inscripcion})
     Route::get('inscripcion/get-areas', [InscripcionController::class, 'getAreas'])->name('inscripcion.getAreas');
+    Route::get('inscripcion/get-categorias', [InscripcionController::class, 'getCategorias'])->name('inscripcion.getCategorias');
     Route::get('inscripcion/get-competiciones', [InscripcionController::class, 'getCompeticiones'])->name('inscripcion.getCompeticiones');
+    Route::get('inscripcion/competition/{competition}/areas-categorias', [InscripcionController::class, 'getCompetitionAreasCategories'])->name('inscripcion.areasCategorias');
 
     Route::resource('inscripcion', InscripcionController::class); // ->middleware('permission:inscripcion')
     Route::resource('phases', EtapaController::class)->names('phases'); // ->middleware('permission:fases')
@@ -75,6 +78,9 @@ Route::middleware(['auth'])->prefix('dashboard/admin')->name('admin.')->group(fu
     // Ruta para calificar estudiantes de una fase específica
     Route::get('evaluacion/{competicion}/fase/{fase}/calificar', [EvaluacionController::class, 'calificar'])->name('evaluacion.calificar');
 
+    // Ruta para calificación grupal
+    Route::get('evaluacion/{competicion}/fase/{fase}/calificar-grupal', [EvaluacionController::class, 'calificarGrupal'])->name('evaluacion.calificar.grupal');
+
     // Ruta para guardar calificaciones
     Route::post('evaluacion/{competicion}/fase/{fase}/calificar', [EvaluacionController::class, 'guardarCalificaciones'])->name('evaluacion.guardar-calificaciones');
 
@@ -89,6 +95,28 @@ Route::middleware(['auth'])->prefix('dashboard/admin')->name('admin.')->group(fu
 
     // Ruta para generar PDF de inscritos
     Route::get('evaluacion/{competicion}/fase/{fase}/estudiantes/pdf', [EvaluacionController::class, 'generarPdfInscritos'])->name('evaluacion.fase.estudiantes.pdf');
+
+    // Ruta para generar PDF de clasificados (siguiente fase)
+    Route::get('evaluacion/{competicion}/fase/{fase}/clasificados/pdf', [EvaluacionController::class, 'generarPdfClasificados'])->name('evaluacion.fase.clasificados.pdf');
+
+    // Nueva ruta: página de premiación (medallero y clasificados)
+    Route::get('evaluacion/{competicion}/premiacion', [EvaluacionController::class, 'premiacion'])->name('evaluacion.premiacion');
+
+    // Nueva ruta: PDF de premiación por grupo (área y nivel)
+    Route::get('evaluacion/{competicion}/premiacion/pdf', [EvaluacionController::class, 'generarPdfPremiacion'])->name('evaluacion.premiacion.pdf');
+
+    // ==========================================
+    // Rutas para Promedios Grupales
+    // ==========================================
+    
+    // Actualizar promedios de todos los grupos de una fase
+    Route::post('promedio-grupal/{competicion}/fase/{fase}/actualizar-todos', [PromedioGrupalController::class, 'actualizarTodosLosPromedios'])->name('promedio-grupal.actualizar-todos');
+    
+    // Recalcular todos los promedios de una fase
+    Route::post('promedios/recalcular', [PromedioGrupalController::class, 'recalcularPromedios'])->name('promedios.recalcular');
+    
+    // Obtener reporte de promedios por fase
+    Route::get('promedios/reporte', [PromedioGrupalController::class, 'obtenerReportePromedios'])->name('promedios.reporte');
 
     // Futuras rutas de áreas (descomentar cuando estén listas)
     // Route::resource('areas', App\Http\Controllers\Admin\AreaController::class);

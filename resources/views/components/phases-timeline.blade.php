@@ -18,8 +18,12 @@
 
             <!-- Fases en el timeline -->
             <template x-for="(phase, index) in phases" :key="phase.id">
-                <div class="absolute top-0 h-2 rounded-full phase-color-0 cursor-pointer transition-all hover:opacity-80"
-                    :class="'phase-color-' + (index % 6)" :style="getPhasePosition(phase)"
+                <div class="absolute top-0 h-2 rounded-full cursor-pointer transition-all hover:opacity-80"
+                    :style="{
+                        left: getPhasePosition(phase).left,
+                        width: getPhasePosition(phase).width,
+                        backgroundColor: phase.color || '#3B82F6'
+                    }"
                     @click="setEditingPhase(phase.id)"
                     :title="phase.name + ' (' + formatDate(phase.start_date) + ' - ' + formatDate(
                         phase.end_date) + ')'">
@@ -44,11 +48,11 @@
                 <div class="flex items-start gap-3">
                     <!-- Color indicator -->
                     <div class="w-3 h-3 rounded-full flex-shrink-0 mt-1.5"
-                        :class="'phase-color-' + (index % 6)"></div>
+                        :style="{ backgroundColor: phase.color || '#3B82F6' }"></div>
 
                     <!-- Contenido de la fase -->
                     <div class="flex-1 space-y-3">
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div class="col-span-1 md:col-span-2">
                                 <label class="block text-sm font-medium text-gray-700 mb-1">
                                     Nombre de la Fase
@@ -59,6 +63,12 @@
                                         <option value="{{ $fase->id }}" x-bind:disabled="phases.filter(p => p.phase_id == {{ $fase->id }}).length > 0 && phase.phase_id != {{ $fase->id }}">{{ $fase->name }}</option>
                                     @endforeach
                                 </select>
+                            </div>
+                            <div class="col-span-1">
+                                <label class="block text-sm font-medium text-gray-700 mb-1">
+                                    Color
+                                </label>
+                                <input type="color" x-model="phase.color" class="w-full h-10 px-1 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 cursor-pointer">
                             </div>
                         </div>
 

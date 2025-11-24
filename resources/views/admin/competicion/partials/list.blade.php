@@ -42,8 +42,7 @@
     <!-- Lista de Competencias -->
     <div class="grid gap-4">
         @forelse($competiciones as $competition)
-        <div data-status="{{ $competition->state }}" 
-             class="rounded-lg border border-border bg-card hover:border-primary/50 transition-colors">
+        <div data-status="{{ $competition->state }}" class="rounded-lg border border-border bg-card hover:border-primary/50 transition-colors">
             <div class="p-6">
                 <div class="flex items-start justify-between gap-4 mb-4">
                     <div class="flex-1">
@@ -206,7 +205,42 @@
                     </div>
                 </div>
                 @endif
+
+                <!-- Acciones integradas al contenido -->
+                <div class="mt-6 flex justify-end gap-2">
+                    @if($competition->state === 'activa')
+                        <form class="swal-finalizar-competicion" action="{{ route('admin.competicion.updateState', ['id' => $competition->id, 'state' => 'completada']) }}" method="POST">
+                            @csrf @method('PATCH')
+                            <button type="submit" class="inline-flex items-center gap-2 text-xs font-semibold px-3 py-2 rounded-md bg-blue-100 text-blue-700 hover:bg-blue-200 border border-blue-200 focus:outline-none focus:ring-2 focus:ring-blue-300 transition shadow-sm">
+                                <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
+                                Finalizar competición
+                            </button>
+                        </form>
+                        <form class="swal-cancelar-competicion" action="{{ route('admin.competicion.updateState', ['id' => $competition->id, 'state' => 'cancelada']) }}" method="POST">
+                            @csrf @method('PATCH')
+                            <button type="submit" class="inline-flex items-center gap-2 text-xs font-semibold px-3 py-2 rounded-md bg-red-100 text-red-700 hover:bg-red-200 border border-red-200 focus:outline-none focus:ring-2 focus:ring-red-300 transition shadow-sm">
+                                <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                                Cancelar competición
+                            </button>
+                        </form>
+                    @elseif($competition->state === 'completada')
+                        <a href="{{ route('admin.evaluacion.premiacion.pdf', $competition) }}" target="_blank" class="inline-flex items-center gap-2 text-xs font-semibold px-3 py-2 rounded-md bg-emerald-100 text-emerald-700 hover:bg-emerald-200 border border-emerald-200 focus:outline-none focus:ring-2 focus:ring-emerald-300 transition shadow-sm">
+                            <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m6-6H6" /></svg>
+                            Imprimir reporte
+                        </a>
+                        <span class="text-xs text-blue-600 font-semibold">Competición finalizada</span>
+                    @elseif($competition->state === 'cancelada')
+                        <form class="swal-activar-competicion" action="{{ route('admin.competicion.updateState', ['id' => $competition->id, 'state' => 'activa']) }}" method="POST">
+                            @csrf @method('PATCH')
+                            <button type="submit" class="inline-flex items-center gap-2 text-xs font-semibold px-3 py-2 rounded-md bg-emerald-100 text-emerald-700 hover:bg-emerald-200 border border-emerald-200 focus:outline-none focus:ring-2 focus:ring-emerald-300 transition shadow-sm">
+                                <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m6-6H6" /></svg>
+                                Activar competición
+                            </button>
+                        </form>
+                    @endif
+                </div>
             </div>
+            <!-- Eliminado footer externo separado -->
         </div>
         @empty
         <div class="rounded-lg border border-border bg-card">
@@ -217,3 +251,31 @@
         @endforelse
     </div>
 </div>
+
+@push('scripts')
+<script>
+ document.addEventListener('DOMContentLoaded', function(){
+    function attachSwal(selector, opts){
+        document.querySelectorAll(selector).forEach(form => {
+            form.addEventListener('submit', function(e){
+                e.preventDefault();
+                Swal.fire(Object.assign({
+                    icon: opts.icon || 'warning',
+                    title: opts.title,
+                    text: opts.text,
+                    showCancelButton: true,
+                    confirmButtonText: opts.confirmText,
+                    cancelButtonText: 'Cancelar',
+                    confirmButtonColor: opts.confirmColor || '#0C3E92',
+                    cancelButtonColor: '#6c757d',
+                    iconColor: opts.iconColor || '#091c47'
+                }, opts.extra || {})).then(r => { if(r.isConfirmed){ form.submit(); } });
+            });
+        });
+    }
+    attachSwal('.swal-cancelar-competicion',{title:'¿Cancelar competición?', text:'Se marcará como cancelada y no podrá continuar.', confirmText:'Sí, cancelar', confirmColor:'#dc2626'});
+    attachSwal('.swal-finalizar-competicion',{title:'¿Finalizar competición?', text:'Se marcará como completada y no se podrán volver a abrir fases.', confirmText:'Finalizar', confirmColor:'#2563eb'});
+    attachSwal('.swal-activar-competicion',{title:'¿Activar competición?', text:'La competición volverá a estar activa.', confirmText:'Activar', confirmColor:'#059669'});
+ });
+</script>
+@endpush

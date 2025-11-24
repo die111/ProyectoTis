@@ -21,6 +21,12 @@ class EtapaController extends Controller
             })
             ->orderBy('name')
             ->paginate(10);
+        
+        // Agregar información de uso para cada fase
+        foreach ($phases as $phase) {
+            $phase->in_use = $phase->isInUse();
+        }
+        
         return view('admin.etapas.index', compact('phases', 'query'));
     }
 

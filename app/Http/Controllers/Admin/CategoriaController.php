@@ -20,9 +20,68 @@ class CategoriaController extends Controller
         
         // Filtrar por búsqueda si existe
         if ($q) {
-            $categories = $categories->where(function($queryBuilder) use ($q) {
-                $queryBuilder->where('nombre', 'like', "%{$q}%")
-                            ->orWhere('descripcion', 'like', "%{$q}%");
+            // Limpiar y normalizar la búsqueda
+            $searchTerm = trim($q);
+            
+            // Función para remover acentos
+            $normalizeString = function($str) {
+                $unwanted = [
+                    'á' => 'a', 'Á' => 'A', 'à' => 'a', 'À' => 'A', 'ä' => 'a', 'Ä' => 'A',
+                    'é' => 'e', 'É' => 'E', 'è' => 'e', 'È' => 'E', 'ë' => 'e', 'Ë' => 'E',
+                    'í' => 'i', 'Í' => 'I', 'ì' => 'i', 'Ì' => 'I', 'ï' => 'i', 'Ï' => 'I',
+                    'ó' => 'o', 'Ó' => 'O', 'ò' => 'o', 'Ò' => 'O', 'ö' => 'o', 'Ö' => 'O',
+                    'ú' => 'u', 'Ú' => 'U', 'ù' => 'u', 'Ù' => 'U', 'ü' => 'u', 'Ü' => 'U',
+                    'ñ' => 'n', 'Ñ' => 'N'
+                ];
+                return strtr($str, $unwanted);
+            };
+            
+            // Normalizar el término de búsqueda
+            $normalizedSearch = $normalizeString($searchTerm);
+            
+            // Dividir en palabras para búsqueda más flexible
+            $words = preg_split('/\s+/', $normalizedSearch);
+            
+            $categories = $categories->where(function($queryBuilder) use ($words, $searchTerm, $normalizedSearch) {
+                // Buscar coincidencia directa (con acentos)
+                $queryBuilder->where('nombre', 'like', "%{$searchTerm}%")
+                            ->orWhere('descripcion', 'like', "%{$searchTerm}%");
+                
+                // Buscar coincidencia sin acentos usando REPLACE anidados
+                $queryBuilder->orWhereRaw("REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(
+                    REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(
+                    REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(
+                    REPLACE(REPLACE(REPLACE(LOWER(nombre), 
+                    'á', 'a'), 'é', 'e'), 'í', 'i'), 'ó', 'o'), 'ú', 'u'), 
+                    'à', 'a'), 'è', 'e'), 'ì', 'i'), 'ò', 'o'), 'ù', 'u'),
+                    'ä', 'a'), 'ë', 'e'), 'ï', 'i'), 'ö', 'o'), 'ü', 'u'),
+                    'ñ', 'n'), 'â', 'a'), 'ê', 'e') LIKE ?", ["%{$normalizedSearch}%"])
+                            ->orWhereRaw("REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(
+                    REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(
+                    REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(
+                    REPLACE(REPLACE(REPLACE(LOWER(descripcion), 
+                    'á', 'a'), 'é', 'e'), 'í', 'i'), 'ó', 'o'), 'ú', 'u'), 
+                    'à', 'a'), 'è', 'e'), 'ì', 'i'), 'ò', 'o'), 'ù', 'u'),
+                    'ä', 'a'), 'ë', 'e'), 'ï', 'i'), 'ö', 'o'), 'ü', 'u'),
+                    'ñ', 'n'), 'â', 'a'), 'ê', 'e') LIKE ?", ["%{$normalizedSearch}%"]);
+                
+                // Si hay múltiples palabras, buscar cada palabra individualmente
+                if (count($words) > 1) {
+                    foreach ($words as $word) {
+                        if (strlen($word) > 2) { // Solo palabras de más de 2 caracteres
+                            $queryBuilder->orWhere('nombre', 'like', "%{$word}%")
+                                        ->orWhere('descripcion', 'like', "%{$word}%")
+                                        ->orWhereRaw("REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(
+                                REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(
+                                REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(
+                                REPLACE(REPLACE(REPLACE(LOWER(nombre), 
+                                'á', 'a'), 'é', 'e'), 'í', 'i'), 'ó', 'o'), 'ú', 'u'), 
+                                'à', 'a'), 'è', 'e'), 'ì', 'i'), 'ò', 'o'), 'ù', 'u'),
+                                'ä', 'a'), 'ë', 'e'), 'ï', 'i'), 'ö', 'o'), 'ü', 'u'),
+                                'ñ', 'n'), 'â', 'a'), 'ê', 'e') LIKE ?", ["%{$word}%"]);
+                        }
+                    }
+                }
             });
         }
         

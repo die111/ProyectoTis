@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 use App\Models\Level;
 use App\Models\Categoria;
+use App\Models\CompetitionCategoryArea;
 
 class Competicion extends Model
 {
@@ -31,12 +32,12 @@ class Competicion extends Model
     protected $casts = [
         'fechaInicio' => 'datetime',
         'fechaFin' => 'datetime',
-        'inscripcion_inicio' => 'date',
-        'inscripcion_fin' => 'date',
-        'evaluacion_inicio' => 'date',
-        'evaluacion_fin' => 'date',
-        'premiacion_inicio' => 'date',
-        'premiacion_fin' => 'date',
+        'inscripcion_inicio' => 'datetime',
+        'inscripcion_fin' => 'datetime',
+        'evaluacion_inicio' => 'datetime',
+        'evaluacion_fin' => 'datetime',
+        'premiacion_inicio' => 'datetime',
+        'premiacion_fin' => 'datetime',
     ];
     
     /**
@@ -85,7 +86,7 @@ class Competicion extends Model
     public function phases()
     {
         return $this->belongsToMany(Phase::class, 'competition_phase', 'competition_id', 'phase_id')
-            ->withPivot('start_date', 'end_date', 'clasificados', 'classification_type', 'classification_cupo', 'classification_nota_minima')
+            ->withPivot('start_date', 'end_date', 'clasificados', 'color', 'classification_type', 'classification_cupo', 'classification_nota_minima')
             ->withTimestamps();
     }
 
