@@ -17,6 +17,7 @@ class PermissionSeeder extends Seeder
             ['name' => 'inscripcion', 'description' => 'Gestionar inscripciones'],
             ['name' => 'fases', 'description' => 'Gestionar fases'],
             ['name' => 'areas', 'description' => 'Gestionar áreas'],
+            ['name' => 'reclamos', 'description' => 'Gestionar reclamos'],
             ['name' => 'categorias', 'description' => 'Gestionar categorías'],
             ['name' => 'evaluaciones', 'description' => 'Gestionar evaluaciones'],
             ['name' => 'inscripcion_competencia', 'description' => 'Inscribirse a competencias activas'],

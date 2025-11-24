@@ -20,6 +20,7 @@ class DatabaseSeeder extends Seeder
             LevelSeeder::class,
             PermissionSeeder::class,
             CategoriaSeeder::class,
+            \Database\Seeders\AuditSeeder::class,
         ]);
     }
 }
