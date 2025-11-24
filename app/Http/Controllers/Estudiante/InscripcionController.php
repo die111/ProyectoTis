@@ -16,6 +16,9 @@ use App\Models\Categoria;
 use App\Models\Permission;
 use App\Models\User;
 use App\Notifications\FrontNotification;
+use App\Models\Evaluation;
+use App\Models\Reclamo;
+use App\Models\Phase;
 
 class InscripcionController extends Controller
 {
@@ -253,5 +256,135 @@ class InscripcionController extends Controller
             ->get();
         
         return view('estudiante.inscripcion.mis-inscripciones', compact('inscripciones', 'user'));
+    }
+
+    /**
+     * Retorna las evaluaciones por fase de una inscripción (JSON)
+     */
+    public function evaluaciones(Inscription $inscripcion)
+    {
+        $user = Auth::user();
+        if ($inscripcion->user_id !== $user->id) {
+            return response()->json(['error' => 'No autorizado'], 403);
+        }
+
+        $competicion = $inscripcion->competition()->with('phases')->first();
+        $phases = $competicion->phases()->orderBy('competition_phase.id')->get();
+
+        // Cargar evaluaciones del inscripcion con stage
+        $evaluaciones = Evaluation::with('stage')
+            ->where('inscription_id', $inscripcion->id)
+            ->where('is_active', true)
+            ->get();
+
+        $result = $phases->map(function($phase, $index) use ($evaluaciones) {
+            $eval = $evaluaciones->firstWhere('stage.nombre', $phase->name) ?? null;
+            return [
+                'fase_numero' => $index + 1,
+                'fase_id' => $phase->id,
+                'fase_nombre' => $phase->name,
+                'evaluacion' => $eval ? [
+                    'id' => $eval->id,
+                    'nota' => $eval->nota,
+                    'estado' => $eval->estado,
+                    'observaciones_evaluador' => $eval->observaciones_evaluador,
+                    'stage_nombre' => $eval->stage?->nombre,
+                ] : null
+            ];
+        });
+
+        return response()->json(['phases' => $result]);
+    }
+
+    /**
+     * Permite al estudiante crear un reclamo sobre una nota o falta de nota
+     */
+    public function reclamar(Request $request, Inscription $inscripcion)
+    {
+        $user = Auth::user();
+        if ($inscripcion->user_id !== $user->id) {
+            return redirect()->back()->with('error', 'No autorizado');
+        }
+
+        $request->validate([
+            'fase_id' => 'nullable|integer',
+            'evaluation_id' => 'nullable|exists:evaluations,id',
+            'mensaje' => 'required|string|max:2000'
+        ]);
+
+        $faseId = $request->input('fase_id');
+        $evaluationId = $request->input('evaluation_id');
+
+        // Evitar reclamos duplicados (mismo inscription + fase + evaluation con estado pendiente)
+        $existing = Reclamo::where('inscription_id', $inscripcion->id)
+            ->where('fase', $faseId)
+            ->where(function($q) use ($evaluationId) {
+                if ($evaluationId) {
+                    $q->where('evaluation_id', $evaluationId);
+                }
+            });
+
+        $existing = $existing->where('estado', 'pendiente')->first();
+        if ($existing) {
+            return redirect()->back()->with('error', 'Ya existe un reclamo pendiente para esta fase/nota.');
+        }
+
+        $reclamo = Reclamo::create([
+            'inscription_id' => $inscripcion->id,
+            'evaluation_id' => $evaluationId,
+            'user_id' => $user->id,
+            'fase' => $faseId,
+            'mensaje' => $request->mensaje,
+            'estado' => 'pendiente'
+        ]);
+
+        // Notificar a roles con permiso 'evaluacion' o administradores
+        try {
+            $permission = Permission::where('name', 'evaluacion')->first();
+            if ($permission) {
+                $roleIds = $permission->roles()->pluck('roles.id');
+                $usersToNotify = User::whereIn('role_id', $roleIds)
+                    ->where('is_active', true)
+                    ->get();
+                foreach ($usersToNotify as $u) {
+                    $u->notify(new FrontNotification(
+                        'Nuevo Reclamo de Nota',
+                        "El estudiante {$user->name} presentó un reclamo en la competencia {$inscripcion->competition->name}.",
+                        'warning',
+                        route('admin.reclamos.show', $reclamo->id),
+                        $reclamo->id
+                    ));
+                }
+            }
+        } catch (\Exception $e) {
+            // Silenciar fallas de notificación
+        }
+
+        return redirect()->back()->with('success', 'Tu reclamo fue enviado correctamente.');
+    }
+
+    /**
+     * Muestra una vista completa con notas por fase y formulario de reclamo
+     */
+    public function detalle(Inscription $inscripcion)
+    {
+        $user = Auth::user();
+        if ($inscripcion->user_id !== $user->id) {
+            abort(403);
+        }
+
+        $competicion = $inscripcion->competition()->with('phases')->first();
+        $phases = $competicion->phases()->orderBy('competition_phase.id')->get();
+
+        $evaluaciones = Evaluation::with('stage')
+            ->where('inscription_id', $inscripcion->id)
+            ->where('is_active', true)
+            ->get();
+
+        $reclamos = Reclamo::where('inscription_id', $inscripcion->id)
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return view('estudiante.inscripcion.detalle', compact('inscripcion', 'competicion', 'phases', 'evaluaciones', 'reclamos', 'user'));
     }
 }
