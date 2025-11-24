@@ -83,8 +83,8 @@
                                             <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-purple-100 text-purple-800">
                                                 Grupal
                                             </span>
-                                            @if($inscripcion->grupo_nombre)
-                                                <div class="text-xs text-gray-500 mt-1">{{ $inscripcion->grupo_nombre }}</div>
+                                            @if($inscripcion->name_grupo)
+                                                <div class="text-xs text-gray-500 mt-1">{{ $inscripcion->name_grupo }}</div>
                                             @endif
                                         @else
                                             <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">

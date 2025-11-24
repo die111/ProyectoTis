@@ -28,18 +28,15 @@ class InscripcionController extends Controller
     public function index()
     {
         $user = Auth::user();
-        
-        // Obtener competencias activas que están en período de inscripción
-        $competenciasActivas = Competicion::inscripcionAbierta()
+        // Mostrar todas las competencias activas
+        $competenciasActivas = Competicion::where('state', 'activa')
             ->with(['area', 'phases'])
             ->orderBy('fechaInicio', 'asc')
             ->get();
-        
         // Obtener inscripciones del usuario
         $misInscripciones = Inscription::where('user_id', $user->id)
             ->with(['competition'])
             ->get();
-        
         return view('estudiante.inscripcion.index', compact('competenciasActivas', 'misInscripciones', 'user'));
     }
 
@@ -86,8 +83,9 @@ class InscripcionController extends Controller
         $user = Auth::user();
         $areas = Area::where('is_active', true)->get();
         $levels = Level::all();
+        $categorias = Categoria::where('is_active', true)->get();
 
-        return view('estudiante.inscripcion.create', compact('competencia', 'areas', 'levels', 'user'));
+        return view('estudiante.inscripcion.create', compact('competencia', 'areas', 'levels', 'categorias', 'user'));
     }
 
     /**
@@ -101,9 +99,8 @@ class InscripcionController extends Controller
             // Validar datos requeridos
             $request->validate([
                 'area_id' => 'required|exists:areas,id',
-                'level_id' => 'required|exists:levels,id',
-                'es_grupal' => 'boolean',
-                'grupo_nombre' => 'nullable|string|max:255',
+                'categoria_id' => 'required|exists:categorias,id',
+                'name_grupo' => 'nullable|string|max:255',
                 'observaciones_estudiante' => 'nullable|string',
             ]);
             
@@ -147,33 +144,8 @@ class InscripcionController extends Controller
                 return redirect()->back()->with('error', 'Ya estás inscrito en esta competencia y área.');
             }
             
-            // Determinar categoria_id asociada a la competencia y área
-            $pair = CompetitionCategoryArea::where('competition_id', $competicion->id)
-                ->where('area_id', $request->area_id)
-                ->first();
-
-            if (!$pair) {
-                $msg = 'No hay categorías configuradas para la combinación competencia/área seleccionada. Se asignará una categoría por defecto. Contacta al administrador para revisar.';
-                Log::warning($msg . ' competition_id=' . $competicion->id . ' area_id=' . $request->area_id . ' user_id=' . $user->id);
-                // Añadir mensaje de sesión para usuarios web
-                if (! $request->expectsJson()) {
-                    session()->flash('warning', $msg);
-                }
-
-                // Buscar una categoría activa primero, luego la primera disponible
-                $fallbackCategoria = Categoria::where('is_active', true)->first() ?? Categoria::first();
-                if (! $fallbackCategoria) {
-                    // Crear categoría por defecto
-                    $fallbackCategoria = Categoria::create([
-                        'nombre' => 'Sin categoría',
-                        'descripcion' => 'Categoría generada automáticamente al inscribir sin configuración',
-                        'is_active' => false,
-                    ]);
-                }
-                $categoriaId = $fallbackCategoria->id;
-            } else {
-                $categoriaId = $pair->categoria_id;
-            }
+            // Usar directamente el categoria_id enviado desde el formulario
+            $categoriaId = $request->categoria_id;
 
             $fase = 1;
 
@@ -184,10 +156,8 @@ class InscripcionController extends Controller
                 'area_id' => $request->area_id,
                 'categoria_id' => $categoriaId,
                 'fase' => $fase,
-                'level_id' => $request->level_id,
                 'estado' => 'pendiente',
-                'es_grupal' => $request->es_grupal ?? false,
-                'grupo_nombre' => $request->grupo_nombre,
+                'name_grupo' => $request->name_grupo ?? 'N/A',
                 'observaciones_estudiante' => $request->observaciones_estudiante,
             ]);
             

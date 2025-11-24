@@ -100,7 +100,7 @@ class EvaluacionController extends \App\Http\Controllers\Controller
                     'level_id' => $this->obtenerNivelId($datos['nivel']),
                     'estado' => 'confirmada',
                     'es_grupal' => $datos['es_grupal'] ?? false,
-                    'name_grupo' => $datos['grupo_nombre'] ?? 'N/A',
+                    'name_grupo' => $datos['name_grupo'] ?? 'N/A',
                 ]);
                 
                 $inscripcionesCargadas++;
@@ -683,6 +683,8 @@ class EvaluacionController extends \App\Http\Controllers\Controller
         $query->where('fase', $numeroFase);
         // Solo mostrar estudiantes con categoría Grupal (ID 3)
         $query->where('categoria_id', 3);
+        // Solo mostrar inscripciones confirmadas
+        $query->where('estado', 'confirmada');
         
         if (request('estado_activo') === 'inactivo') { 
             $query->where('is_active', false); 
