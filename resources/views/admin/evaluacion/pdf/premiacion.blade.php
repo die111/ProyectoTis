@@ -173,96 +173,192 @@
         <p><strong>Total de Premiados:</strong> {{ $premiados->count() }}</p>
     </div>
 
-    <table>
-        <thead>
-            <tr>
-                <th class="posicion">Pos.</th>
-                <th>Estudiante / Grupo</th>
-                <th>Unidad Educativa</th>
-                <th style="text-align: center;">Nota / Promedio</th>
-                <th style="text-align: center;">Premio</th>
-            </tr>
-        </thead>
-        <tbody>
-            @forelse($premiados as $row)
-                @php
-                    $badgeClass = match($row['premio']) {
-                        'oro' => 'badge-oro',
-                        'plata' => 'badge-plata',
-                        'bronce' => 'badge-bronce',
-                        'mencion_honor' => 'badge-mencion',
-                        default => 'badge-mencion'
-                    };
-                    $medallaClass = match($row['premio']) {
-                        'oro' => 'medalla-oro',
-                        'plata' => 'medalla-plata',
-                        'bronce' => 'medalla-bronce',
-                        'mencion_honor' => 'medalla-mencion',
-                        default => 'medalla-mencion'
-                    };
-                    $medallaNum = match($row['premio']) {
-                        'oro' => '1',
-                        'plata' => '2',
-                        'bronce' => '3',
-                        'mencion_honor' => 'M',
-                        default => '—'
-                    };
-                    $label = match($row['premio']) {
-                        'oro' => 'ORO',
-                        'plata' => 'PLATA',
-                        'bronce' => 'BRONCE',
-                        'mencion_honor' => 'MENCIÓN',
-                        default => strtoupper($row['premio'] ?? '—')
-                    };
-                    $esGrupal = isset($row['es_grupal']) && $row['es_grupal'] === true;
-                @endphp
+    {{-- Agrupar premiados por área y categoría --}}
+    @php
+        $premiadosAgrupados = collect($premiados)->groupBy(function($item) {
+            $area = $item['area'] ?? 'Sin área';
+            $categoria = $item['nivel'] ?? 'Sin categoría';
+            return $area . ' | ' . $categoria;
+        });
+    @endphp
+
+    @forelse($premiadosAgrupados as $grupoKey => $grupoPremiados)
+        @php
+            [$areaNombre, $categoriaNombre] = explode(' | ', $grupoKey);
+        @endphp
+        <h3 style="margin-top: 30px; margin-bottom: 10px; font-size: 13px; color: #091C47; font-weight: bold;">
+            Área: {{ $areaNombre }} &nbsp;|&nbsp; Categoría: {{ $categoriaNombre }}
+        </h3>
+        <table>
+            <thead>
                 <tr>
-                    <td class="posicion">{{ $row['posicion'] }}</td>
-                    <td>
-                        @if($esGrupal)
-                            <!-- Mostrar grupo con integrantes -->
-                            <strong style="color: #7c3aed;">👥 {{ $row['nombre_grupo'] ?? 'Sin nombre' }}</strong>
-                            @if(isset($row['integrantes']) && is_array($row['integrantes']))
-                                <br>
-                                <span style="font-size: 9px; color: #666;">
-                                    Integrantes: {{ implode(', ', $row['integrantes']) }}
-                                </span>
+                    <th class="posicion">Pos.</th>
+                    <th>
+                        {{-- Detectar si la mayoría son grupales o individuales --}}
+                        @php
+                            $esGrupalTabla = $grupoPremiados->count() > 0 && $grupoPremiados->where('es_grupal', true)->count() > $grupoPremiados->where('es_grupal', false)->count();
+                        @endphp
+                        {{ $esGrupalTabla ? 'Grupo' : 'Estudiante' }}
+                    </th>
+                    <th>Unidad Educativa</th>
+                    <th style="text-align: center;">Nota / Promedio</th>
+                    <th style="text-align: center;">Premio</th>
+                </tr>
+            </thead>
+            <tbody>
+                @forelse($grupoPremiados as $row)
+                    @php
+                        $badgeClass = match($row['premio']) {
+                            'oro' => 'badge-oro',
+                            'plata' => 'badge-plata',
+                            'bronce' => 'badge-bronce',
+                            'mencion_honor' => 'badge-mencion',
+                            default => 'badge-mencion'
+                        };
+                        $label = match($row['premio']) {
+                            'oro' => 'ORO',
+                            'plata' => 'PLATA',
+                            'bronce' => 'BRONCE',
+                            'mencion_honor' => 'MENCIÓN',
+                            default => strtoupper($row['premio'] ?? '—')
+                        };
+                        $esGrupal = isset($row['es_grupal']) && $row['es_grupal'] === true;
+                    @endphp
+                    <tr>
+                        <td class="posicion">{{ $row['posicion'] }}</td>
+                        <td>
+                            @if($esGrupal)
+                                <!-- Mostrar grupo con integrantes -->
+                                <strong style="color: #7c3aed;">{{ $row['nombre_grupo'] ?? 'Sin nombre' }}</strong>
+                                @if(isset($row['integrantes']) && is_array($row['integrantes']))
+                                    <br>
+                                    <span style="font-size: 9px; color: #666;">Integrantes:</span>
+                                    @foreach($row['integrantes'] as $integrante)
+                                        <br><span style="font-size: 9px; color: #333; margin-left: 10px;">{{ $integrante }}</span>
+                                    @endforeach
+                                @endif
+                            @else
+                                <!-- Mostrar estudiante individual -->
+                                {{ $row['nombre_completo'] ?? 'N/A' }}
                             @endif
-                        @else
-                            <!-- Mostrar estudiante individual -->
-                            {{ $row['nombre_completo'] ?? 'N/A' }}
-                        @endif
+                        </td>
+                        <td>{{ $row['unidad_educativa'] }}</td>
+                        <td style="text-align: center; font-weight: bold;">
+                            {{ number_format($row['promedio'] ?? $row['nota'] ?? 0, 2) }}
+                        </td>
+                        <td style="text-align: center;">
+                            <span class="badge {{ $badgeClass }}">{{ $label }}</span>
+                        </td>
+                    </tr>
+                @empty
+                    <tr>
+                        <td colspan="5" style="text-align: center; padding: 20px; color: #999;">
+                            No hay estudiantes clasificados en esta categoría
+                        </td>
+                    </tr>
+                @endforelse
+            </tbody>
+            <tfoot>
+                <tr class="total">
+                    <td colspan="4" style="text-align: right; padding: 10px;">
+                        <strong>Total de Premiados:</strong>
                     </td>
-                    <td>{{ $row['unidad_educativa'] }}</td>
-                    <td style="text-align: center; font-weight: bold;">
-                        {{ number_format($row['promedio'] ?? $row['nota'] ?? 0, 2) }}
-                    </td>
-                    <td style="text-align: center;">
-                        <span class="badge {{ $badgeClass }}">
-                            <span class="medalla-icon {{ $medallaClass }}">{{ $medallaNum }}</span>
-                            {{ $label }}
-                        </span>
+                    <td style="text-align: center; padding: 10px;">
+                        <strong>{{ count($grupoPremiados) }}</strong>
                     </td>
                 </tr>
-            @empty
-                <tr>
-                    <td colspan="5" style="text-align: center; padding: 20px; color: #999;">
-                        No hay estudiantes clasificados en esta categoría
-                    </td>
-                </tr>
-            @endforelse
-        </tbody>
-        <tfoot>
-            <tr class="total">
-                <td colspan="4" style="text-align: right; padding: 10px;">
-                    <strong>Total de Premiados:</strong>
-                </td>
-                <td style="text-align: center; padding: 10px;">
-                    <strong>{{ $premiados->count() }}</strong>
-                </td>
-            </tr>
-        </tfoot>
-    </table>
+            </tfoot>
+        </table>
+    @empty
+        <div style="text-align: center; padding: 20px; color: #999;">
+            No hay estudiantes clasificados en esta competición
+        </div>
+    @endforelse
+
+    {{-- Nueva sección: Lista de todos los inscritos fase 1 --}}
+    @if(isset($inscritosFase1) && $inscritosFase1->count() > 0)
+        <div style="page-break-before: always;"></div>
+        
+        <div class="header" style="margin-top: 20px;">
+            <h1>LISTA DE INSCRITOS - FASE 1</h1>
+            <h2>{{ strtoupper($competicion->name) }}</h2>
+            <p>Listado completo de estudiantes inscritos en la primera fase</p>
+        </div>
+
+        <div class="info-section">
+            <p><strong>Competición:</strong> {{ $competicion->name }}</p>
+            <p><strong>Total de Inscritos:</strong> {{ $inscritosFase1->count() }}</p>
+        </div>
+
+        {{-- Agrupar inscritos por área y categoría --}}
+        @php
+            $inscritosAgrupados = $inscritosFase1->groupBy(function($item) {
+                $area = $item['area'] ?? 'Sin área';
+                $categoria = $item['categoria'] ?? 'Sin categoría';
+                return $area . ' | ' . $categoria;
+            });
+        @endphp
+
+        @foreach($inscritosAgrupados as $grupoKey => $grupoInscritos)
+            @php
+                [$areaNombre, $categoriaNombre] = explode(' | ', $grupoKey);
+                // Separar individuales y grupales
+                $grupales = collect($grupoInscritos)->where('es_grupal', true)->groupBy('nombre_grupo');
+                $individuales = collect($grupoInscritos)->where('es_grupal', false);
+            @endphp
+            <h3 style="margin-top: 30px; margin-bottom: 10px; font-size: 13px; color: #091C47; font-weight: bold;">
+                Área: {{ $areaNombre }} &nbsp;|&nbsp; Categoría: {{ $categoriaNombre }}
+            </h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 40px; text-align: center;">N°</th>
+                        <th>
+                            @php
+                                $esGrupalTabla = $grupoInscritos && collect($grupoInscritos)->where('es_grupal', true)->count() > collect($grupoInscritos)->where('es_grupal', false)->count();
+                            @endphp
+                            {{ $esGrupalTabla ? 'Grupo' : 'Estudiante' }}
+                        </th>
+                        <th>Unidad Educativa</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{-- Mostrar grupales agrupados por nombre_grupo --}}
+                    @foreach($grupales as $nombreGrupo => $integrantes)
+                        <tr>
+                            <td style="text-align: center;">—</td>
+                            <td>
+                                <strong style="color: #7c3aed;">{{ $nombreGrupo }}</strong><br>
+                                <span style="font-size: 9px; color: #666;">Integrantes:</span>
+                                @foreach($integrantes as $integrante)
+                                    <br><span style="font-size: 9px; color: #333; margin-left: 10px;">{{ $integrante['nombre_completo'] }}</span>
+                                @endforeach
+                            </td>
+                            <td>{{ $integrantes->first()['unidad_educativa'] ?? '' }}</td>
+                        </tr>
+                    @endforeach
+                    {{-- Mostrar individuales --}}
+                    @foreach($individuales as $index => $inscrito)
+                        <tr>
+                            <td style="text-align: center;">{{ $index + 1 }}</td>
+                            <td>{{ $inscrito['nombre_completo'] }}</td>
+                            <td>{{ $inscrito['unidad_educativa'] }}</td>
+                        </tr>
+                    @endforeach
+                </tbody>
+                <tfoot>
+                    <tr class="total">
+                        <td colspan="2" style="text-align: right; padding: 10px;">
+                            <strong>Total de Inscritos:</strong>
+                        </td>
+                        <td style="text-align: center; padding: 10px;">
+                            <strong>{{ count($grupoInscritos) }}</strong>
+                        </td>
+                    </tr>
+                </tfoot>
+            </table>
+        @endforeach
+    @endif
 
     <div class="footer">
         <p>Documento generado automáticamente por el Sistema de Gestión de Competiciones</p>
