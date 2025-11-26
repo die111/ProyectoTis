@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Admin;
 use App\Models\{
     Competicion, 
     Etapa, 
+    Stage,
     Inscription, 
     Evaluation, 
     EvaluationLog,
@@ -19,6 +20,12 @@ use Illuminate\Http\Request;
 
 class EvaluacionController extends \App\Http\Controllers\Controller
 {
+    protected $promedioGrupalController;
+    
+    public function __construct()
+    {
+        $this->promedioGrupalController = new PromedioGrupalController();
+    }
     // Constantes para estados
     const ETAPA_CLASIFICATORIA = 1;
     const ETAPA_FINAL = 2;
@@ -27,14 +34,45 @@ class EvaluacionController extends \App\Http\Controllers\Controller
     const ESTADO_NO_CLASIFICADO = 'no_clasificado';
     const ESTADO_DESCLASIFICADO = 'desclasificado';
 
-    public function index()
+    public function index(Request $request)
     {
-        $competiciones = Competicion::with(['area', 'phases'])
-            ->orderBy('fechaInicio', 'desc')
-            ->get();
+        $query = Competicion::with(['area', 'phases', 'categorias'])
+            ->orderBy('fechaInicio', 'desc');
+        
+        // Aplicar búsqueda si existe
+        if ($request->has('search') && $request->search != '') {
+            $search = $request->search;
+            
+            // Normalizar el término de búsqueda (eliminar tildes)
+            $searchNormalized = $this->removeAccents($search);
+            
+            // Buscar de forma flexible (insensible a tildes y mayúsculas)
+            $query->whereRaw("LOWER(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(
+                name, 'á', 'a'), 'é', 'e'), 'í', 'i'), 'ó', 'o'), 'ú', 'u')) 
+                LIKE ?", ['%' . strtolower($searchNormalized) . '%']);
+        }
+        
+        $competiciones = $query->paginate(6)->appends(['search' => $request->search]);
             
         return view('admin.evaluacion.index', compact('competiciones'));
     }
+    
+    /**
+     * Eliminar tildes de un texto
+     */
+    private function removeAccents($string)
+    {
+        $unwanted_array = [
+            'á'=>'a', 'Á'=>'a', 'à'=>'a', 'À'=>'a', 'ã'=>'a', 'Ã'=>'a', 'â'=>'a', 'Â'=>'a',
+            'é'=>'e', 'É'=>'e', 'è'=>'e', 'È'=>'e', 'ê'=>'e', 'Ê'=>'e',
+            'í'=>'i', 'Í'=>'i', 'ì'=>'i', 'Ì'=>'i', 'î'=>'i', 'Î'=>'i',
+            'ó'=>'o', 'Ó'=>'o', 'ò'=>'o', 'Ò'=>'o', 'õ'=>'o', 'Õ'=>'o', 'ô'=>'o', 'Ô'=>'o',
+            'ú'=>'u', 'Ú'=>'u', 'ù'=>'u', 'Ù'=>'u', 'û'=>'u', 'Û'=>'u',
+            'ñ'=>'n', 'Ñ'=>'n'
+        ];
+        return strtr($string, $unwanted_array);
+    }
+    
     /**
      * Cargar inscripciones desde CSV
      */
@@ -62,7 +100,7 @@ class EvaluacionController extends \App\Http\Controllers\Controller
                     'level_id' => $this->obtenerNivelId($datos['nivel']),
                     'estado' => 'confirmada',
                     'es_grupal' => $datos['es_grupal'] ?? false,
-                    'grupo_nombre' => $datos['grupo_nombre'] ?? null,
+                    'name_grupo' => $datos['name_grupo'] ?? 'N/A',
                 ]);
                 
                 $inscripcionesCargadas++;
@@ -221,7 +259,7 @@ class EvaluacionController extends \App\Http\Controllers\Controller
             }
             
             // Actualizar estado del stage
-            $stage = Etapa::find($stageId);
+            $stage = Stage::find($stageId);
             // Aquí podrías agregar un campo 'estado' a la tabla stages
             
             // Si es etapa de clasificación, preparar para la final
@@ -259,7 +297,7 @@ class EvaluacionController extends \App\Http\Controllers\Controller
      */
     public function generarReporte($competicionId, $stageId, $tipoReporte)
     {
-    $stage = Etapa::findOrFail($stageId);
+    $stage = Stage::findOrFail($stageId);
         
         $query = Evaluation::with(['inscription.user', 'inscription.area', 'inscription.level'])
             ->where('stage_id', $stageId)
@@ -434,11 +472,44 @@ class EvaluacionController extends \App\Http\Controllers\Controller
     {
         // Cargar las fases de la competición ordenadas por fechas
         $fases = $competicion->phases()
+            ->withPivot('color', 'start_date', 'end_date', 'clasificados', 'classification_type', 'classification_cupo', 'classification_nota_minima')
             ->orderBy('start_date', 'asc')
             ->orderBy('end_date', 'asc')
             ->get();
         
-        return view('admin.evaluacion.fases', compact('competicion', 'fases'));
+        // Preparar datos para la tarjeta de Premiación siguiendo la lógica de fases
+        $clasificados = collect();
+        $premiacion = [
+            'start_date' => $competicion->premiacion_inicio,
+            'end_date' => $competicion->premiacion_fin,
+        ];
+        $totalFases = $fases->count();
+
+        if ($totalFases > 0) {
+            $numeroFaseAnterior = $totalFases; // última fase real listada
+
+            // Traer evaluaciones clasificadas de la última fase para esta competición
+            $clasificados = \App\Models\Evaluation::with(['inscription.user'])
+                ->where('estado', self::ESTADO_CLASIFICADO)
+                ->whereHas('inscription', function ($q) use ($competicion, $numeroFaseAnterior) {
+                    $q->where('competition_id', $competicion->id)
+                      ->where('is_active', true)
+                      ->where('estado', 'confirmada')
+                      ->where('fase', $numeroFaseAnterior);
+                })
+                ->orderByDesc('nota')
+                ->get()
+                ->map(function ($ev) {
+                    return (object) [
+                        'name' => trim(($ev->inscription->user->name ?? '') . ' ' . ($ev->inscription->user->last_name_father ?? '')),
+                        'full_name' => trim(($ev->inscription->user->name ?? '') . ' ' . ($ev->inscription->user->last_name_father ?? '')),
+                        'email' => $ev->inscription->user->email ?? null,
+                        'score' => $ev->nota,
+                    ];
+                });
+        }
+        
+        return view('admin.evaluacion.fases', compact('competicion', 'fases', 'clasificados', 'premiacion'));
     }
     
     /**
@@ -470,18 +541,27 @@ class EvaluacionController extends \App\Http\Controllers\Controller
         $query = \App\Models\Inscription::with(['user', 'area', 'categoria']);
         $query->where('competition_id', $competicion->id);
         $query->where('fase', $numeroFase);
+        $query->where('estado', 'confirmada');
         if (request('estado_activo') === 'inactivo') { $query->where('is_active', false); }
         elseif (request('estado_activo') === 'todos') { /* no-op */ }
         else { $query->where('is_active', true); }
         if (request('categoria')) { $query->where('categoria_id', request('categoria')); }
         if (request('area')) { $query->where('area_id', request('area')); }
         if (request('search')) {
-            $search = request('search');
+            $search = $this->removeAccents(request('search'));
             $query->whereHas('user', function($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('last_name_father', 'like', "%{$search}%")
-                  ->orWhere('last_name_mother', 'like', "%{$search}%")
-                  ->orWhere('school', 'like', "%{$search}%");
+                $q->whereRaw("LOWER(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(
+                    name, 'á', 'a'), 'é', 'e'), 'í', 'i'), 'ó', 'o'), 'ú', 'u')) 
+                    LIKE ?", ['%' . strtolower($search) . '%'])
+                  ->orWhereRaw("LOWER(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(
+                    last_name_father, 'á', 'a'), 'é', 'e'), 'í', 'i'), 'ó', 'o'), 'ú', 'u')) 
+                    LIKE ?", ['%' . strtolower($search) . '%'])
+                  ->orWhereRaw("LOWER(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(
+                    last_name_mother, 'á', 'a'), 'é', 'e'), 'í', 'i'), 'ó', 'o'), 'ú', 'u')) 
+                    LIKE ?", ['%' . strtolower($search) . '%'])
+                  ->orWhereRaw("LOWER(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(
+                    school, 'á', 'a'), 'é', 'e'), 'í', 'i'), 'ó', 'o'), 'ú', 'u')) 
+                    LIKE ?", ['%' . strtolower($search) . '%']);
             });
         }
         $estudiantes = $query->paginate(10)->appends(request()->query());
@@ -510,17 +590,27 @@ class EvaluacionController extends \App\Http\Controllers\Controller
         $query = Inscription::with(['user', 'area', 'categoria']);
         $query->where('competition_id', $competicion->id);
         $query->where('fase', $numeroFase);
+        // Excluir estudiantes con categoría Grupal (ID 3)
+        $query->where('categoria_id', '!=', 3);
         if (request('estado_activo') === 'inactivo') { $query->where('is_active', false); }
         elseif (request('estado_activo') === 'todos') { /* no-op */ }
         else { $query->where('is_active', true); }
         if (request('area')) { $query->where('area_id', request('area')); }
         if (request('search')) {
-            $search = request('search');
+            $search = $this->removeAccents(request('search'));
             $query->whereHas('user', function($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('last_name_father', 'like', "%{$search}%")
-                  ->orWhere('last_name_mother', 'like', "%{$search}%")
-                  ->orWhere('school', 'like', "%{$search}%")
+                $q->whereRaw("LOWER(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(
+                    name, 'á', 'a'), 'é', 'e'), 'í', 'i'), 'ó', 'o'), 'ú', 'u')) 
+                    LIKE ?", ['%' . strtolower($search) . '%'])
+                  ->orWhereRaw("LOWER(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(
+                    last_name_father, 'á', 'a'), 'é', 'e'), 'í', 'i'), 'ó', 'o'), 'ú', 'u')) 
+                    LIKE ?", ['%' . strtolower($search) . '%'])
+                  ->orWhereRaw("LOWER(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(
+                    last_name_mother, 'á', 'a'), 'é', 'e'), 'í', 'i'), 'ó', 'o'), 'ú', 'u')) 
+                    LIKE ?", ['%' . strtolower($search) . '%'])
+                  ->orWhereRaw("LOWER(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(
+                    school, 'á', 'a'), 'é', 'e'), 'í', 'i'), 'ó', 'o'), 'ú', 'u')) 
+                    LIKE ?", ['%' . strtolower($search) . '%'])
                   ->orWhere('ci', 'like', "%{$search}%");
             });
         }
@@ -530,17 +620,126 @@ class EvaluacionController extends \App\Http\Controllers\Controller
         // Cargar evaluaciones sin filtrar por stage_id
         $estudiantes = $query->with('evaluations')->get();
         
+        // Separar estudiantes calificados y no calificados
+        $noCalificados = $estudiantes->filter(function($e) {
+            $evaluacion = $e->evaluations->first();
+            return !$evaluacion || $evaluacion->nota === null;
+        });
+        
+        $calificados = $estudiantes->filter(function($e) {
+            $evaluacion = $e->evaluations->first();
+            return $evaluacion && $evaluacion->nota !== null;
+        });
+        
+        // Aplicar ordenamiento a cada grupo
         if ($sortBy === 'nombre') {
-            $estudiantes = $sortOrder === 'asc' 
-                ? $estudiantes->sortBy(fn($e) => $e->user->name . ' ' . $e->user->last_name_father)
-                : $estudiantes->sortByDesc(fn($e) => $e->user->name . ' ' . $e->user->last_name_father);
+            $noCalificados = $sortOrder === 'asc' 
+                ? $noCalificados->sortBy(fn($e) => $e->user->name . ' ' . $e->user->last_name_father)
+                : $noCalificados->sortByDesc(fn($e) => $e->user->name . ' ' . $e->user->last_name_father);
+            
+            $calificados = $sortOrder === 'asc' 
+                ? $calificados->sortBy(fn($e) => $e->user->name . ' ' . $e->user->last_name_father)
+                : $calificados->sortByDesc(fn($e) => $e->user->name . ' ' . $e->user->last_name_father);
         } elseif ($sortBy === 'nota') {
-            $estudiantes = $sortOrder === 'desc'
-                ? $estudiantes->sortByDesc(fn($e) => optional($e->evaluations->first())->nota ?? -1)
-                : $estudiantes->sortBy(fn($e) => optional($e->evaluations->first())->nota ?? 999);
+            $noCalificados = $sortOrder === 'asc'
+                ? $noCalificados->sortBy(fn($e) => $e->user->name . ' ' . $e->user->last_name_father)
+                : $noCalificados->sortByDesc(fn($e) => $e->user->name . ' ' . $e->user->last_name_father);
+            
+            $calificados = $sortOrder === 'desc'
+                ? $calificados->sortByDesc(fn($e) => optional($e->evaluations->first())->nota)
+                : $calificados->sortBy(fn($e) => optional($e->evaluations->first())->nota);
         }
-        $estudiantes = $estudiantes->values();
+        
+        // Combinar: no calificados primero, calificados después
+        $estudiantes = $noCalificados->merge($calificados)->values();
         return view('admin.evaluacion.calificar', compact('competicion', 'fase', 'estudiantes', 'areas', 'categorias', 'numeroFase'));
+    }
+
+    /**
+     * Vista de calificación grupal (calificar múltiples estudiantes a la vez)
+     */
+    public function calificarGrupal(Competicion $competicion, $faseId)
+    {
+        $fase = $competicion->phases()->findOrFail($faseId);
+        $todasLasFases = $competicion->phases()->orderBy('competition_phase.id')->get();
+        
+        // Leer ?fase_n o ?fase
+        $numeroFase = (int) request('fase_n', request('fase'));
+        if ($numeroFase <= 0) {
+            foreach ($todasLasFases as $index => $f) {
+                if ($f->id == $faseId) { $numeroFase = $index + 1; break; }
+            }
+            if ($numeroFase <= 0) { $numeroFase = 1; }
+        } else {
+            $maxFases = max(1, $todasLasFases->count());
+            if ($numeroFase > $maxFases) { $numeroFase = $maxFases; }
+        }
+
+        $categorias = \App\Models\Categoria::where('is_active', true)->get();
+        $areas = \App\Models\Area::where('is_active', true)->get();
+        
+        $query = Inscription::with(['user', 'area', 'categoria', 'evaluations']);
+        $query->where('competition_id', $competicion->id);
+        $query->where('fase', $numeroFase);
+        // Solo mostrar estudiantes con categoría Grupal (ID 3)
+        $query->where('categoria_id', 3);
+        // Solo mostrar inscripciones confirmadas
+        $query->where('estado', 'confirmada');
+        
+        if (request('estado_activo') === 'inactivo') { 
+            $query->where('is_active', false); 
+        } elseif (request('estado_activo') === 'todos') { 
+            /* no-op */ 
+        } else { 
+            $query->where('is_active', true); 
+        }
+        
+        if (request('categoria')) { 
+            $query->where('categoria_id', request('categoria')); 
+        }
+        
+        if (request('area')) { 
+            $query->where('area_id', request('area')); 
+        }
+        
+        if (request('search')) {
+            $search = $this->removeAccents(request('search'));
+            $query->where(function($q) use ($search) {
+                $q->whereHas('user', function($subQ) use ($search) {
+                    $subQ->whereRaw("LOWER(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(
+                        name, 'á', 'a'), 'é', 'e'), 'í', 'i'), 'ó', 'o'), 'ú', 'u')) 
+                        LIKE ?", ['%' . strtolower($search) . '%'])
+                      ->orWhereRaw("LOWER(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(
+                        last_name_father, 'á', 'a'), 'é', 'e'), 'í', 'i'), 'ó', 'o'), 'ú', 'u')) 
+                        LIKE ?", ['%' . strtolower($search) . '%'])
+                      ->orWhereRaw("LOWER(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(
+                        last_name_mother, 'á', 'a'), 'é', 'e'), 'í', 'i'), 'ó', 'o'), 'ú', 'u')) 
+                        LIKE ?", ['%' . strtolower($search) . '%'])
+                      ->orWhereRaw("LOWER(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(
+                        school, 'á', 'a'), 'é', 'e'), 'í', 'i'), 'ó', 'o'), 'ú', 'u')) 
+                        LIKE ?", ['%' . strtolower($search) . '%'])
+                      ->orWhere('ci', 'like', "%{$search}%");
+                })
+                // Agregar búsqueda por nombre de grupo
+                ->orWhereRaw("LOWER(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(
+                    name_grupo, 'á', 'a'), 'é', 'e'), 'í', 'i'), 'ó', 'o'), 'ú', 'u')) 
+                    LIKE ?", ['%' . strtolower($search) . '%']);
+            });
+        }
+        
+        // Ordenar por nombre de grupo para agrupar estudiantes del mismo grupo
+        $query->orderBy('name_grupo', 'asc');
+        
+        $estudiantes = $query->paginate(20)->appends(request()->query());
+        
+        return view('admin.evaluacion.calificar-grupal', compact(
+            'fase', 
+            'competicion', 
+            'categorias', 
+            'areas', 
+            'estudiantes', 
+            'numeroFase'
+        ));
     }
 
     public function guardarCalificaciones(Request $request, Competicion $competicion, $faseId)
@@ -569,16 +768,19 @@ class EvaluacionController extends \App\Http\Controllers\Controller
                     ->first();
 
                 if ($inscripcion) {
+                    // Preparar los datos para crear o actualizar
+                    $evaluacionData = [
+                        'evaluator_id' => $evaluadorId,
+                        'nota' => $datos['puntaje'],
+                        'observaciones_evaluador' => $datos['observaciones'] ?? null,
+                        'estado' => $this->determinarEstado($datos['puntaje']),
+                        'is_active' => true,
+                    ];
+                    
                     // Crear o actualizar evaluación sin usar stage_id
                     Evaluation::updateOrCreate(
                         ['inscription_id' => $inscripcionId],
-                        [
-                            'evaluator_id' => $evaluadorId,
-                            'nota' => $datos['puntaje'],
-                            'observaciones_evaluador' => $datos['observaciones'] ?? null,
-                            'estado' => $this->determinarEstado($datos['puntaje']),
-                            'is_active' => true,
-                        ]
+                        $evaluacionData
                     );
 
                     $calificacionesGuardadas++;
@@ -598,6 +800,7 @@ class EvaluacionController extends \App\Http\Controllers\Controller
             return redirect()->back()->with('error', 'Error al guardar las calificaciones: ' . $e->getMessage());
         }
     }
+
 
     private function determinarEstado($nota)
     {
@@ -666,7 +869,7 @@ class EvaluacionController extends \App\Http\Controllers\Controller
                         'estado' => 'confirmada',
                         'is_active' => true,
                         'fase' => $faseSiguiente,
-                        'grupo_nombre' => $inscripcionOriginal->grupo_nombre,
+                        'name_grupo' => $inscripcionOriginal->name_grupo ?? 'N/A',
                     ]);
                     
                     $clasificados++;
@@ -738,7 +941,7 @@ class EvaluacionController extends \App\Http\Controllers\Controller
                         'estado' => 'confirmada',
                         'is_active' => true,
                         'fase' => $faseSiguiente,
-                        'grupo_nombre' => $inscripcionOriginal->grupo_nombre,
+                        'name_grupo' => $inscripcionOriginal->name_grupo ?? 'N/A',
                     ]);
                     
                     $clasificados++;
@@ -822,13 +1025,44 @@ class EvaluacionController extends \App\Http\Controllers\Controller
                 }
             }
 
+            // Obtener los IDs de los estudiantes listados (si están filtrados en la vista)
+            $estudiantesListados = $request->input('estudiantes_listados', []);
+            
+            // Determinar si estamos en categoría grupal revisando la primera inscripción
+            $esGrupal = false;
+            if (!empty($estudiantesListados)) {
+                $primeraInscripcion = Inscription::whereIn('id', $estudiantesListados)->first();
+                $esGrupal = $primeraInscripcion && $primeraInscripcion->categoria_id == 3;
+            }
+            
             $evaluacionesQuery = Evaluation::where('is_active', true)
-                ->whereHas('inscription', function($q) use ($competicion, $numeroFase) {
+                ->whereHas('inscription', function($q) use ($competicion, $numeroFase, $estudiantesListados) {
                     $q->where('competition_id', $competicion->id)
-                      ->where('fase', $numeroFase);
+                      ->where('fase', $numeroFase)
+                      ->where('categoria_id', '!=', 3); // Excluir categoría Grupal (ID 3)
+                    
+                    // Si hay estudiantes listados (filtrados), solo considerar esos
+                    if (!empty($estudiantesListados)) {
+                        $q->whereIn('inscriptions.id', $estudiantesListados);
+                    }
                 })
                 ->with('inscription')
                 ->orderBy('nota', 'DESC');
+            
+            // Query para categoría grupal (usa promedio en lugar de nota)
+            $evaluacionesGrupalQuery = Evaluation::where('is_active', true)
+                ->whereHas('inscription', function($q) use ($competicion, $numeroFase, $estudiantesListados) {
+                    $q->where('competition_id', $competicion->id)
+                      ->where('fase', $numeroFase)
+                      ->where('categoria_id', '=', 3); // Solo categoría Grupal (ID 3)
+                    
+                    // Si hay estudiantes listados (filtrados), solo considerar esos
+                    if (!empty($estudiantesListados)) {
+                        $q->whereIn('inscriptions.id', $estudiantesListados);
+                    }
+                })
+                ->with('inscription')
+                ->orderBy('promedio', 'DESC');
 
             $evaluaciones = collect();
 
@@ -837,37 +1071,87 @@ class EvaluacionController extends \App\Http\Controllers\Controller
                     DB::rollBack();
                     return redirect()->back()->with('error', 'No se configuró la nota mínima para esta fase.');
                 }
-                $evaluaciones = (clone $evaluacionesQuery)
-                    ->where('nota', '>=', $notaMinima)
-                    ->get();
+                
+                if ($esGrupal) {
+                    // Para grupos, usar promedio
+                    $evaluaciones = (clone $evaluacionesGrupalQuery)
+                        ->where('promedio', '>=', $notaMinima)
+                        ->get();
+                } else {
+                    // Para individuales, usar nota
+                    $evaluaciones = (clone $evaluacionesQuery)
+                        ->where('nota', '>=', $notaMinima)
+                        ->get();
+                }
             } elseif ($tipo === 'cupo') {
                 if (empty($cupo) || (int)$cupo < 1) {
                     DB::rollBack();
                     return redirect()->back()->with('error', 'No se configuró un cupo válido para esta fase.');
                 }
-                $top = (clone $evaluacionesQuery)->take((int)$cupo)->get();
-                if ($top->isEmpty()) {
-                    DB::rollBack();
-                    return redirect()->back()->with('error', 'No se encontraron evaluaciones para clasificar.');
-                }
-                $evaluaciones = $top;
-                $ultimaNota = optional($top->last())->nota;
-                if ($ultimaNota !== null) {
-                    $empatados = (clone $evaluacionesQuery)
-                        ->where('nota', '=', $ultimaNota)
+                
+                if ($esGrupal) {
+                    // Para grupos, filtrar por promedio >= 51
+                    $top = (clone $evaluacionesGrupalQuery)
+                        ->where('promedio', '>=', 51)
+                        ->take((int)$cupo)
                         ->get();
-                    $evaluaciones = $evaluaciones->merge($empatados)
-                        ->unique('inscription_id')
-                        ->values();
+                        
+                    if ($top->isEmpty()) {
+                        DB::rollBack();
+                        return redirect()->back()->with('error', 'No se encontraron grupos con promedio >= 51 para clasificar.');
+                    }
+                    
+                    $evaluaciones = $top;
+                    $ultimoPromedio = optional($top->last())->promedio;
+                    
+                    // Incluir empates solo si también tienen promedio >= 51
+                    if ($ultimoPromedio !== null && $ultimoPromedio >= 51) {
+                        $empatados = (clone $evaluacionesGrupalQuery)
+                            ->where('promedio', '=', $ultimoPromedio)
+                            ->where('promedio', '>=', 51)
+                            ->get();
+                        $evaluaciones = $evaluaciones->merge($empatados)
+                            ->unique('inscription_id')
+                            ->values();
+                    }
+                } else {
+                    // Para individuales, filtrar por nota >= 51
+                    $top = (clone $evaluacionesQuery)
+                        ->where('nota', '>=', 51)
+                        ->take((int)$cupo)
+                        ->get();
+                        
+                    if ($top->isEmpty()) {
+                        DB::rollBack();
+                        return redirect()->back()->with('error', 'No se encontraron estudiantes con nota >= 51 para clasificar.');
+                    }
+                    
+                    $evaluaciones = $top;
+                    $ultimaNota = optional($top->last())->nota;
+                    
+                    // Incluir empates solo si también tienen nota >= 51
+                    if ($ultimaNota !== null && $ultimaNota >= 51) {
+                        $empatados = (clone $evaluacionesQuery)
+                            ->where('nota', '=', $ultimaNota)
+                            ->where('nota', '>=', 51)
+                            ->get();
+                        $evaluaciones = $evaluaciones->merge($empatados)
+                            ->unique('inscription_id')
+                            ->values();
+                    }
                 }
             }
 
             if ($evaluaciones->isEmpty()) {
                 DB::rollBack();
-                return redirect()->back()->with('error', 'No hay estudiantes que cumplan los criterios de clasificación.');
+                $mensaje = $esGrupal 
+                    ? 'No hay grupos que cumplan los criterios de clasificación.'
+                    : 'No hay estudiantes que cumplan los criterios de clasificación.';
+                return redirect()->back()->with('error', $mensaje);
             }
 
             $clasificados = 0;
+            $gruposClasificados = []; // Para contar grupos únicos
             $faseSiguiente = null;
 
             foreach ($evaluaciones as $evaluacion) {
@@ -891,17 +1175,31 @@ class EvaluacionController extends \App\Http\Controllers\Controller
                         'estado' => 'confirmada',
                         'is_active' => true,
                         'fase' => $faseSiguiente,
-                        'grupo_nombre' => $inscripcionOriginal->grupo_nombre,
+                        'name_grupo' => $inscripcionOriginal->name_grupo ?? 'N/A',
                     ]);
                     $clasificados++;
+                    
+                    // Si es grupal, rastrear grupos únicos
+                    if ($esGrupal && $inscripcionOriginal->name_grupo && $inscripcionOriginal->name_grupo !== 'N/A') {
+                        if (!in_array($inscripcionOriginal->name_grupo, $gruposClasificados)) {
+                            $gruposClasificados[] = $inscripcionOriginal->name_grupo;
+                        }
+                    }
                 }
             }
 
             DB::commit();
 
-            $mensaje = $tipo === 'notas_altas'
-                ? "Clasificados {$clasificados} estudiantes con nota >= {$notaMinima} a la fase {$faseSiguiente}."
-                : "Clasificados {$clasificados} mejores puntajes (incluye empates) a la fase {$faseSiguiente}.";
+            if ($esGrupal) {
+                $cantidadGrupos = count($gruposClasificados);
+                $mensaje = $tipo === 'notas_altas'
+                    ? "Clasificados {$cantidadGrupos} " . ($cantidadGrupos == 1 ? 'grupo' : 'grupos') . " con promedio >= {$notaMinima} a la fase {$faseSiguiente}."
+                    : "Clasificados {$cantidadGrupos} " . ($cantidadGrupos == 1 ? 'mejor grupo' : 'mejores grupos') . " con promedio >= 51 (incluye empates) a la fase {$faseSiguiente}.";
+            } else {
+                $mensaje = $tipo === 'notas_altas'
+                    ? "Clasificados {$clasificados} " . ($clasificados == 1 ? 'estudiante' : 'estudiantes') . " con nota >= {$notaMinima} a la fase {$faseSiguiente}."
+                    : "Clasificados {$clasificados} mejores puntajes con nota >= 51 (incluye empates) a la fase {$faseSiguiente}.";
+            }
 
             return redirect()->back()->with('success', $mensaje);
 
@@ -909,6 +1207,346 @@ class EvaluacionController extends \App\Http\Controllers\Controller
             DB::rollBack();
             return redirect()->back()->with('error', 'Error al finalizar la fase: ' . $e->getMessage());
         }
+    }
+
+    /**
+     * Página de Premiación (medallero) por competición
+     */
+    public function premiacion(\App\Models\Competicion $competicion)
+    {
+        // Intentar obtener premiados desde el medallero configurado
+        $premiados = collect($this->generarReportePremiados($competicion->id));
+
+        // Si no hay premiados del medallero, mostrar todos los clasificados de la última fase
+        if ($premiados->isEmpty()) {
+            $totalFases = $competicion->phases()->count();
+            if ($totalFases > 0) {
+                $numeroFaseAnterior = $totalFases;
+
+                // Obtener clasificados INDIVIDUALES (excluir categoría grupal)
+                $clasificadosIndividuales = \App\Models\Evaluation::with(['inscription.user', 'inscription.area', 'inscription.categoria'])
+                    ->where('estado', self::ESTADO_CLASIFICADO)
+                    ->whereHas('inscription', function ($q) use ($competicion, $numeroFaseAnterior) {
+                        $q->where('competition_id', $competicion->id)
+                          ->where('is_active', true)
+                          ->where('estado', 'confirmada')
+                          ->where('fase', $numeroFaseAnterior)
+                          ->where('categoria_id', '!=', 3); // Excluir categoría grupal
+                    })
+                    ->orderByDesc('nota')
+                    ->get();
+
+                // Obtener clasificados GRUPALES (solo categoría grupal)
+                $clasificadosGrupales = \App\Models\Evaluation::with(['inscription.user', 'inscription.area', 'inscription.categoria'])
+                    ->where('estado', self::ESTADO_CLASIFICADO)
+                    ->whereHas('inscription', function ($q) use ($competicion, $numeroFaseAnterior) {
+                        $q->where('competition_id', $competicion->id)
+                          ->where('is_active', true)
+                          ->where('estado', 'confirmada')
+                          ->where('fase', $numeroFaseAnterior)
+                          ->where('categoria_id', 3); // Solo categoría grupal
+                    })
+                    ->orderByDesc('promedio')
+                    ->get();
+
+                // Procesar estudiantes individuales
+                $premiadosIndividuales = $clasificadosIndividuales->groupBy(function ($ev) {
+                    $area = $ev->inscription->area->name ?? 'Sin área';
+                    $nivel = $ev->inscription->categoria->nombre ?? 'Sin nivel';
+                    return $area . '|' . $nivel;
+                })->flatMap(function ($grupo) {
+                    // Ordenar por nota descendente dentro del grupo
+                    $ordenados = $grupo->sortByDesc('nota')->values();
+                    
+                    return $ordenados->map(function ($ev, $index) {
+                        $posicion = $index + 1;
+                        
+                        // Asignar premio según posición
+                        $premio = match($posicion) {
+                            1 => 'oro',
+                            2 => 'plata',
+                            3 => 'bronce',
+                            default => 'mencion_honor'
+                        };
+
+                        return [
+                            'posicion' => $posicion,
+                            'nombre_completo' => trim(($ev->inscription->user->name ?? '') . ' ' . 
+                                                     ($ev->inscription->user->last_name_father ?? '') . ' ' . 
+                                                     ($ev->inscription->user->last_name_mother ?? '')),
+                            'unidad_educativa' => $ev->inscription->user->school ?? 'No especificada',
+                            'area' => $ev->inscription->area->name ?? 'Sin área',
+                            'nivel' => $ev->inscription->categoria->nombre ?? 'Sin nivel',
+                            'nota' => $ev->nota,
+                            'promedio' => null, // Los individuales no tienen promedio
+                            'premio' => $premio,
+                            'es_grupal' => false,
+                        ];
+                    });
+                });
+
+                // Procesar estudiantes grupales
+                $premiadosGrupales = $clasificadosGrupales->groupBy(function ($ev) {
+                    $area = $ev->inscription->area->name ?? 'Sin área';
+                    $nivel = $ev->inscription->categoria->nombre ?? 'Sin nivel';
+                    return $area . '|' . $nivel;
+                })->flatMap(function ($grupoAreaNivel) {
+                    // Agrupar por nombre de grupo dentro de cada área/nivel
+                    $gruposPorNombre = $grupoAreaNivel->groupBy(function ($ev) {
+                        return $ev->inscription->name_grupo ?? 'Sin nombre';
+                    });
+                    
+                    // Calcular promedio por grupo y ordenar
+                    $gruposConPromedio = $gruposPorNombre->map(function ($miembros) {
+                        $primerMiembro = $miembros->first();
+                        $promedio = $primerMiembro->promedio ?? 0;
+                        
+                        // Obtener nombres de todos los integrantes
+                        $integrantes = $miembros->map(function ($ev) {
+                            return trim(($ev->inscription->user->name ?? '') . ' ' . 
+                                       ($ev->inscription->user->last_name_father ?? '') . ' ' . 
+                                       ($ev->inscription->user->last_name_mother ?? ''));
+                        })->toArray();
+                        
+                        return [
+                            'nombre_grupo' => $primerMiembro->inscription->name_grupo ?? 'Sin nombre',
+                            'integrantes' => $integrantes,
+                            'unidad_educativa' => $primerMiembro->inscription->user->school ?? 'No especificada',
+                            'area' => $primerMiembro->inscription->area->name ?? 'Sin área',
+                            'nivel' => $primerMiembro->inscription->categoria->nombre ?? 'Sin nivel',
+                            'promedio' => $promedio,
+                            'es_grupal' => true,
+                        ];
+                    })->sortByDesc('promedio')->values();
+                    
+                    // Asignar posiciones y premios
+                    return $gruposConPromedio->map(function ($grupo, $index) {
+                        $posicion = $index + 1;
+                        
+                        $premio = match($posicion) {
+                            1 => 'oro',
+                            2 => 'plata',
+                            3 => 'bronce',
+                            default => 'mencion_honor'
+                        };
+
+                        return array_merge($grupo, [
+                            'posicion' => $posicion,
+                            'premio' => $premio,
+                        ]);
+                    });
+                });
+
+                // Combinar ambos conjuntos
+                $premiados = $premiadosIndividuales->merge($premiadosGrupales);
+            }
+        }
+
+        // Agrupar por Área y Nivel para la vista
+        $premiadosGrouped = $premiados->groupBy(function ($p) {
+            return ($p['area'] ?? 'Área') . ' | ' . ($p['nivel'] ?? 'Nivel');
+        })->map(function ($items) {
+            return $items->sortBy('posicion')->values();
+        });
+
+        return view('admin.evaluacion.premiacion', [
+            'competicion' => $competicion,
+            'premiados' => $premiados,
+            'premiadosGrouped' => $premiadosGrouped,
+        ]);
+    }
+
+    /**
+     * Generar PDF de premiación por grupo (área y nivel)
+     */
+    public function generarPdfPremiacion(Request $request, $competicionId)
+    {
+        $competicion = Competicion::findOrFail($competicionId);
+        $area = $request->query('area');
+        $nivel = $request->query('nivel');
+
+        $totalFases = $competicion->phases()->count();
+        if ($totalFases == 0) {
+            return response()->json(['error' => 'No hay fases configuradas'], 404);
+        }
+        $numeroFaseAnterior = $totalFases;
+
+        // Obtener clasificados INDIVIDUALES
+        $clasificadosIndividuales = \App\Models\Evaluation::with(['inscription.user', 'inscription.area', 'inscription.categoria'])
+            ->where('estado', self::ESTADO_CLASIFICADO)
+            ->whereHas('inscription', function ($q) use ($competicion, $numeroFaseAnterior, $area, $nivel) {
+                $q->where('competition_id', $competicion->id)
+                  ->where('is_active', true)
+                  ->where('estado', 'confirmada')
+                  ->where('fase', $numeroFaseAnterior)
+                  ->where('categoria_id', '!=', 3);
+                if ($area) {
+                    $q->whereHas('area', function($qa) use ($area) {
+                        $qa->where('name', $area);
+                    });
+                }
+                if ($nivel) {
+                    $q->whereHas('categoria', function($qc) use ($nivel) {
+                        $qc->where('nombre', $nivel);
+                    });
+                }
+            })
+            ->orderByDesc('nota')
+            ->get();
+
+        // Agrupar individuales por área y categoría
+        $individualesPorGrupo = $clasificadosIndividuales->groupBy(function ($ev) {
+            $area = $ev->inscription->area->name ?? 'Sin área';
+            $categoria = $ev->inscription->categoria->nombre ?? 'Sin nivel';
+            return $area . '|' . $categoria;
+        });
+
+        $premiadosIndividuales = collect();
+        foreach ($individualesPorGrupo as $grupoKey => $grupoEvaluaciones) {
+            foreach ($grupoEvaluaciones->values() as $index => $ev) {
+                $posicion = $index + 1;
+                $premio = match($posicion) {
+                    1 => 'oro',
+                    2 => 'plata',
+                    3 => 'bronce',
+                    default => 'mencion_honor'
+                };
+                $premiadosIndividuales->push([
+                    'posicion' => $posicion,
+                    'nombre_completo' => trim(($ev->inscription->user->name ?? '') . ' ' . ($ev->inscription->user->last_name_father ?? '') . ' ' . ($ev->inscription->user->last_name_mother ?? '')),
+                    'unidad_educativa' => $ev->inscription->user->school ?? 'No especificada',
+                    'area' => $ev->inscription->area->name ?? 'Sin área',
+                    'nivel' => $ev->inscription->categoria->nombre ?? 'Sin nivel',
+                    'nota' => $ev->nota,
+                    'promedio' => null,
+                    'premio' => $premio,
+                    'es_grupal' => false,
+                    'grupo_key' => $grupoKey,
+                ]);
+            }
+        }
+
+        // Obtener clasificados GRUPALES
+        $clasificadosGrupales = \App\Models\Evaluation::with(['inscription.user', 'inscription.area', 'inscription.categoria'])
+            ->where('estado', self::ESTADO_CLASIFICADO)
+            ->whereHas('inscription', function ($q) use ($competicion, $numeroFaseAnterior, $area, $nivel) {
+                $q->where('competition_id', $competicion->id)
+                  ->where('is_active', true)
+                  ->where('estado', 'confirmada')
+                  ->where('fase', $numeroFaseAnterior)
+                  ->where('categoria_id', 3);
+                if ($area) {
+                    $q->whereHas('area', function($qa) use ($area) {
+                        $qa->where('name', $area);
+                    });
+                }
+                if ($nivel) {
+                    $q->whereHas('categoria', function($qc) use ($nivel) {
+                        $qc->where('nombre', $nivel);
+                    });
+                }
+            })
+            ->orderByDesc('promedio')
+            ->get();
+
+        // Agrupar grupales por área y categoría y nombre de grupo
+        $grupalesPorGrupo = $clasificadosGrupales->groupBy(function ($ev) {
+            $area = $ev->inscription->area->name ?? 'Sin área';
+            $categoria = $ev->inscription->categoria->nombre ?? 'Sin nivel';
+            $nombreGrupo = $ev->inscription->name_grupo ?? 'Sin nombre';
+            return $area . '|' . $categoria . '|' . $nombreGrupo;
+        });
+
+        $premiadosGrupales = collect();
+        // Agrupar por área y categoría, luego asignar premios por grupo
+        $grupalesPorAreaCategoria = $clasificadosGrupales->groupBy(function ($ev) {
+            $area = $ev->inscription->area->name ?? 'Sin área';
+            $categoria = $ev->inscription->categoria->nombre ?? 'Sin nivel';
+            return $area . '|' . $categoria;
+        });
+        foreach ($grupalesPorAreaCategoria as $grupoKey => $evaluaciones) {
+            // Agrupar por nombre de grupo dentro de área-categoría
+            $grupos = $evaluaciones->groupBy(function ($ev) {
+                return $ev->inscription->name_grupo ?? 'Sin nombre';
+            });
+            $gruposArray = [];
+            foreach ($grupos as $nombreGrupo => $miembros) {
+                $primerMiembro = $miembros->first();
+                $promedio = $primerMiembro->promedio ?? 0;
+                $integrantes = [];
+                foreach ($miembros as $ev) {
+                    $integrantes[] = trim(($ev->inscription->user->name ?? '') . ' ' . ($ev->inscription->user->last_name_father ?? '') . ' ' . ($ev->inscription->user->last_name_mother ?? ''));
+                }
+                $gruposArray[] = [
+                    'nombre_grupo' => $nombreGrupo,
+                    'integrantes' => $integrantes,
+                    'unidad_educativa' => $primerMiembro->inscription->user->school ?? 'No especificada',
+                    'area' => $primerMiembro->inscription->area->name ?? 'Sin área',
+                    'nivel' => $primerMiembro->inscription->categoria->nombre ?? 'Sin nivel',
+                    'promedio' => $promedio,
+                    'nota' => null,
+                    'es_grupal' => true,
+                    'grupo_key' => $grupoKey,
+                ];
+            }
+            // Ordenar por promedio descendente
+            usort($gruposArray, function($a, $b) {
+                return $b['promedio'] <=> $a['promedio'];
+            });
+            // Asignar posiciones y premios por grupo dentro de área-categoría
+            foreach ($gruposArray as $index => &$grupo) {
+                $posicion = $index + 1;
+                $premio = match($posicion) {
+                    1 => 'oro',
+                    2 => 'plata',
+                    3 => 'bronce',
+                    default => 'mencion_honor'
+                };
+                $grupo['posicion'] = $posicion;
+                $grupo['premio'] = $premio;
+            }
+            unset($grupo);
+            foreach ($gruposArray as $grupo) {
+                $premiadosGrupales->push($grupo);
+            }
+        }
+
+        // Combinar ambos conjuntos
+        $premiados = $premiadosIndividuales->merge($premiadosGrupales);
+
+        // Obtener todos los inscritos de fase 1 (sin repetición)
+        $inscritosFase1 = \App\Models\Inscription::with(['user', 'area', 'categoria'])
+            ->where('competition_id', $competicion->id)
+            ->where('fase', 1)
+            ->where('is_active', true)
+            ->where('estado', 'confirmada')
+            ->orderBy('area_id')
+            ->orderBy('categoria_id')
+            ->orderBy('user_id')
+            ->get()
+            ->map(function ($inscripcion) {
+                return [
+                    'nombre_completo' => trim(($inscripcion->user->name ?? '') . ' ' . 
+                                             ($inscripcion->user->last_name_father ?? '') . ' ' . 
+                                             ($inscripcion->user->last_name_mother ?? '')),
+                    'unidad_educativa' => $inscripcion->user->school ?? 'No especificada',
+                    'area' => $inscripcion->area->name ?? 'Sin área',
+                    'categoria' => $inscripcion->categoria->nombre ?? 'Sin categoría',
+                    'nombre_grupo' => $inscripcion->name_grupo !== 'N/A' ? $inscripcion->name_grupo : null,
+                    'es_grupal' => $inscripcion->categoria_id == 3,
+                ];
+            });
+
+        $pdf = Pdf::loadView('admin.evaluacion.pdf.premiacion', [
+            'competicion' => $competicion,
+            'premiados' => $premiados,
+            'inscritosFase1' => $inscritosFase1,
+            'area' => $area ?? 'Todas las áreas',
+            'nivel' => $nivel ?? 'Todos los niveles',
+            'grupo' => ($area ?? 'Todas') . ' | ' . ($nivel ?? 'Todos'),
+        ])->setPaper('letter', 'portrait');
+
+        return $pdf->stream("premiacion_{$competicion->id}_{$area}_{$nivel}.pdf");
     }
 
     // Métodos auxiliares
@@ -977,5 +1615,137 @@ class EvaluacionController extends \App\Http\Controllers\Controller
         // Generar PDF
         $pdf = Pdf::loadView('admin.evaluacion.pdf.inscritos', compact('competicion', 'faseObj', 'categorias', 'areas', 'estudiantes', 'numeroFase'));
         return $pdf->stream('lista_inscritos.pdf');
+    }
+
+    // Generar PDF de clasificados (siguiente fase)
+    public function generarPdfClasificados(Request $request, $competicion, $fase)
+    {
+        // Filtros similares para mantener consistencia visual
+        $categoria = $request->input('categoria');
+        $area = $request->input('area');
+        $estado_activo = $request->input('estado_activo', 'activo');
+        $search = $request->input('search');
+        $numeroFaseActual = (int) $request->input('fase_n', $request->input('fase'));
+
+        $competicion = \App\Models\Competicion::findOrFail($competicion);
+        $faseObj = \App\Models\Phase::findOrFail($fase);
+
+        // Calcular número de fase si no viene correcto
+        $todasLasFases = $competicion->phases()->orderBy('competition_phase.id')->get();
+        if ($numeroFaseActual <= 0) {
+            foreach ($todasLasFases as $index => $f) {
+                if ($f->id == $faseObj->id) { $numeroFaseActual = $index + 1; break; }
+            }
+            if ($numeroFaseActual <= 0) { $numeroFaseActual = 1; }
+        } else {
+            $maxFases = max(1, $todasLasFases->count());
+            if ($numeroFaseActual > $maxFases) { $numeroFaseActual = $maxFases; }
+        }
+
+        $numeroFaseSiguiente = $numeroFaseActual + 1;
+
+        // Traer inscripciones de la siguiente fase como "clasificados"
+        $query = \App\Models\Inscription::with(['user', 'area', 'categoria', 'evaluations'])
+            ->where('competition_id', $competicion->id)
+            ->where('fase', $numeroFaseSiguiente);
+
+        if ($estado_activo === 'inactivo') { $query->where('is_active', false); }
+        elseif ($estado_activo === 'todos') { /* no-op */ }
+        else { $query->where('is_active', true); }
+        if ($categoria) { $query->where('categoria_id', $categoria); }
+        if ($area) { $query->where('area_id', $area); }
+        if ($search) {
+            $query->whereHas('user', function($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('last_name_father', 'like', "%{$search}%")
+                  ->orWhere('last_name_mother', 'like', "%{$search}%")
+                  ->orWhere('school', 'like', "%{$search}%");
+            });
+        }
+
+        $clasificados = $query->get();
+
+        // Obtener inscripciones de la fase actual (anterior a la siguiente) para los mismos usuarios con sus evaluaciones
+        $inscripcionesPreviasKeyed = \App\Models\Inscription::with(['evaluations'])
+            ->where('competition_id', $competicion->id)
+            ->where('fase', $numeroFaseActual)
+            ->whereIn('user_id', $clasificados->pluck('user_id'))
+            ->get()
+            ->keyBy('user_id');
+
+        // Separar clasificados en individuales y grupales (categoria_id 3 es grupal)
+        $clasificadosIndividuales = $clasificados->filter(function($estudiante) {
+            return $estudiante->categoria_id != 3;
+        });
+
+        $clasificadosGrupales = $clasificados->filter(function($estudiante) {
+            return $estudiante->categoria_id == 3 && $estudiante->name_grupo && $estudiante->name_grupo !== 'N/A';
+        });
+
+        // Función para ordenar por nota (para individuales)
+        $ordenarPorNota = function($collection) use ($inscripcionesPreviasKeyed) {
+            return $collection->sortByDesc(function($estudiante) use ($inscripcionesPreviasKeyed) {
+                $evaluacionActual = $estudiante->evaluations->first();
+                $notaActual = $evaluacionActual && $evaluacionActual->nota !== null ? $evaluacionActual->nota : null;
+                if ($notaActual !== null) {
+                    return $notaActual;
+                }
+                $inscripcionPrevia = $inscripcionesPreviasKeyed->get($estudiante->user_id);
+                $evaluacionPrevia = $inscripcionPrevia ? $inscripcionPrevia->evaluations->first() : null;
+                $notaPrevia = $evaluacionPrevia && $evaluacionPrevia->nota !== null ? $evaluacionPrevia->nota : null;
+                return $notaPrevia ?? -1;
+            })->values();
+        };
+
+        $clasificadosIndividualesOrdenados = $ordenarPorNota($clasificadosIndividuales);
+
+        // Agrupar grupos y calcular promedio (usa campo promedio si ya está; si no, calcula)
+        $gruposClasificados = $clasificadosGrupales
+            ->groupBy('name_grupo')
+            ->map(function($miembros) use ($inscripcionesPreviasKeyed) {
+                // Tomar promedio almacenado si existe en alguna evaluación
+                $promedio = null;
+                $notas = [];
+                foreach ($miembros as $m) {
+                    $eval = $m->evaluations->first();
+                    if ($eval && $eval->promedio !== null && $eval->promedio > 0) {
+                        $promedio = $eval->promedio; // ya calculado previamente
+                        break;
+                    }
+                    if ($eval && $eval->nota !== null) {
+                        $notas[] = $eval->nota;
+                    } else {
+                        // Buscar nota previa si esta inscripción no tiene
+                        $inscripcionPrevia = $inscripcionesPreviasKeyed->get($m->user_id);
+                        $evaluacionPrevia = $inscripcionPrevia ? $inscripcionPrevia->evaluations->first() : null;
+                        if ($evaluacionPrevia && $evaluacionPrevia->nota !== null) {
+                            $notas[] = $evaluacionPrevia->nota;
+                        }
+                    }
+                }
+                if ($promedio === null) {
+                    $promedio = count($notas) > 0 ? array_sum($notas) / count($notas) : null;
+                }
+                return (object) [
+                    'nombre_grupo' => $miembros->first()->name_grupo,
+                    'promedio' => $promedio,
+                    'integrantes' => $miembros->values()
+                ];
+            })
+            ->sortByDesc(function($g) { return $g->promedio ?? -1; })
+            ->values();
+
+        $pdf = Pdf::loadView('admin.evaluacion.pdf.clasificados', [
+            'competicion' => $competicion,
+            'faseObj' => $faseObj,
+            'numeroFaseActual' => $numeroFaseActual,
+            'numeroFaseSiguiente' => $numeroFaseSiguiente,
+            'estudiantesIndividuales' => $clasificadosIndividualesOrdenados,
+            // Lista original de miembros si se requiere en la vista (no usada para tabla principal de grupos)
+            'estudiantesGrupales' => $clasificadosGrupales,
+            'gruposClasificados' => $gruposClasificados,
+            'inscripcionesPreviasKeyed' => $inscripcionesPreviasKeyed,
+        ]);
+        return $pdf->stream('lista_clasificados.pdf');
     }
 }

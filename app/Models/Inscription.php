@@ -3,9 +3,11 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Traits\Auditable;
 
 class Inscription extends Model
 {
+    use Auditable;
     protected $fillable = [
         'competition_id',
         'user_id',
@@ -13,7 +15,7 @@ class Inscription extends Model
         'categoria_id',
         'fase',
         'estado',
-        'grupo_nombre',
+        'name_grupo',
         'observaciones_estudiante',
         'motivo_rechazo',
         'is_active'

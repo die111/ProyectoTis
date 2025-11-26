@@ -3,7 +3,7 @@
 
 @section('content')
 <div class="p-6">
-    <div class="max-w-5xl mx-auto">
+    <div class="w-full">
         <!-- Breadcrumb -->
         <div class="mb-6">
             <nav class="flex" aria-label="Breadcrumb">
@@ -122,10 +122,10 @@
                                 @endif
                             </p>
                         </div>
-                        @if($inscripcion->grupo_nombre)
+                        @if($inscripcion->name_grupo)
                         <div class="col-span-2">
                             <p class="text-sm font-medium text-gray-600">Nombre del Grupo:</p>
-                            <p class="text-sm text-gray-900">{{ $inscripcion->grupo_nombre }}</p>
+                            <p class="text-sm text-gray-900">{{ $inscripcion->name_grupo }}</p>
                         </div>
                         @endif
                         <div>

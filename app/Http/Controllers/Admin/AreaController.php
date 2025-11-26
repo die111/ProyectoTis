@@ -52,8 +52,8 @@ class AreaController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'description' => 'required|string|max:1000',
+            'name' => 'required|string|max:20|unique:areas,name',
+            'description' => 'required|string|max:30',
         ]);
 
         $area = new Area();
@@ -73,8 +73,8 @@ class AreaController extends Controller
     public function update(Request $request, $id)
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'description' => 'required|string|max:1000',
+            'name' => 'required|string|max:20|unique:areas,name,' . $id,
+            'description' => 'required|string|max:30',
         ]);
 
         $area = Area::findOrFail($id);

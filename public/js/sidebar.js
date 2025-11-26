@@ -51,47 +51,61 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Función para manejar la selección activa
     function handleActiveSelection() {
-        // Obtener la URL actual
+        // Primero, verificar si el servidor ya marcó algún elemento como activo
+        const serverActiveItem = document.querySelector('.sidebar-item-active');
+        
+        // Si el servidor ya marcó un item, no hacer nada más
+        // El servidor tiene prioridad sobre localStorage
+        if (serverActiveItem) {
+            // Expandir menú padre si es necesario
+            const parentSubmenu = serverActiveItem.closest('ul[x-show]');
+            if (parentSubmenu) {
+                const parentLi = parentSubmenu.closest('li[x-data]');
+                if (parentLi) {
+                    const alpineComponent = parentLi._x_dataStack && parentLi._x_dataStack[0];
+                    if (alpineComponent) {
+                        alpineComponent.open = true;
+                    }
+                }
+            }
+            
+            // Actualizar localStorage con el item activo del servidor
+            const menuId = serverActiveItem.getAttribute('data-menu');
+            if (menuId) {
+                localStorage.setItem('activeMenuItem', menuId);
+            }
+            return; // Salir aquí, el servidor ya definió el estado
+        }
+        
+        // Si el servidor no marcó nada, intentar por URL
         const currentPath = window.location.pathname;
-        
-        // Remover clase activa de todos los elementos
-        document.querySelectorAll('.sidebar-item').forEach(item => {
-            item.classList.remove('sidebar-item-active');
-        });
-        
-        // Encontrar y marcar el elemento activo basado en la URL actual
         let activeFound = false;
+        
         document.querySelectorAll('.sidebar-item[href]').forEach(item => {
             const href = item.getAttribute('href');
             if (href && href !== '#' && (currentPath === href || currentPath.startsWith(href + '/'))) {
                 item.classList.add('sidebar-item-active');
                 activeFound = true;
                 
-                // Si es un elemento de submenú, expandir el menú padre
+                // Expandir menú padre si es necesario
                 const parentSubmenu = item.closest('ul[x-show]');
                 if (parentSubmenu) {
                     const parentLi = parentSubmenu.closest('li[x-data]');
                     if (parentLi) {
-                        // Buscar el componente Alpine.js y forzar la apertura
                         const alpineComponent = parentLi._x_dataStack && parentLi._x_dataStack[0];
                         if (alpineComponent) {
                             alpineComponent.open = true;
                         }
                     }
                 }
-            }
-        });
-        
-        // Si no se encontró elemento activo por URL, usar localStorage
-        if (!activeFound) {
-            const activeItem = localStorage.getItem('activeMenuItem');
-            if (activeItem) {
-                const element = document.querySelector(`[data-menu="${activeItem}"]`);
-                if (element) {
-                    element.classList.add('sidebar-item-active');
+                
+                // Actualizar localStorage
+                const menuId = item.getAttribute('data-menu');
+                if (menuId) {
+                    localStorage.setItem('activeMenuItem', menuId);
                 }
             }
-        }
+        });
     }
 
     // Event Listeners
@@ -134,15 +148,8 @@ document.addEventListener('DOMContentLoaded', function() {
             // Solo procesar si es un enlace real (no #)
             const href = this.getAttribute('href');
             if (href && href !== '#') {
-                // Remover clase activa de todos los elementos
-                document.querySelectorAll('.sidebar-item').forEach(el => {
-                    el.classList.remove('sidebar-item-active');
-                });
-                
-                // Agregar clase activa al elemento clickeado
-                this.classList.add('sidebar-item-active');
-                
-                // Guardar en localStorage
+                // NO manipular clases aquí - dejar que el servidor lo maneje en la próxima carga
+                // Solo guardar en localStorage como referencia auxiliar
                 const menuId = this.getAttribute('data-menu') || this.textContent.trim();
                 localStorage.setItem('activeMenuItem', menuId);
             }

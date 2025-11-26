@@ -16,6 +16,9 @@ use App\Models\Categoria;
 use App\Models\Permission;
 use App\Models\User;
 use App\Notifications\FrontNotification;
+use App\Models\Evaluation;
+use App\Models\Reclamo;
+use App\Models\Phase;
 
 class InscripcionController extends Controller
 {
@@ -25,18 +28,15 @@ class InscripcionController extends Controller
     public function index()
     {
         $user = Auth::user();
-        
-        // Obtener competencias activas que están en período de inscripción
-        $competenciasActivas = Competicion::inscripcionAbierta()
+        // Mostrar todas las competencias activas
+        $competenciasActivas = Competicion::where('state', 'activa')
             ->with(['area', 'phases'])
             ->orderBy('fechaInicio', 'asc')
             ->get();
-        
         // Obtener inscripciones del usuario
         $misInscripciones = Inscription::where('user_id', $user->id)
             ->with(['competition'])
             ->get();
-        
         return view('estudiante.inscripcion.index', compact('competenciasActivas', 'misInscripciones', 'user'));
     }
 
@@ -83,8 +83,9 @@ class InscripcionController extends Controller
         $user = Auth::user();
         $areas = Area::where('is_active', true)->get();
         $levels = Level::all();
+        $categorias = Categoria::where('is_active', true)->get();
 
-        return view('estudiante.inscripcion.create', compact('competencia', 'areas', 'levels', 'user'));
+        return view('estudiante.inscripcion.create', compact('competencia', 'areas', 'levels', 'categorias', 'user'));
     }
 
     /**
@@ -98,9 +99,8 @@ class InscripcionController extends Controller
             // Validar datos requeridos
             $request->validate([
                 'area_id' => 'required|exists:areas,id',
-                'level_id' => 'required|exists:levels,id',
-                'es_grupal' => 'boolean',
-                'grupo_nombre' => 'nullable|string|max:255',
+                'categoria_id' => 'required|exists:categorias,id',
+                'name_grupo' => 'nullable|string|max:255',
                 'observaciones_estudiante' => 'nullable|string',
             ]);
             
@@ -144,33 +144,8 @@ class InscripcionController extends Controller
                 return redirect()->back()->with('error', 'Ya estás inscrito en esta competencia y área.');
             }
             
-            // Determinar categoria_id asociada a la competencia y área
-            $pair = CompetitionCategoryArea::where('competition_id', $competicion->id)
-                ->where('area_id', $request->area_id)
-                ->first();
-
-            if (!$pair) {
-                $msg = 'No hay categorías configuradas para la combinación competencia/área seleccionada. Se asignará una categoría por defecto. Contacta al administrador para revisar.';
-                Log::warning($msg . ' competition_id=' . $competicion->id . ' area_id=' . $request->area_id . ' user_id=' . $user->id);
-                // Añadir mensaje de sesión para usuarios web
-                if (! $request->expectsJson()) {
-                    session()->flash('warning', $msg);
-                }
-
-                // Buscar una categoría activa primero, luego la primera disponible
-                $fallbackCategoria = Categoria::where('is_active', true)->first() ?? Categoria::first();
-                if (! $fallbackCategoria) {
-                    // Crear categoría por defecto
-                    $fallbackCategoria = Categoria::create([
-                        'nombre' => 'Sin categoría',
-                        'descripcion' => 'Categoría generada automáticamente al inscribir sin configuración',
-                        'is_active' => false,
-                    ]);
-                }
-                $categoriaId = $fallbackCategoria->id;
-            } else {
-                $categoriaId = $pair->categoria_id;
-            }
+            // Usar directamente el categoria_id enviado desde el formulario
+            $categoriaId = $request->categoria_id;
 
             $fase = 1;
 
@@ -181,10 +156,8 @@ class InscripcionController extends Controller
                 'area_id' => $request->area_id,
                 'categoria_id' => $categoriaId,
                 'fase' => $fase,
-                'level_id' => $request->level_id,
                 'estado' => 'pendiente',
-                'es_grupal' => $request->es_grupal ?? false,
-                'grupo_nombre' => $request->grupo_nombre,
+                'name_grupo' => $request->name_grupo ?? 'N/A',
                 'observaciones_estudiante' => $request->observaciones_estudiante,
             ]);
             
@@ -253,5 +226,135 @@ class InscripcionController extends Controller
             ->get();
         
         return view('estudiante.inscripcion.mis-inscripciones', compact('inscripciones', 'user'));
+    }
+
+    /**
+     * Retorna las evaluaciones por fase de una inscripción (JSON)
+     */
+    public function evaluaciones(Inscription $inscripcion)
+    {
+        $user = Auth::user();
+        if ($inscripcion->user_id !== $user->id) {
+            return response()->json(['error' => 'No autorizado'], 403);
+        }
+
+        $competicion = $inscripcion->competition()->with('phases')->first();
+        $phases = $competicion->phases()->orderBy('competition_phase.id')->get();
+
+        // Cargar evaluaciones del inscripcion con stage
+        $evaluaciones = Evaluation::with('stage')
+            ->where('inscription_id', $inscripcion->id)
+            ->where('is_active', true)
+            ->get();
+
+        $result = $phases->map(function($phase, $index) use ($evaluaciones) {
+            $eval = $evaluaciones->firstWhere('stage.nombre', $phase->name) ?? null;
+            return [
+                'fase_numero' => $index + 1,
+                'fase_id' => $phase->id,
+                'fase_nombre' => $phase->name,
+                'evaluacion' => $eval ? [
+                    'id' => $eval->id,
+                    'nota' => $eval->nota,
+                    'estado' => $eval->estado,
+                    'observaciones_evaluador' => $eval->observaciones_evaluador,
+                    'stage_nombre' => $eval->stage?->nombre,
+                ] : null
+            ];
+        });
+
+        return response()->json(['phases' => $result]);
+    }
+
+    /**
+     * Permite al estudiante crear un reclamo sobre una nota o falta de nota
+     */
+    public function reclamar(Request $request, Inscription $inscripcion)
+    {
+        $user = Auth::user();
+        if ($inscripcion->user_id !== $user->id) {
+            return redirect()->back()->with('error', 'No autorizado');
+        }
+
+        $request->validate([
+            'fase_id' => 'nullable|integer',
+            'evaluation_id' => 'nullable|exists:evaluations,id',
+            'mensaje' => 'required|string|max:2000'
+        ]);
+
+        $faseId = $request->input('fase_id');
+        $evaluationId = $request->input('evaluation_id');
+
+        // Evitar reclamos duplicados (mismo inscription + fase + evaluation con estado pendiente)
+        $existing = Reclamo::where('inscription_id', $inscripcion->id)
+            ->where('fase', $faseId)
+            ->where(function($q) use ($evaluationId) {
+                if ($evaluationId) {
+                    $q->where('evaluation_id', $evaluationId);
+                }
+            });
+
+        $existing = $existing->where('estado', 'pendiente')->first();
+        if ($existing) {
+            return redirect()->back()->with('error', 'Ya existe un reclamo pendiente para esta fase/nota.');
+        }
+
+        $reclamo = Reclamo::create([
+            'inscription_id' => $inscripcion->id,
+            'evaluation_id' => $evaluationId,
+            'user_id' => $user->id,
+            'fase' => $faseId,
+            'mensaje' => $request->mensaje,
+            'estado' => 'pendiente'
+        ]);
+
+        // Notificar a roles con permiso 'evaluacion' o administradores
+        try {
+            $permission = Permission::where('name', 'evaluacion')->first();
+            if ($permission) {
+                $roleIds = $permission->roles()->pluck('roles.id');
+                $usersToNotify = User::whereIn('role_id', $roleIds)
+                    ->where('is_active', true)
+                    ->get();
+                foreach ($usersToNotify as $u) {
+                    $u->notify(new FrontNotification(
+                        'Nuevo Reclamo de Nota',
+                        "El estudiante {$user->name} presentó un reclamo en la competencia {$inscripcion->competition->name}.",
+                        'warning',
+                        route('admin.reclamos.show', $reclamo->id),
+                        $reclamo->id
+                    ));
+                }
+            }
+        } catch (\Exception $e) {
+            // Silenciar fallas de notificación
+        }
+
+        return redirect()->back()->with('success', 'Tu reclamo fue enviado correctamente.');
+    }
+
+    /**
+     * Muestra una vista completa con notas por fase y formulario de reclamo
+     */
+    public function detalle(Inscription $inscripcion)
+    {
+        $user = Auth::user();
+        if ($inscripcion->user_id !== $user->id) {
+            abort(403);
+        }
+
+        $competicion = $inscripcion->competition()->with('phases')->first();
+        $phases = $competicion->phases()->orderBy('competition_phase.id')->get();
+
+        $evaluaciones = Evaluation::with('stage')
+            ->where('inscription_id', $inscripcion->id)
+            ->where('is_active', true)
+            ->get();
+
+        $reclamos = Reclamo::where('inscription_id', $inscripcion->id)
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return view('estudiante.inscripcion.detalle', compact('inscripcion', 'competicion', 'phases', 'evaluaciones', 'reclamos', 'user'));
     }
 }

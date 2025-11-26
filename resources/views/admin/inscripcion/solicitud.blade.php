@@ -4,9 +4,9 @@
 
 @section('content')
 <div class="p-6">
-    <div class="max-w-7xl mx-auto">
+    <div class="w-full">
         <!-- Header -->
-        <div class="mb-6">
+        <div class="mb-6 text-center">
             <h1 class="text-3xl font-bold text-gray-900 mb-2">
                 Solicitudes de Inscripción
             </h1>
@@ -83,8 +83,8 @@
                                             <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-purple-100 text-purple-800">
                                                 Grupal
                                             </span>
-                                            @if($inscripcion->grupo_nombre)
-                                                <div class="text-xs text-gray-500 mt-1">{{ $inscripcion->grupo_nombre }}</div>
+                                            @if($inscripcion->name_grupo)
+                                                <div class="text-xs text-gray-500 mt-1">{{ $inscripcion->name_grupo }}</div>
                                             @endif
                                         @else
                                             <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">

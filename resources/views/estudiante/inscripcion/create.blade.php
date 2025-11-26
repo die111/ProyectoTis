@@ -80,46 +80,27 @@
                 <p class="mt-1 text-sm text-gray-500">Selecciona el área en la que deseas competir</p>
             </div>
 
-            <!-- Nivel -->
+            <!-- Categoría -->
             <div class="mb-6">
-                <label for="level_id" class="block text-sm font-semibold text-gray-700 mb-2">
-                    Nivel <span class="text-red-500">*</span>
+                <label for="categoria_id" class="block text-sm font-semibold text-gray-700 mb-2">
+                    Categoría <span class="text-red-500">*</span>
                 </label>
-                <select id="level_id" name="level_id" required 
+                <select id="categoria_id" name="categoria_id" required 
                         class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
-                    <option value="">Seleccione un nivel</option>
-                    @foreach($levels as $level)
-                        <option value="{{ $level->id }}">{{ $level->nombre }}</option>
+                    <option value="">Seleccione una categoría</option>
+                    @foreach($categorias as $categoria)
+                        <option value="{{ $categoria->id }}" data-nombre="{{ $categoria->nombre }}">{{ $categoria->nombre }}</option>
                     @endforeach
                 </select>
-                <p class="mt-1 text-sm text-gray-500">Selecciona tu nivel académico</p>
-            </div>
-
-            <!-- Tipo de Inscripción -->
-            <div class="mb-6">
-                <label class="block text-sm font-semibold text-gray-700 mb-3">
-                    Tipo de Inscripción
-                </label>
-                <div class="flex items-center space-x-6">
-                    <label class="flex items-center cursor-pointer">
-                        <input type="radio" name="tipo_inscripcion" value="individual" checked 
-                               class="mr-2 text-blue-600 focus:ring-blue-500">
-                        <span class="text-gray-700">Individual</span>
-                    </label>
-                    <label class="flex items-center cursor-pointer">
-                        <input type="radio" name="tipo_inscripcion" value="grupal" 
-                               class="mr-2 text-blue-600 focus:ring-blue-500">
-                        <span class="text-gray-700">Grupal</span>
-                    </label>
-                </div>
+                <p class="mt-1 text-sm text-gray-500">Selecciona la categoría correspondiente</p>
             </div>
 
             <!-- Nombre del Grupo (oculto inicialmente) -->
             <div id="grupoNombreContainer" class="mb-6 hidden">
-                <label for="grupo_nombre" class="block text-sm font-semibold text-gray-700 mb-2">
+                <label for="name_grupo" class="block text-sm font-semibold text-gray-700 mb-2">
                     Nombre del Grupo <span class="text-red-500">*</span>
                 </label>
-                <input type="text" id="grupo_nombre" name="grupo_nombre" 
+                <input type="text" id="name_grupo" name="name_grupo" 
                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
                        placeholder="Ingrese el nombre del equipo">
                 <p class="mt-1 text-sm text-gray-500">Nombre que identificará a tu equipo</p>
@@ -180,21 +161,22 @@
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
-    // Mostrar/ocultar campo de nombre de grupo según tipo de inscripción
-    document.querySelectorAll('input[name="tipo_inscripcion"]').forEach(radio => {
-        radio.addEventListener('change', function() {
-            const container = document.getElementById('grupoNombreContainer');
-            const grupoNombreInput = document.getElementById('grupo_nombre');
-            
-            if (this.value === 'grupal') {
-                container.classList.remove('hidden');
-                grupoNombreInput.required = true;
-            } else {
-                container.classList.add('hidden');
-                grupoNombreInput.required = false;
-                grupoNombreInput.value = '';
-            }
-        });
+    // Mostrar/ocultar campo de nombre de grupo según la categoría seleccionada
+    document.getElementById('categoria_id').addEventListener('change', function() {
+        const selectedOption = this.options[this.selectedIndex];
+        const nombre = selectedOption.getAttribute('data-nombre');
+        const container = document.getElementById('grupoNombreContainer');
+        const grupoNombreInput = document.getElementById('name_grupo');
+        
+        // Mostrar el campo si la categoría se llama "Grupal"
+        if (nombre && nombre.toLowerCase() === 'grupal') {
+            container.classList.remove('hidden');
+            grupoNombreInput.required = true;
+        } else {
+            container.classList.add('hidden');
+            grupoNombreInput.required = false;
+            grupoNombreInput.value = '';
+        }
     });
 
     // Manejar el envío del formulario
@@ -204,9 +186,8 @@
         const formData = new FormData(this);
         const data = {
             area_id: formData.get('area_id'),
-            level_id: formData.get('level_id'),
-            es_grupal: formData.get('tipo_inscripcion') === 'grupal',
-            grupo_nombre: formData.get('grupo_nombre'),
+            categoria_id: formData.get('categoria_id'),
+            name_grupo: formData.get('name_grupo'),
             observaciones_estudiante: formData.get('observaciones_estudiante'),
             _token: formData.get('_token')
         };

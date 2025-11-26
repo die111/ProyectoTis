@@ -13,6 +13,42 @@ const txtSearch = document.getElementById('txtSearch');
 const btnSearch = document.getElementById('btnSearch');
 const btnSearchIcon = document.getElementById('btnSearchIcon');
 const cmbCompeticiones = document.getElementById('cmbCompeticiones');
+// Estructura permitida por competición (se carga al cambiar el combo)
+let allowedCatAreas = []; // [{id, nombre, areas:[{id,name}]}]
+let allowedAreasFlat = new Set();
+let allowedCategoriasFlat = new Set();
+
+function normalizeFlex(str){
+  return (str||'')
+    .toLowerCase()
+    .normalize('NFD') // separa tildes
+    .replace(/[\u0300-\u036f]/g,'') // elimina diacríticos
+    .replace(/[^a-z0-9 ]+/g,' ') // limpia símbolos
+    .replace(/\s+/g,' ') // colapsa espacios
+    .trim();
+}
+
+function resetAllowed(){
+  allowedCatAreas = []; allowedAreasFlat = new Set(); allowedCategoriasFlat = new Set();
+}
+
+cmbCompeticiones?.addEventListener('change', ()=>{
+  const id = cmbCompeticiones.value;
+  resetAllowed();
+  if(!id) return;
+  fetch(`/dashboard/admin/inscripcion/competition/${id}/areas-categorias`)
+    .then(r=>r.json())
+    .then(data=>{
+      if(!data.success) return;
+      allowedCatAreas = data.categorias || [];
+      allowedCategoriasFlat = new Set(allowedCatAreas.map(c=> normalizeFlex(c.nombre)));
+      allowedAreasFlat = new Set();
+      allowedCatAreas.forEach(c=> (c.areas||[]).forEach(a=> allowedAreasFlat.add(normalizeFlex(a.name))));
+      console.log('Permitidos categorías(normalizados):', [...allowedCategoriasFlat]);
+      console.log('Permitidos áreas(normalizados):', [...allowedAreasFlat]);
+    })
+    .catch(err=> console.error('Error cargando categorías/áreas permitidas', err));
+});
 
 // Token CSRF (opcional para GET)
 const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
@@ -115,6 +151,7 @@ function nuevaFila(data = {}) {
     'email',
     'area',
     'categoria',
+    'nombre_grupo',
     'codigo_usuario',
     'password'
   ].forEach(k => {
@@ -171,7 +208,7 @@ function cargarCSV(csvText){
 
   for (let i=startIndex;i<filas.length;i++){
     const cols = parseLine(filas[i]).map(c => (c || '').trim());
-    // Orden esperado del CSV: nombre(0), ap_paterno(1), ap_materno(2), ci(3), email(4), area(5), categoria(6), codigo_usuario(7), password(8)
+    // Orden esperado del CSV: nombre(0), ap_paterno(1), ap_materno(2), ci(3), email(4), area(5), categoria(6), nombre_grupo(7), codigo_usuario(8), password(9)
     const data = {
       nombre: cols[0] || '',
       ap_paterno: cols[1] || '',
@@ -180,13 +217,37 @@ function cargarCSV(csvText){
       email: cols[4] || '',
       area: cols[5] || '',
       categoria: cols[6] || '',
-      codigo_usuario: cols[7] || '',
-      password: cols[8] || ''
+      nombre_grupo: cols[7] || 'N/A',
+      codigo_usuario: cols[8] || '',
+      password: cols[9] || ''
     };
 
     if (Object.values(data).every(v => v === '')) continue;
     nuevaFila(data);
   }
+}
+
+// Helper SweetAlert bonito
+function showMsg({title='Mensaje', html='', icon='info', confirmText='Aceptar', color='#091c47'}){
+  Swal.fire({
+    title,
+    html: `<div style="font-size:13px;line-height:1.5">${html}</div>`,
+    icon,
+    confirmButtonText: confirmText,
+    buttonsStyling: false,
+    showCloseButton: true,
+    customClass: {
+      popup: 'swal2-rounded swal2-shadow',
+      confirmButton: 'px-4 py-2 text-white rounded-md text-sm font-medium',
+    },
+    didRender: () => {
+      const btn = document.querySelector('.swal2-confirm');
+      if(btn) btn.style.background = color;
+      if(btn) btn.onmouseenter = () => btn.style.filter='brightness(1.15)';
+      if(btn) btn.onmouseleave = () => btn.style.filter='none';
+    },
+    backdrop: 'rgba(0,0,0,0.35)'
+  });
 }
 
 // Exportar
@@ -203,88 +264,110 @@ btnExport.addEventListener('click', () => {
         tds[4]?.textContent?.trim() || '', // email
         tds[5]?.textContent?.trim() || '', // area
         tds[6]?.textContent?.trim() || '', // categoria
-        tds[7]?.textContent?.trim() || '', // codigo_usuario
-        tds[8]?.textContent?.trim() || ''  // password
+        tds[7]?.textContent?.trim() || '', // nombre_grupo
+        tds[8]?.textContent?.trim() || '', // codigo_usuario
+        tds[9]?.textContent?.trim() || ''  // password
       ].join(',');
     });
 
   // Guardar en base de datos
+  const competitionId = cmbCompeticiones?.value || '';
+  if (!competitionId) {
+    showMsg({
+      title: '⚠️ Falta competición',
+      html: 'Selecciona una competición activa antes de guardar.',
+      icon: 'warning',
+      confirmText: 'Entendido',
+      color: '#f59e0b'
+    });
+    return;
+  }
+
+  // Construir estudiantes y FILTRAR por área/categoría permitidas
   const estudiantes = [...tbody.querySelectorAll('tr')]
     .filter(tr => tr.style.display !== 'none')
     .map(tr => {
       const tds = tr.querySelectorAll('td');
-      const areaNombre = tds[5]?.textContent?.trim() || ''; // area ahora índice 5
+      const areaNombre = (tds[5]?.textContent || '').trim();
+      const categoriaNombre = (tds[6]?.textContent || '').trim();
+      const areaKey = normalizeFlex(areaNombre);
+      const categoriaKey = normalizeFlex(categoriaNombre);
+
+      // Coincidencia flexible: exacta, contiene o es contenida
+      const areaOk = areaKey === '' || [...allowedAreasFlat].some(v => v === areaKey || v.includes(areaKey) || areaKey.includes(v));
+      const categoriaOk = categoriaKey === '' || [...allowedCategoriasFlat].some(v => v === categoriaKey || v.includes(categoriaKey) || categoriaKey.includes(v));
+
+      if(!(areaOk && categoriaOk)) return null; // descartar si no coincide flexiblemente
       const areaId = getAreaId(areaNombre);
-      const categoriaNombre = tds[6]?.textContent?.trim() || '';
-
-      if (areaNombre && !areaId) {
-        console.warn(`Área "${areaNombre}" no encontrada en el sistema`);
-      }
-
       return {
-        name: tds[0]?.textContent?.trim() || '',
-        last_name_father: tds[1]?.textContent?.trim() || '',
-        last_name_moothe: tds[2]?.textContent?.trim() || '',
-        ci: tds[3]?.textContent?.trim() || '',
-        email: tds[4]?.textContent?.trim() || '',
-        password: tds[8]?.textContent?.trim() || '', // password índice 8
+        name: (tds[0]?.textContent || '').trim(),
+        last_name_father: (tds[1]?.textContent || '').trim(),
+        last_name_mother: (tds[2]?.textContent || '').trim(),
+        ci: (tds[3]?.textContent || '').trim(),
+        email: (tds[4]?.textContent || '').trim(),
+        password: (tds[9]?.textContent || '').trim(),
         role: 'Estudiante',
         area_id: (areaId ?? areaNombre),
-        user_code: tds[7]?.textContent?.trim() || '', // codigo_usuario índice 7
+        user_code: (tds[8]?.textContent || '').trim(),
         is_active: true,
-        categoria: categoriaNombre
+        categoria: categoriaNombre,
+        nombre_grupo: (tds[7]?.textContent || 'N/A').trim()
       };
+    })
+    .filter(e => e !== null);
+
+  if(estudiantes.length === 0){
+    showMsg({
+      title: '🙈 Sin estudiantes válidos',
+      html: 'No hay estudiantes con área y categoría permitidas para esta competición.',
+      icon: 'info',
+      color: '#6366f1'
     });
-
-  const competitionId = cmbCompeticiones?.value || '';
-
-  if (!competitionId) {
-    alert('Seleccione una competición antes de guardar.');
     return;
   }
 
-  if (estudiantes.length > 0) {
-    fetch('/dashboard/admin/inscripcion/guardar-estudiantes', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-      },
-      body: JSON.stringify({ estudiantes, competition_id: Number(competitionId) })
-    })
-    .then(res => res.json())
-    .then((data) => {
-      if (data.success) {
-        Swal.fire({
-          title: '¡Éxito!',
-          text: data.message || 'Estudiantes e inscripciones guardados correctamente.',
-          icon: 'success',
-          confirmButtonText: 'Aceptar'
-        });
-      } else {
-        Swal.fire({
-          title: 'Error',
-          text: 'Error al guardar: ' + (data.error || 'Error desconocido'),
-          icon: 'error',
-          confirmButtonText: 'Aceptar'
-        });
-        console.error('Error del servidor:', data);
-      }
-    })
-    .catch(error => {
-      console.error('Error de conexión:', error);
-      Swal.fire({
-        title: 'Error de Conexión',
-        text: 'No se pudo conectar con el servidor. Revisa tu conexión a internet.',
-        icon: 'error',
-        confirmButtonText: 'Aceptar'
+  fetch('/dashboard/admin/inscripcion/guardar-estudiantes', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+    },
+    body: JSON.stringify({ estudiantes, competition_id: Number(competitionId) })
+  })
+  .then(res => res.json())
+  .then((data) => {
+    if (data.success) {
+      // Procesar mensaje en líneas
+      const parts = (data.message || '').split(',').map(p=>p.trim()).filter(p=>p.length);
+      const listHtml = parts.length ? `<ul style="margin:6px 0;padding-left:18px;text-align:left">${parts.map(li=>`<li style=\"margin:3px 0;\">✅ ${li}</li>`).join('')}</ul>` : 'Operación completada.';
+      showMsg({
+        title: '🎉 Guardado correcto',
+        html: listHtml,
+        icon: 'success',
+        color: '#091c47'
       });
+    } else {
+      showMsg({
+        title: '❌ Error al guardar',
+        html: (data.error || 'Error desconocido'),
+        icon: 'error',
+        color: '#dc2626'
+      });
+      console.error('Error del servidor:', data);
+    }
+  })
+  .catch(error => {
+    console.error('Error de conexión:', error);
+    showMsg({
+      title: '🌐 Error de Conexión',
+      html: 'No se pudo conectar con el servidor.<br>Revisa tu conexión a internet.',
+      icon: 'warning',
+      color: '#d97706'
     });
-  }
+  });
+  if (filas.length === 0) { showMsg({title:'📄 Sin datos', html:'No hay datos para exportar.', icon:'info', color:'#6366f1'}); return; }
 
-  if (filas.length === 0) { alert('No hay datos para exportar.'); return; }
-
-  const encabezado = 'NOMBRE,APELLIDO PATERNO,APELLIDO MATERNO,EMAIL,AREA,CATEGORIA,CODIGO USUARIO,CONTRASEÑA';
+  const encabezado = 'NOMBRE,APELLIDO PATERNO,APELLIDO MATERNO,CI,EMAIL,AREA,CATEGORIA,NOMBRE GRUPO,CODIGO USUARIO,CONTRASEÑA';
   const csv = [encabezado, ...filas].join('\n');
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
@@ -300,17 +383,87 @@ btnExport.addEventListener('click', () => {
 });
 
 function filtrarTabla(q) {
-  const query = q.toLowerCase();
-  [...tbody.querySelectorAll('tr')].forEach(tr => {
-    const tds = tr.querySelectorAll('td');
-    const texto = Array.from(tds).map(td => td.textContent || '').join(' ').toLowerCase();
-    tr.style.display = (query === '' || texto.includes(query)) ? '' : 'none';
+  // NUEVO BUSCADOR FLEXIBLE
+  const raw = q || '';
+  const query = raw.trim();
+  const rows = [...tbody.querySelectorAll('tr')];
+  if(query === ''){ rows.forEach(tr=> tr.style.display=''); return; }
+
+  // Mapa de columnas para búsquedas tipo campo:valor
+  const columnMap = {
+    nombre:0, name:0,
+    paterno:1, ap_paterno:1,
+    materno:2, ap_materno:2,
+    ci:3, cedula:3, documento:3,
+    email:4, correo:4,
+    area:5,
+    categoria:6, cat:6,
+    codigo:7, usercode:7, usuario:7,
+    contraseña:8, password:8, pass:8,
+    grupo:7, nombre_grupo:7, nombregrupo:7
+  };
+
+  // Normalizar y tokenizar la consulta (soporta comillas para frases)
+  const tokens = [];
+  const regToken = /\"([^\"]+)\"|[^\s]+/g; // frases entre comillas o palabras
+  let m; while((m = regToken.exec(query))){ tokens.push(m[1] ? m[1] : m[0]); }
+  if(tokens.length === 0){ rows.forEach(tr=> tr.style.display=''); return; }
+
+  // Pre-cálculo: cache normalizada de cada fila
+  rows.forEach(tr => {
+    if(!tr._normCells){
+      const tds = [...tr.querySelectorAll('td')];
+      tr._normCells = tds.map(td => normalizeFlex(td.textContent));
+      tr._joined = tr._normCells.join(' ');
+    }
+  });
+
+  function levenshtein(a,b){
+    if(a === b) return 0; if(!a || !b) return Math.max(a.length,b.length);
+    const dp = Array(b.length+1).fill(0).map((_,i)=>[i]);
+    for(let j=1;j<=a.length;j++){ dp[0][j]=j; }
+    for(let i=1;i<=b.length;i++){
+      for(let j=1;j<=a.length;j++){
+        if(a[j-1] === b[i-1]) dp[i][j] = dp[i-1][j-1];
+        else dp[i][j] = 1 + Math.min(dp[i-1][j-1], dp[i][j-1], dp[i-1][j]);
+      }
+    }
+    return dp[b.length][a.length];
+  }
+
+  function matchToken(tr, token){
+    const isField = token.includes(':');
+    let field, value;
+    if(isField){ [field, value] = token.split(':'); field = normalizeFlex(field); value = normalizeFlex(value); }
+    else { value = normalizeFlex(token); }
+    if(!value) return true;
+
+    const cells = tr._normCells;
+
+    const tryApprox = (target) => {
+      if(value.length < 4) return false; // solo fuzzy para términos relativamente largos
+      const dist = levenshtein(value, target);
+      return dist <= 2; // tolerancia
+    };
+
+    if(isField){
+      const colIdx = columnMap[field];
+      if(colIdx == null) { // campo desconocido -> tratar como término general
+        return tr._joined.includes(value) || cells.some(c => c.includes(value) || tryApprox(c));
+      }
+      const cell = cells[colIdx] || '';
+      return cell.includes(value) || tryApprox(cell);
+    }
+    // Búsqueda general: coincide si aparece en alguna celda o aproximado
+    return tr._joined.includes(value) || cells.some(c => c.includes(value) || tryApprox(c));
+  }
+
+  rows.forEach(tr => {
+    const visible = tokens.every(tok => matchToken(tr, tok));
+    tr.style.display = visible ? '' : 'none';
   });
 }
 function aplicarFiltroActual() { filtrarTabla(txtSearch.value.trim()); }
-btnSearch.addEventListener('click', aplicarFiltroActual);
-btnSearchIcon.addEventListener('click', aplicarFiltroActual);
-txtSearch.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); aplicarFiltroActual(); }});
 
 // ==========================
 // MODAL abrir/cerrar
@@ -343,7 +496,7 @@ document.addEventListener('keydown', (e)=>{
 });
 
 // ==========================
-// SUBIR FOTO (preview + drag&drop)
+// SUBIR FOTO (preview + drag&drop) - ahora opcional, puede que el modal ya no tenga estos campos
 // ==========================
 const filePhoto      = document.getElementById('m_foto');
 const photoDrop      = document.getElementById('photoDrop');
@@ -354,70 +507,95 @@ const btnRemovePhoto = document.getElementById('btnRemovePhoto');
 
 let photoDataUrl = null;
 
-function pickPhoto(){ filePhoto.click(); }
-btnPickPhoto.addEventListener('click', pickPhoto);
-btnPickPhoto2.addEventListener('click', pickPhoto);
-photoDrop.addEventListener('click', (e)=> {
-  if (e.target === photoDrop || e.target.classList.contains('avatar-ico') || e.target.classList.contains('drop-text')) {
-    pickPhoto();
+if (filePhoto && photoDrop) {
+  function pickPhoto(){ filePhoto.click(); }
+  if(btnPickPhoto) btnPickPhoto.addEventListener('click', pickPhoto);
+  if(btnPickPhoto2) btnPickPhoto2.addEventListener('click', pickPhoto);
+  photoDrop.addEventListener('click', (e)=> {
+    if (e.target === photoDrop || e.target.classList.contains('avatar-ico') || e.target.classList.contains('drop-text')) {
+      pickPhoto();
+    }
+  });
+
+  function clearPhoto(){
+    photoDataUrl = null;
+    filePhoto.value = '';
+    if(photoPreview){ photoPreview.src = ''; photoPreview.hidden = true; }
+    photoDrop.classList.remove('has-image');
   }
-});
+  if(btnRemovePhoto) btnRemovePhoto.addEventListener('click', clearPhoto);
 
-function clearPhoto(){
-  photoDataUrl = null;
-  filePhoto.value = '';
-  photoPreview.src = '';
-  photoPreview.hidden = true;
-  photoDrop.classList.remove('has-image');
+  function handleFiles(files){
+    if (!files || !files.length) return;
+    const f = files[0];
+    if (!f.type.startsWith('image/')) { alert('El archivo debe ser una imagen.'); return; }
+    if (f.size > 3 * 1024 * 1024) { alert('La imagen no debe superar 3 MB.'); return; }
+    const reader = new FileReader();
+    reader.onload = () => {
+      photoDataUrl = reader.result;
+      if(photoPreview){
+        photoPreview.src = photoDataUrl;
+        photoPreview.hidden = false;
+      }
+      photoDrop.classList.add('has-image');
+    };
+    reader.readAsDataURL(f);
+  }
+
+  filePhoto.addEventListener('change', ()=> handleFiles(filePhoto.files));
+
+  ['dragenter','dragover','dragleave','drop'].forEach(ev=>{
+    photoDrop.addEventListener(ev, e=>{ e.preventDefault(); e.stopPropagation(); });
+  });
+  ['dragenter','dragover'].forEach(()=>{
+    photoDrop.classList.add('dragging');
+  });
+  ['dragleave','drop'].forEach(()=>{
+    photoDrop.classList.remove('dragging');
+  });
+  photoDrop.addEventListener('drop', e=> handleFiles(e.dataTransfer.files));
 }
-btnRemovePhoto.addEventListener('click', clearPhoto);
-
-function handleFiles(files){
-  if (!files || !files.length) return;
-  const f = files[0];
-  if (!f.type.startsWith('image/')) { alert('El archivo debe ser una imagen.'); return; }
-  if (f.size > 3 * 1024 * 1024) { alert('La imagen no debe superar 3 MB.'); return; }
-  const reader = new FileReader();
-  reader.onload = () => {
-    photoDataUrl = reader.result;
-    photoPreview.src = photoDataUrl;
-    photoPreview.hidden = false;
-    photoDrop.classList.add('has-image');
-  };
-  reader.readAsDataURL(f);
-}
-
-filePhoto.addEventListener('change', ()=> handleFiles(filePhoto.files));
-
-['dragenter','dragover','dragleave','drop'].forEach(ev=>{
-  photoDrop.addEventListener(ev, e=>{ e.preventDefault(); e.stopPropagation(); });
-});
-['dragenter','dragover'].forEach(()=>{
-  photoDrop.classList.add('dragging');
-});
-['dragleave','drop'].forEach(()=>{
-  photoDrop.classList.remove('dragging');
-});
-photoDrop.addEventListener('drop', e=> handleFiles(e.dataTransfer.files));
 
 // Submit modal -> agrega fila a la tabla y cierra
 document.getElementById('frmAdd').addEventListener('submit', (e)=>{
   e.preventDefault();
-  const id         = document.getElementById('m_id').value.trim();
-  const nombre     = document.getElementById('m_nombre').value.trim();
-  const ap_paterno = document.getElementById('m_paterno').value.trim();
-  const ap_materno = document.getElementById('m_materno').value.trim();
-  const area       = document.getElementById('m_area').value.trim();
+  const nombre          = document.getElementById('m_nombre').value.trim();
+  const ap_paterno      = document.getElementById('m_paterno').value.trim();
+  const ap_materno      = document.getElementById('m_materno').value.trim();
+  const ci              = document.getElementById('m_ci').value.trim();
+  const email           = document.getElementById('m_email').value.trim();
 
-  if (!nombre || !ap_paterno || !ap_materno || !area){
-    alert('Completa los campos obligatorios.');
+  const areaSelect = document.getElementById('m_area');
+  const categoriaSelect = document.getElementById('m_categoria');
+  const areaValue = areaSelect?.value.trim() || '';
+  const categoriaValue = categoriaSelect?.value.trim() || '';
+  // Guardar NOMBRES visibles en la tabla
+  const areaNombre = areaSelect && areaSelect.selectedIndex > -1 ? areaSelect.options[areaSelect.selectedIndex].text.trim() : '';
+  const categoriaNombre = categoriaSelect && categoriaSelect.selectedIndex > -1 ? categoriaSelect.options[categoriaSelect.selectedIndex].text.trim() : '';
+
+  const codigo_usuario  = document.getElementById('m_codigo').value.trim();
+  const password        = document.getElementById('m_password').value.trim();
+  const nombre_grupo    = (document.getElementById('m_nombre_grupo')?.value.trim() || 'N/A');
+
+  if (!nombre || !ap_paterno || !ap_materno || !ci || !email || !areaValue || !categoriaValue || !codigo_usuario || !password){
+    alert('Completa todos los campos obligatorios.');
     return;
   }
-  nuevaFila({ id, nombre, ap_paterno, ap_materno, area });
+  nuevaFila({ 
+    nombre, 
+    ap_paterno, 
+    ap_materno, 
+    ci, 
+    email, 
+    area: areaNombre, 
+    categoria: categoriaNombre, 
+    nombre_grupo,
+    codigo_usuario, 
+    password 
+  });
   closeModal();
-  ['m_id','m_nombre','m_paterno','m_materno','m_area','m_tutor','m_colegio','m_fnac','m_direccion','m_email','m_nivel','m_categoria','m_tipo_col','m_ci','m_depmun','m_tel']
+  ['m_nombre','m_paterno','m_materno','m_ci','m_email','m_area','m_categoria','m_codigo','m_password']
     .forEach(id=>{ const el=document.getElementById(id); if(el) el.value=''; });
-  clearPhoto();
 });
 
 // Deshabilitar el botón Guardar y Exportar hasta que se seleccione una competición
