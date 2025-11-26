@@ -102,56 +102,17 @@
                style="border: 2px solid {{ $colorHex }};"
                data-phase="{{ strtolower($numeroFase . ' ' . $fase->name) }}" 
                data-phase-number="{{ $numeroFase }}">
-        
+        <!-- Identificador Fase N arriba a la izquierda -->
+        <div class="absolute left-4 top-1 z-10">
+          <span class="inline-block font-extrabold rounded-lg px-5 py-2 shadow text-white text-lg" style="background-color: {{ $colorHex }}; border: 2px solid {{ $colorHex }}; text-shadow: 1px 1px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000;">
+            Fase {{ $numeroFase }}
+          </span>
+        </div>
         <div class="h-1.5" style="background-color: {{ $colorHex }};"></div>
-        <div class="brush relative px-8 pt-6">
-          <svg viewBox="0 0 360 120" class="w-full">
-            <defs>
-              <filter id="cloudShadow{{ $index }}">
-                <feDropShadow dx="2" dy="3" stdDeviation="4" flood-opacity="0.2"/>
-              </filter>
-            </defs>
-            <!-- Nube orgánica con círculos superpuestos -->
-            <!-- Base principal de la nube -->
-            <ellipse cx="180" cy="55" rx="120" ry="25" 
-                     fill="{{ $colorHex }}" 
-                     filter="url(#cloudShadow{{ $index }})"
-                     opacity="0.9"/>
-            
-            <!-- Círculos para crear la forma de nube -->
-            <!-- Lado izquierdo -->
-            <circle cx="80" cy="50" r="35" fill="{{ $colorHex }}" opacity="0.85"/>
-            <circle cx="110" cy="40" r="28" fill="{{ $colorHex }}" opacity="0.8"/>
-            <circle cx="95" cy="65" r="22" fill="{{ $colorHex }}" opacity="0.75"/>
-            
-            <!-- Centro superior -->
-            <circle cx="150" cy="35" r="25" fill="{{ $colorHex }}" opacity="0.8"/>
-            <circle cx="180" cy="30" r="30" fill="{{ $colorHex }}" opacity="0.85"/>
-            <circle cx="210" cy="35" r="25" fill="{{ $colorHex }}" opacity="0.8"/>
-            
-            <!-- Lado derecho -->
-            <circle cx="280" cy="50" r="35" fill="{{ $colorHex }}" opacity="0.85"/>
-            <circle cx="250" cy="40" r="28" fill="{{ $colorHex }}" opacity="0.8"/>
-            <circle cx="265" cy="65" r="22" fill="{{ $colorHex }}" opacity="0.75"/>
-            
-            <!-- Detalles inferiores -->
-            <circle cx="140" cy="70" r="18" fill="{{ $colorHex }}" opacity="0.7"/>
-            <circle cx="180" cy="75" r="20" fill="{{ $colorHex }}" opacity="0.7"/>
-            <circle cx="220" cy="70" r="18" fill="{{ $colorHex }}" opacity="0.7"/>
-          </svg>
-
-          <!-- Insignia con numeración de la tarjeta -->
-          <div class="absolute left-4 top-3">
-            <span class="inline-flex h-7 w-7 items-center justify-center rounded-full text-white text-xs font-bold shadow" 
-                  style="background-color: {{ $colorHex }};">
-              {{ $numeroFase }}
-            </span>
-          </div>
-
-          <div class="pointer-events-none absolute inset-0 flex items-center justify-center px-4">
-            <span class="select-none text-lg md:text-xl lg:text-2xl font-extrabold tracking-wide text-white drop-shadow-lg text-center leading-tight max-w-full">
-              {{ Str::upper($fase->name) }}
-            </span>
+        <div class="brush relative px-8 pt-6 flex items-center justify-center" style="min-height: 80px; flex-direction: column;">
+          <span class="block text-sm font-semibold text-gray-700 mb-2" style="text-shadow:none;">Nombre de Fase</span>
+          <div class="phase-title-rect" style="background-color: {{ $colorHex }}; color: white; padding: 18px 48px; border-radius: 16px; font-size: 1.5rem; font-weight: bold; box-shadow: 1px 1px 12px rgba(0,0,0,0.14); display: inline-block; text-align: center; text-shadow: 1px 1px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000;">
+            {{ Str::upper($fase->name) }}
           </div>
         </div>
         <div class="space-y-2 px-8 pb-6 pt-2 text-sm">
@@ -243,46 +204,17 @@
              style="border: 2px solid {{ $colorHexPrem }};"
              data-phase="{{ strtolower($numeroFasePrem . ' premiacion') }}" 
              data-phase-number="{{ $numeroFasePrem }}">
+      <!-- Identificador Premiación arriba a la izquierda -->
+      <div class="absolute left-4 top-1 z-10">
+        <span class="inline-block font-extrabold rounded-lg px-5 py-2 shadow text-white text-lg" style="background-color: {{ $colorHexPrem }}; border: 2px solid {{ $colorHexPrem }}; text-shadow: 1px 1px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000;">
+          Premiación
+        </span>
+      </div>
       <div class="h-1.5" style="background-color: {{ $colorHexPrem }};"></div>
-      <div class="brush relative px-8 pt-6">
-        <svg viewBox="0 0 360 120" class="w-full">
-          <defs>
-            <filter id="cloudShadowPrem">
-              <feDropShadow dx="2" dy="3" stdDeviation="4" flood-opacity="0.2"/>
-            </filter>
-          </defs>
-          <!-- Base de la nube -->
-          <ellipse cx="180" cy="55" rx="120" ry="25" 
-                   fill="{{ $colorHexPrem }}" 
-                   filter="url(#cloudShadowPrem)"
-                   opacity="0.9"/>
-          <!-- Círculos -->
-          <circle cx="80" cy="50" r="35" fill="{{ $colorHexPrem }}" opacity="0.85"/>
-          <circle cx="110" cy="40" r="28" fill="{{ $colorHexPrem }}" opacity="0.8"/>
-          <circle cx="95" cy="65" r="22" fill="{{ $colorHexPrem }}" opacity="0.75"/>
-          <circle cx="150" cy="35" r="25" fill="{{ $colorHexPrem }}" opacity="0.8"/>
-          <circle cx="180" cy="30" r="30" fill="{{ $colorHexPrem }}" opacity="0.85"/>
-          <circle cx="210" cy="35" r="25" fill="{{ $colorHexPrem }}" opacity="0.8"/>
-          <circle cx="280" cy="50" r="35" fill="{{ $colorHexPrem }}" opacity="0.85"/>
-          <circle cx="250" cy="40" r="28" fill="{{ $colorHexPrem }}" opacity="0.8"/>
-          <circle cx="265" cy="65" r="22" fill="{{ $colorHexPrem }}" opacity="0.75"/>
-          <circle cx="140" cy="70" r="18" fill="{{ $colorHexPrem }}" opacity="0.7"/>
-          <circle cx="180" cy="75" r="20" fill="{{ $colorHexPrem }}" opacity="0.7"/>
-          <circle cx="220" cy="70" r="18" fill="{{ $colorHexPrem }}" opacity="0.7"/>
-        </svg>
-
-        <!-- Insignia con numeración -->
-        <div class="absolute left-4 top-3">
-          <span class="inline-flex h-7 w-7 items-center justify-center rounded-full text-white text-xs font-bold shadow"
-                style="background-color: {{ $colorHexPrem }};">
-            {{ $numeroFasePrem }}
-          </span>
-        </div>
-
-        <div class="pointer-events-none absolute inset-0 flex items-center justify-center px-4">
-          <span class="select-none text-lg md:text-xl lg:text-2xl font-extrabold tracking-wide text-white drop-shadow-lg text-center leading-tight max-w-full">
-            {{ Str::upper('Premiación') }}
-          </span>
+      <div class="brush relative px-8 pt-6 flex items-center justify-center" style="min-height: 80px; flex-direction: column;">
+        <span class="block text-sm font-semibold text-gray-700 mb-2" style="text-shadow:none;">Nombre de Fase</span>
+        <div class="phase-title-rect" style="background-color: {{ $colorHexPrem }}; color: white; padding: 18px 48px; border-radius: 16px; font-size: 1.5rem; font-weight: bold; box-shadow: 1px 1px 12px rgba(0,0,0,0.14); display: inline-block; text-align: center; text-shadow: 1px 1px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000;">
+          {{ Str::upper('Premiación') }}
         </div>
       </div>
 
@@ -308,6 +240,22 @@
   </section>
 </div>
 
+<!-- Styles -->
+<style>
+/* Estilos para la vista de fases de evaluación */
+.phase-card {
+  transition: box-shadow 0.2s, transform 0.2s;
+}
+.phase-card:hover {
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+  transform: scale(1.02);
+}
+.brush .phase-title-rect {
+  /* Ya se aplican estilos inline, pero puedes agregar más aquí si lo deseas */
+}
+/* Puedes agregar más estilos personalizados aquí */
+</style>
+
 <!-- Scripts -->
 <script>
   const input = document.getElementById('searchInput');
@@ -328,22 +276,16 @@
   input.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') applyFilter();
   });
-  
-  // Búsqueda en tiempo real
   input.addEventListener('input', applyFilter);
 
-  // Función para gestionar fase
-  function gestionarFase(faseId, faseNumero, accion) {
-    console.log(`Gestionar fase ${faseId} (número ${faseNumero}) - Acción: ${accion}`);
-    const competicionId = {{ $competicion->id }};
-    // Usar fase_n para no chocar con el parámetro de ruta {fase}
-    window.location.href = `/dashboard/admin/evaluacion/${competicionId}/fase/${faseId}/estudiantes?fase_n=${faseNumero}`;
+  window.competicionId = {{ $competicion->id }};
+
+  window.gestionarFase = function(faseId, faseNumero, accion) {
+    window.location.href = `/dashboard/admin/evaluacion/${window.competicionId}/fase/${faseId}/estudiantes?fase_n=${faseNumero}`;
   }
 
-  // Función para gestionar premiación
-  function gestionarPremiacion() {
-    const competicionId = {{ $competicion->id }};
-    window.location.href = `/dashboard/admin/evaluacion/${competicionId}/premiacion`;
+  window.gestionarPremiacion = function() {
+    window.location.href = `/dashboard/admin/evaluacion/${window.competicionId}/premiacion`;
   }
 </script>
 @endsection

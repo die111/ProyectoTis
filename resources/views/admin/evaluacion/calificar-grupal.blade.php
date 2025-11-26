@@ -25,7 +25,7 @@
       </div>
       <div>
         <span class="font-semibold text-blue-800">Fase:</span>
-        <span class="text-blue-700">{{ $fase->name }} (Nivel {{ $numeroFase }})</span>
+        <span class="text-blue-700">{{ $fase->name }}</span>
       </div>
       <div>
         <span class="font-semibold text-blue-800">Estado:</span>
@@ -134,115 +134,127 @@
           <tbody class="bg-white divide-y divide-gray-200">
             @php
               $grupoAnterior = null;
+              // Contar miembros por grupo+área
+              $miembrosPorGrupoArea = [];
+              foreach ($estudiantes as $e) {
+                $nombreGrupo = $e->name_grupo ?? 'Sin nombre';
+                $areaNombre = $e->area->name ?? 'No asignada';
+                $grupoKey = $nombreGrupo . '|||' . $areaNombre;
+                if (!isset($miembrosPorGrupoArea[$grupoKey])) $miembrosPorGrupoArea[$grupoKey] = 0;
+                $miembrosPorGrupoArea[$grupoKey]++;
+              }
             @endphp
             @foreach($estudiantes as $estudiante)
               @php
                 $evaluacion = $estudiante->evaluations->first();
                 $estaCalificado = $evaluacion && $evaluacion->nota !== null;
-                $grupoActual = $estudiante->name_grupo ?? 'Sin nombre';
+                $nombreGrupo = $estudiante->name_grupo ?? 'Sin nombre';
+                $areaNombre = $estudiante->area->name ?? 'No asignada';
+                $grupoActual = $nombreGrupo . '|||' . $areaNombre; // Clave compuesta
               @endphp
-              
-              <!-- Separador de grupo -->
-              @if($grupoAnterior === null || $grupoAnterior !== $grupoActual)
-                <tr class="bg-blue-100">
-                  <td colspan="9" class="px-6 py-3">
-                    <div class="flex items-center justify-center">
-                      <div class="flex-grow border-t-2 border-blue-300"></div>
-                      <span class="px-4 text-sm font-semibold style="color: #091c47;">Grupo: {{ $grupoActual }}</span>
-                      <div class="flex-grow border-t-2 border-blue-300"></div>
+              @if($miembrosPorGrupoArea[$grupoActual] > 1)
+                <!-- Separador de grupo -->
+                @if($grupoAnterior === null || $grupoAnterior !== $grupoActual)
+                  <tr class="bg-blue-100">
+                    <td colspan="9" class="px-6 py-3">
+                      <div class="flex items-center justify-center">
+                        <div class="flex-grow border-t-2 border-blue-300"></div>
+                        <span class="px-4 text-sm font-semibold" style="color: #091c47;">Grupo: {{ $nombreGrupo }} &mdash; Área: {{ $areaNombre }}</span>
+                        <div class="flex-grow border-t-2 border-blue-300"></div>
+                      </div>
+                      <!-- Campo de nota grupal y botón de evaluar -->
+                      <form method="POST" action="{{ route('admin.evaluacion.evaluar-grupo', ['competicion' => $competicion->id, 'fase' => $fase->id, 'grupo' => $nombreGrupo, 'area' => $areaNombre]) }}" class="mt-4 flex items-center justify-center gap-3">
+                        @csrf
+                        <input type="number" name="nota_grupal" min="0" max="100" step="0.1" placeholder="Nota grupal (0-100)" class="w-32 rounded-md border border-blue-300 px-2 py-1 text-sm text-center focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500" oninput="if(this.value<0)this.value=0;if(this.value>100)this.value=100;">
+                        <button type="submit" class="rounded-md px-4 py-2 text-sm font-medium text-white shadow-sm hover:opacity-90" style="background-color: #091c47;">
+                          Evaluar Grupo
+                        </button>
+                      </form>
+                    </td>
+                  </tr>
+                @endif
+                @php $grupoAnterior = $grupoActual; @endphp
+                
+                <tr class="hover:bg-gray-50 {{ $estaCalificado ? 'bg-gray-50/50' : '' }}">
+                  <td class="px-6 py-4 whitespace-nowrap">
+                    <div class="flex items-center">
+                      <div class="flex-shrink-0 h-10 w-10">
+                        <div class="h-10 w-10 rounded-full bg-purple-100 flex items-center justify-center">
+                          <span class="text-sm font-medium text-purple-700">
+                            {{ substr($estudiante->user->name ?? 'N', 0, 1) }}{{ substr($estudiante->user->last_name_father ?? 'A', 0, 1) }}
+                          </span>
+                        </div>
+                      </div>
+                      <div class="ml-4">
+                        <div class="text-sm font-medium text-gray-900">
+                          {{ $estudiante->user->name ?? 'N/A' }} {{ $estudiante->user->last_name_father ?? '' }} {{ $estudiante->user->last_name_mother ?? '' }}
+                        </div>                      
+                      </div>
                     </div>
                   </td>
-                </tr>
-              @endif
-              
-              @php
-                $grupoAnterior = $grupoActual;
-              @endphp
-              
-              <tr class="hover:bg-gray-50 {{ $estaCalificado ? 'bg-gray-50/50' : '' }}">
-                <td class="px-6 py-4 whitespace-nowrap">
-                  <div class="flex items-center">
-                    <div class="flex-shrink-0 h-10 w-10">
-                      <div class="h-10 w-10 rounded-full bg-purple-100 flex items-center justify-center">
-                        <span class="text-sm font-medium text-purple-700">
-                          {{ substr($estudiante->user->name ?? 'N', 0, 1) }}{{ substr($estudiante->user->last_name_father ?? 'A', 0, 1) }}
-                        </span>
-                      </div>
-                    </div>
-                    <div class="ml-4">
-                      <div class="text-sm font-medium text-gray-900">
-                        {{ $estudiante->user->name ?? 'N/A' }} {{ $estudiante->user->last_name_father ?? '' }} {{ $estudiante->user->last_name_mother ?? '' }}
-                      </div>
-                      <div class="text-sm text-gray-500">
-                        ID: {{ $estudiante->id }}
-                      </div>
-                    </div>
-                  </div>
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  {{ $estudiante->area->name ?? 'No asignada' }}
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  {{ $estudiante->categoria->nombre ?? 'No asignada' }}
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  <span class="font-medium text-blue-700">{{ $estudiante->name_grupo ?? 'Sin nombre' }}</span>
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  {{ $estudiante->user->ci ?? 'N/A' }}
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap text-center">
-                  @php
-                    $puntajeExistente = $evaluacion ? $evaluacion->nota : '';
-                  @endphp
-                  <input type="number"
-                         form="calif-{{ $estudiante->id }}"
-                         name="calificaciones[{{ $estudiante->id }}][puntaje]"
-                         value="{{ $puntajeExistente }}"
-                         min="0"
-                         max="100"
-                         step="0.1"
-                         placeholder="0.0"
-                         class="w-20 rounded-md border border-gray-300 px-2 py-1 text-sm text-center focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500">
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap text-center">
-                  @php
-                    $observacionesExistentes = $evaluacion ? $evaluacion->observaciones_evaluador : '';
-                  @endphp
-                  <textarea form="calif-{{ $estudiante->id }}"
-                            name="calificaciones[{{ $estudiante->id }}][observaciones]"
-                            rows="1"
-                            placeholder="Observaciones..."
-                            class="w-32 rounded-md border border-gray-300 px-2 py-1 text-sm resize-none focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500">{{ $observacionesExistentes }}</textarea>
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap text-center">
-                  {{ $evaluacion && $evaluacion->promedio !== null ? $evaluacion->promedio : '' }}
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap text-center">
-                  @php
-                    // Determinar si está calificado basándose en si tiene una nota
-                    if ($estaCalificado) {
-                      $estadoCalifClass = 'bg-green-100 text-green-800';
-                      $estadoCalifTexto = 'Calificado';
-                    } else {
-                      $estadoCalifClass = 'bg-red-100 text-red-800';
-                      $estadoCalifTexto = 'No calificado';
-                    }
-                  @endphp
-                  <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full {{ $estadoCalifClass }}">
-                    {{ $estadoCalifTexto }}
-                  </span>
-                  <!-- Formulario por fila - solo mostrar si no está calificado -->
-                  @if(!$estaCalificado)
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    {{ $estudiante->area->name ?? 'No asignada' }}
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    {{ $estudiante->categoria->nombre ?? 'No asignada' }}
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <span class="font-medium text-blue-700">{{ $estudiante->name_grupo ?? 'Sin nombre' }}</span>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    {{ $estudiante->user->ci ?? 'N/A' }}
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-center">
+                    @php
+                      $puntajeExistente = $evaluacion ? $evaluacion->nota : '';
+                    @endphp
+                    <input type="number"
+                           form="calif-{{ $estudiante->id }}"
+                           name="calificaciones[{{ $estudiante->id }}][puntaje]"
+                           value="{{ $puntajeExistente }}"
+                           min="0"
+                           max="100"
+                           step="0.1"
+                           placeholder="0.0"
+                           class="w-20 rounded-md border border-gray-300 px-2 py-1 text-sm text-center focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500">
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-center">
+                    @php
+                      $observacionesExistentes = $evaluacion ? $evaluacion->observaciones_evaluador : '';
+                    @endphp
+                    <textarea form="calif-{{ $estudiante->id }}"
+                              name="calificaciones[{{ $estudiante->id }}][observaciones]"
+                              rows="1"
+                              placeholder="Observaciones..."
+                              class="w-32 rounded-md border border-gray-300 px-2 py-1 text-sm resize-none focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500">{{ $observacionesExistentes }}</textarea>
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-center">
+                    {{ $evaluacion && $evaluacion->promedio !== null ? $evaluacion->promedio : '' }}
+                  </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-center">
+                    @php
+                      // Determinar si está calificado basándose en si tiene una nota
+                      if ($estaCalificado) {
+                        $estadoCalifClass = 'bg-green-100 text-green-800';
+                        $estadoCalifTexto = 'Calificado';
+                      } else {
+                        $estadoCalifClass = 'bg-red-100 text-red-800';
+                        $estadoCalifTexto = 'No calificado';
+                      }
+                    @endphp
+                    <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full {{ $estadoCalifClass }}">
+                      {{ $estadoCalifTexto }}
+                    </span>
+                    <!-- Formulario por fila - mostrar siempre el botón de calificar/recalificar -->
                     <form id="calif-{{ $estudiante->id }}" method="POST" action="{{ route('admin.evaluacion.guardar-calificaciones', ['competicion' => $competicion->id, 'fase' => $fase->id]) }}" class="mt-2 inline-block">
                       @csrf
                       <button type="submit" class="rounded-md px-3 py-1.5 text-xs font-medium text-white shadow-sm hover:opacity-90" style="background-color: #091c47;">
-                        Calificar
+                        {{ $estaCalificado ? 'Recalificar' : 'Calificar' }}
                       </button>
                     </form>
-                  @endif
-                </td>
-              </tr>
+                  </td>
+                </tr>
+              @endif
             @endforeach
           </tbody>
         </table>
@@ -586,7 +598,7 @@
   // Función para calcular y guardar promedios grupales
   async function calcularYGuardarPromedios() {
     try {
-      // Agrupar estudiantes por nombre de grupo
+      // Agrupar estudiantes por nombre de grupo y área
       const grupos = {};
       
       @foreach($estudiantes as $estudiante)
@@ -594,13 +606,17 @@
           $evaluacion = $estudiante->evaluations->first();
           $nota = $evaluacion ? $evaluacion->nota : null;
           $nombreGrupo = $estudiante->name_grupo ?? 'Sin nombre';
+          $areaNombre = $estudiante->area->name ?? 'No asignada';
+          $areaId = $estudiante->area->id ?? null;
         @endphp
         
         @if($nota !== null)
-          const grupoKey_{{ $estudiante->id }} = '{{ $nombreGrupo }}';
+          const grupoKey_{{ $estudiante->id }} = '{{ $nombreGrupo }}|||{{ $areaNombre }}';
           if (!grupos[grupoKey_{{ $estudiante->id }}]) {
             grupos[grupoKey_{{ $estudiante->id }}] = {
               nombre: '{{ $nombreGrupo }}',
+              area: '{{ $areaNombre }}',
+              area_id: {{ $areaId ?? 'null' }},
               inscripciones: [],
               notas: []
             };
@@ -612,13 +628,15 @@
       
       // Calcular promedios y preparar datos para enviar
       const promediosCalculados = [];
-      for (const [nombreGrupo, datos] of Object.entries(grupos)) {
+      for (const [grupoKey, datos] of Object.entries(grupos)) {
         if (datos.notas.length > 0) {
           const suma = datos.notas.reduce((a, b) => a + b, 0);
           const promedio = suma / datos.notas.length;
           
           promediosCalculados.push({
             nombre_grupo: datos.nombre,
+            area: datos.area,
+            area_id: datos.area_id,
             inscripciones: datos.inscripciones,
             promedio: promedio.toFixed(2)
           });

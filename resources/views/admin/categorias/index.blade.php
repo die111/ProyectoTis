@@ -119,10 +119,12 @@
                   <td class="px-5 py-3 text-sm w-1/8">
                     <div class="flex items-center justify-end gap-2">
                       @if($c->is_active ?? true)
-                        <form action="{{ route('admin.categorias.deactivate', $c->id) }}" method="POST" class="inline">
-                          @csrf @method('PATCH')
-                          <button type="submit"
-                                  class="inline-flex items-center gap-1 rounded-lg px-3 py-1 text-xs font-medium text-white shadow-sm hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-offset-2"
+                        @if(in_array($c->id, $categoriesInUse ?? []))
+                          {{-- Botón deshabilitado cuando está en uso --}}
+                          <button type="button"
+                                  disabled
+                                  title="No se puede desactivar: Esta categoría está siendo utilizada en una competición activa"
+                                  class="inline-flex items-center gap-1 rounded-lg px-3 py-1 text-xs font-medium text-white shadow-sm cursor-not-allowed opacity-50"
                                   style="background-color: #DC2626;">
                             <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -130,7 +132,20 @@
                             </svg>
                             Desactivar
                           </button>
-                        </form>
+                        @else
+                          <form action="{{ route('admin.categorias.deactivate', $c->id) }}" method="POST" class="inline">
+                            @csrf @method('PATCH')
+                            <button type="submit"
+                                    class="inline-flex items-center gap-1 rounded-lg px-3 py-1 text-xs font-medium text-white shadow-sm hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-offset-2"
+                                    style="background-color: #DC2626;">
+                              <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                      d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                              </svg>
+                              Desactivar
+                            </button>
+                          </form>
+                        @endif
                       @else
                         <form action="{{ route('admin.categorias.activate', $c->id) }}" method="POST" class="inline">
                           @csrf @method('PATCH')

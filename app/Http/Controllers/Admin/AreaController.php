@@ -11,7 +11,7 @@ class AreaController extends Controller
     public function index(Request $request)
     {
         $query = $request->input('q');
-        $areas = Area::query();
+        $areas = Area::query()->with('competitionCategoryAreas');
         if ($query) {
             $areas->where('name', 'like', "%$query%");
         }

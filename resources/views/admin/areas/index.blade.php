@@ -76,12 +76,17 @@
                                 <td class="px-6 py-3 text-right">
                                     <div class="flex items-center justify-end gap-2">
                                         @if($area->is_active)
+                                            @php
+                                                $isInUse = $area->isInUse();
+                                            @endphp
                                             <form method="POST" action="{{ route('admin.areas.bulk-deactivate') }}" class="inline">
                                                 @csrf
                                                 <input type="hidden" name="ids" value="{{ $area->id }}">
                                                 <button type="submit"
-                                                    class="inline-flex items-center gap-1 rounded-lg px-3 py-1 text-xs font-medium text-white shadow-sm hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-offset-2"
-                                                    style="background-color: #DC2626;">
+                                                    {{ $isInUse ? 'disabled' : '' }}
+                                                    class="inline-flex items-center gap-1 rounded-lg px-3 py-1 text-xs font-medium text-white shadow-sm hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-offset-2 {{ $isInUse ? 'opacity-50 cursor-not-allowed' : '' }}"
+                                                    style="background-color: #DC2626;"
+                                                    title="{{ $isInUse ? 'No se puede desactivar porque está en uso' : '' }}">
                                                     <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                             d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>

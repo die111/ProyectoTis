@@ -19,4 +19,16 @@ class Area extends Model
     {
         return $this->morphToMany(Competicion::class, 'competitionable');
     }
+
+    // Relación con competition_category_area
+    public function competitionCategoryAreas()
+    {
+        return $this->hasMany(CompetitionCategoryArea::class, 'area_id');
+    }
+
+    // Método para verificar si el área está siendo usada
+    public function isInUse()
+    {
+        return $this->competitionCategoryAreas()->exists();
+    }
 }
