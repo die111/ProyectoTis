@@ -32,7 +32,7 @@ class InscriptionSeeder extends Seeder
                 'estado' => 'pendiente',
                 'observaciones' => null,
                 'is_active' => true,
-                'grupo_nombre' => null,
+                'name_grupo' => null,
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);

@@ -230,10 +230,10 @@
                         <p class="text-sm font-semibold text-gray-700">Tipo:</p>
                         <p class="text-sm text-gray-900">${inscripcion.es_grupal ? 'Grupal' : 'Individual'}</p>
                     </div>
-                    ${inscripcion.grupo_nombre ? `
+                    ${inscripcion.name_grupo ? `
                     <div class="col-span-2">
                         <p class="text-sm font-semibold text-gray-700">Nombre del Grupo:</p>
-                        <p class="text-sm text-gray-900">${inscripcion.grupo_nombre}</p>
+                        <p class="text-sm text-gray-900">${inscripcion.name_grupo}</p>
                     </div>
                     ` : ''}
                     <div class="col-span-2">

@@ -15,7 +15,6 @@ class Inscription extends Model
         'categoria_id',
         'fase',
         'estado',
-        'grupo_nombre',
         'name_grupo',
         'observaciones_estudiante',
         'motivo_rechazo',
