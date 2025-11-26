@@ -98,8 +98,8 @@
               class="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
           </div>
         </div>
-        <!-- Teléfono, Área y Nivel en una fila -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-6">
+        <!-- Teléfono y Área en una fila -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-6">
           <div>
             <label for="telephone_number" class="block text-sm font-semibold text-gray-800 mb-1">Teléfono*</label>
             <input id="telephone_number" name="telephone_number" type="text" required placeholder="Ingrese su teléfono o celular"
@@ -116,17 +116,6 @@
                   <option value="{{ $area->id }}" {{ (isset($user) && $user->area_id == $area->id) ? 'selected' : '' }}>{{ $area->name }}</option>
                 @endif
               @endforeach
-            </select>
-            <i class="bi bi-chevron-down absolute right-3 top-9 pointer-events-none text-gray-500"></i>
-          </div>
-          <div class="relative">
-            <label for="level" class="block text-sm font-semibold text-gray-800 mb-1">Nivel*</label>
-            <select id="level" name="level" required
-              class="appearance-none w-full rounded-xl border border-gray-300 bg-white px-4 py-3 pr-10 shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-800">
-              <option value="" disabled {{ !isset($user) ? 'selected' : '' }}>Selecciona un nivel</option>
-              <option value="Primaria" {{ (isset($user) && $user->level == 'Primaria') ? 'selected' : '' }}>Primaria</option>
-              <option value="Secundaria" {{ (isset($user) && $user->level == 'Secundaria') ? 'selected' : '' }}>Secundaria</option>
-              <option value="Preuniversitario" {{ (isset($user) && $user->level == 'Preuniversitario') ? 'selected' : '' }}>Preuniversitario</option>
             </select>
             <i class="bi bi-chevron-down absolute right-3 top-9 pointer-events-none text-gray-500"></i>
           </div>

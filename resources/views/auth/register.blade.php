@@ -52,14 +52,9 @@
                     </div>
 
                     <div class="form-group">
-                        <label for="area_id">Área</label>
-                        <select id="area_id" name="area_id" required class="@error('area_id') error @enderror">
-                            <option value="">-- Selecciona un Área --</option>
-                            @foreach($areas as $area)
-                                <option value="{{ $area->id }}" {{ old('area_id') == $area->id ? 'selected' : '' }}>{{ $area->name }}</option>
-                            @endforeach
-                        </select>
-                        @error('area_id') <span class="error-message">{{ $message }}</span> @enderror
+                        <label for="ci">Carnet de Identidad</label>
+                        <input id="ci" name="ci" type="text" value="{{ old('ci') }}" required class="@error('ci') error @enderror" placeholder="Ingrese su CI">
+                        @error('ci') <span class="error-message">{{ $message }}</span> @enderror
                     </div>
 
                     <div class="form-row">

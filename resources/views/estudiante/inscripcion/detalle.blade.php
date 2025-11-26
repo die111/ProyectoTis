@@ -17,38 +17,50 @@
     <div class="bg-white shadow rounded-lg p-6 mb-6">
         <h2 class="text-lg font-semibold mb-4">Notas por Fase</h2>
 
-        @if($phases->isEmpty())
-            <div class="bg-yellow-50 border border-yellow-200 rounded p-4">No hay fases configuradas para esta competencia.</div>
+        @if($evaluaciones->isEmpty())
+            <div class="bg-yellow-50 border border-yellow-200 rounded p-4">No hay evaluaciones registradas para esta inscripción.</div>
         @else
             <div class="space-y-4">
-                @foreach($phases as $index => $phase)
+                @foreach($evaluaciones as $index => $eval)
                     @php
-                        $eval = $evaluaciones->firstWhere('stage.nombre', $phase->name);
-                        $existingReclamo = $reclamos->firstWhere('fase', $phase->id);
+                        $existingReclamo = $reclamos->firstWhere('evaluation_id', $eval->id);
                     @endphp
                     <div class="p-4 border rounded flex items-center justify-between">
-                        <div>
-                            <div class="font-medium">Fase {{ $index + 1 }} — {{ $phase->name }}</div>
-                            @if($eval)
-                                <div class="text-sm text-gray-700">Nota: <strong>{{ $eval->nota }}</strong> · Estado: {{ $eval->estado }}</div>
-                                @if($eval->observaciones_evaluador)
-                                    <div class="text-sm text-gray-600">Observaciones: {{ $eval->observaciones_evaluador }}</div>
+                        <div class="flex-1">
+                            <div class="font-medium">
+                                @if($eval->stage)
+                                    Fase {{ $index + 1 }} — {{ $eval->stage->nombre }}
+                                @else
+                                    Evaluación {{ $index + 1 }}
                                 @endif
-                            @else
-                                <div class="text-sm text-gray-500">No se subió la nota aún.</div>
+                            </div>
+                            <div class="text-sm text-gray-700 mt-1">Nota: <strong class="text-lg">{{ $eval->nota }}</strong> · Estado: <span class="capitalize">{{ $eval->estado }}</span></div>
+                            @if($eval->observaciones_evaluador)
+                                <div class="text-sm text-gray-600 mt-1">Observaciones: {{ $eval->observaciones_evaluador }}</div>
+                            @endif
+                            @if($eval->stage)
+                                <div class="text-xs text-gray-500 mt-1">
+                                    Periodo: {{ \Carbon\Carbon::parse($eval->stage->fechaInicio)->format('d/m/Y') }} - {{ \Carbon\Carbon::parse($eval->stage->fechaFin)->format('d/m/Y') }}
+                                </div>
                             @endif
 
                             @if($existingReclamo)
                                 <div class="mt-2 text-sm">
-                                    <span class="inline-block px-2 py-1 rounded text-sm font-medium bg-yellow-100 text-yellow-800">Reclamo: {{ ucfirst($existingReclamo->estado) }}</span>
+                                    <span class="inline-block px-2 py-1 rounded text-sm font-medium 
+                                        @if($existingReclamo->estado === 'pendiente') bg-yellow-100 text-yellow-800
+                                        @elseif($existingReclamo->estado === 'atendido') bg-green-100 text-green-800
+                                        @else bg-gray-100 text-gray-800
+                                        @endif">
+                                        Reclamo: {{ ucfirst($existingReclamo->estado) }}
+                                    </span>
                                 </div>
                             @endif
                         </div>
                         <div>
                             @if($existingReclamo && $existingReclamo->estado === 'pendiente')
-                                <button disabled class="px-3 py-1 bg-gray-300 text-gray-700 rounded">Reclamar</button>
+                                <button disabled class="px-3 py-1 bg-gray-300 text-gray-700 rounded cursor-not-allowed">Reclamo Enviado</button>
                             @else
-                                <button onclick="document.getElementById('fase_id').value='{{ $phase->id }}'; document.getElementById('evaluation_id').value='{{ $eval?->id ?? '' }}'; document.getElementById('mensaje').focus();" class="px-3 py-1 bg-blue-600 text-white rounded">Reclamar</button>
+                                <button onclick="document.getElementById('evaluation_id').value='{{ $eval->id }}'; document.getElementById('mensaje').focus();" class="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700">Enviar Reclamo</button>
                             @endif
                         </div>
                     </div>
@@ -61,12 +73,11 @@
         <h2 class="text-lg font-semibold mb-4">Enviar Reclamo</h2>
         <form method="POST" action="{{ route('estudiante.inscripcion.reclamar', $inscripcion->id) }}">
             @csrf
-            <input type="hidden" name="fase_id" id="fase_id" value="">
             <input type="hidden" name="evaluation_id" id="evaluation_id" value="">
 
             <div class="mb-4">
                 <label class="block text-sm font-medium text-gray-700">Mensaje</label>
-                <textarea name="mensaje" id="mensaje" rows="4" class="mt-1 block w-full border rounded p-2">{{ old('mensaje') }}</textarea>
+                <textarea name="mensaje" id="mensaje" rows="4" class="mt-1 block w-full border rounded p-2" placeholder="Selecciona una evaluación arriba y escribe tu reclamo...">{{ old('mensaje') }}</textarea>
                 @error('mensaje')<p class="text-red-600 text-sm">{{ $message }}</p>@enderror
             </div>
 

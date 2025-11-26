@@ -8,7 +8,6 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
 use App\Models\User;
 use App\Models\Role;
-use App\Models\Area;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 
@@ -16,8 +15,7 @@ class RegisterController extends Controller
 {
     public function showRegistrationForm(): View
     {
-        $areas = Area::orderBy('name')->get();
-        return view('auth.register', compact('areas'));
+        return view('auth.register');
     }
 
     public function register(Request $request): RedirectResponse
@@ -28,7 +26,7 @@ class RegisterController extends Controller
             'last_name_mother' => 'nullable|string|max:255',
             'email' => 'required|email|max:255|unique:users,email',
             'password' => 'required|string|min:8|confirmed',
-            'area_id' => 'required|exists:areas,id',
+            'ci' => 'required|string|max:255|unique:users,ci',
             'user_code' => 'nullable|string|unique:users,user_code',
         ]);
 
@@ -54,7 +52,8 @@ class RegisterController extends Controller
             'password' => Hash::make($data['password']),
             'role_id' => $role->id,
             'is_active' => true,
-            'area_id' => $data['area_id'],
+            'ci' => $data['ci'],
+            'area_id' => $data['area_id'] ?? null,
             'user_code' => $userCode,
         ]);
 

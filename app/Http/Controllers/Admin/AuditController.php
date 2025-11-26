@@ -10,7 +10,8 @@ class AuditController extends \App\Http\Controllers\Controller
     {
         $this->authorize('viewAny', Audit::class);
 
-        $q = Audit::query();
+        // Eager-load user to avoid N+1 and ensure names are available in the view
+        $q = Audit::with('user');
 
         if ($request->filled('model')) {
             $q->where('auditable_type', $request->model);
@@ -30,17 +31,29 @@ class AuditController extends \App\Http\Controllers\Controller
 
         $audits = $q->orderBy('created_at','desc')->paginate(15);
 
-        // Obtener lista de modelos disponibles para filtrar
-        $modelFiles = glob(app_path('Models') . '/*.php');
+        // Obtener lista de modelos disponibles para filtrar (buscar recursivamente en app/Models)
         $models = [];
-        foreach ($modelFiles as $file) {
-            $name = pathinfo($file, PATHINFO_FILENAME);
-            $class = "App\\Models\\{$name}";
-            if (class_exists($class)) {
-                $models[$class] = class_basename($class);
+        try {
+            $base = app_path('Models');
+            $rii = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($base));
+            foreach ($rii as $file) {
+                if ($file->isDir()) continue;
+                if ($file->getExtension() !== 'php') continue;
+                $relative = str_replace($base . DIRECTORY_SEPARATOR, '', $file->getPathname());
+                $class = 'App\\Models\\' . str_replace(DIRECTORY_SEPARATOR, '\\', substr($relative, 0, -4));
+                if (class_exists($class)) {
+                    $models[$class] = class_basename($class);
+                }
             }
+            asort($models);
+        } catch (\Throwable $e) {
+            // En caso de error, dejar una lista mínima para que la vista funcione
+            $models = [
+                'App\\Models\\Inscription' => 'Inscripción',
+                'App\\Models\\Evaluation' => 'Evaluación',
+                'App\\Models\\User' => 'Usuario',
+            ];
         }
-        asort($models);
 
         return view('admin.audits.index', compact('audits', 'models'));
     }
