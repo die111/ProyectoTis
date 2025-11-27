@@ -6,6 +6,7 @@ use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Notifications\Events\BroadcastNotificationCreated;
 use App\Listeners\AddNotificationIdToBroadcast;
 use Carbon\Carbon;
@@ -32,6 +33,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Forzar HTTPS en producción para evitar errores de contenido mixto
+        if ($this->app->environment('production')) {
+            URL::forceScheme('https');
+        }
+        
         // Force Carbon locale to Spanish so diffForHumans() prints in Spanish
         try {
             Carbon::setLocale('es');
