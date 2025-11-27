@@ -1,3 +1,7 @@
+{{-- 
+se hizo invisible la columna promedio, tarjeta de promedio, boton de calificar/recalificar,
+solo hay q hacerlos visibles
+--}}
 @extends('layouts.app')
 @section('title', 'Calificación Grupal · Admin')
 
@@ -127,7 +131,7 @@
               <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">CI</th>
               <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Puntaje (0-100)</th>
               <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Observaciones</th>
-              <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Promedio</th>
+              <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider hidden">Promedio</th>
               <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Estado Calificación</th>
             </tr>
           </thead>
@@ -216,19 +220,39 @@
                            max="100"
                            step="0.1"
                            placeholder="0.0"
-                           class="w-20 rounded-md border border-gray-300 px-2 py-1 text-sm text-center focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500">
+                           class="w-20 rounded-md border border-gray-300 px-2 py-1 text-sm text-center focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500"
+                           readonly>
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap text-center">
                     @php
                       $observacionesExistentes = $evaluacion ? $evaluacion->observaciones_evaluador : '';
                     @endphp
-                    <textarea form="calif-{{ $estudiante->id }}"
-                              name="calificaciones[{{ $estudiante->id }}][observaciones]"
-                              rows="1"
-                              placeholder="Observaciones..."
-                              class="w-32 rounded-md border border-gray-300 px-2 py-1 text-sm resize-none focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500">{{ $observacionesExistentes }}</textarea>
+                    <div style="display: flex; align-items: center; gap: 0.5rem; justify-content: center;">
+                      <textarea form="calif-{{ $estudiante->id }}"
+                                id="observaciones-{{ $estudiante->id }}"
+                                name="calificaciones[{{ $estudiante->id }}][observaciones]"
+                                rows="1"
+                                placeholder="Observaciones..."
+                                class="w-32 rounded-md border border-gray-300 px-2 py-1 text-sm resize-none focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500" {{ $estaCalificado ? '' : 'disabled' }}>{{ $observacionesExistentes }}</textarea>
+                      @if($estaCalificado)
+                        <button type="button"
+                                class="rounded-md px-2 py-1 text-xs font-medium text-white shadow-sm hover:opacity-90"
+                                style="background-color: #091c47;"
+                                onclick="guardarObservacion({{ $competicion->id }}, {{ $fase->id }}, {{ $estudiante->id }})">
+                          Observar
+                        </button>
+                      @else
+                        <button type="button"
+                                class="rounded-md px-2 py-1 text-xs font-medium text-white shadow-sm cursor-not-allowed opacity-50"
+                                style="background-color: #9ca3af;"
+                                disabled
+                                title="Califica primero al grupo para habilitar las observaciones">
+                          Observar
+                        </button>
+                      @endif
+                    </div>
                   </td>
-                  <td class="px-6 py-4 whitespace-nowrap text-center">
+                  <td class="px-6 py-4 whitespace-nowrap text-center hidden">
                     {{ $evaluacion && $evaluacion->promedio !== null ? $evaluacion->promedio : '' }}
                   </td>
                   <td class="px-6 py-4 whitespace-nowrap text-center">
@@ -248,7 +272,7 @@
                     <!-- Formulario por fila - mostrar siempre el botón de calificar/recalificar -->
                     <form id="calif-{{ $estudiante->id }}" method="POST" action="{{ route('admin.evaluacion.guardar-calificaciones', ['competicion' => $competicion->id, 'fase' => $fase->id]) }}" class="mt-2 inline-block">
                       @csrf
-                      <button type="submit" class="rounded-md px-3 py-1.5 text-xs font-medium text-white shadow-sm hover:opacity-90" style="background-color: #091c47;">
+                      <button type="submit" class="rounded-md px-3 py-1.5 text-xs font-medium text-white shadow-sm hover:opacity-90 hidden" style="background-color: #091c47;">
                         {{ $estaCalificado ? 'Recalificar' : 'Calificar' }}
                       </button>
                     </form>
@@ -304,7 +328,7 @@
           </button>
         </form>
       </div>
-      <div class="bg-white rounded-lg p-4 border border-gray-200 flex flex-col justify-center items-center">
+      <div class="bg-white rounded-lg p-4 border border-gray-200 flex flex-col justify-center items-center hidden">
         <h5 class="font-medium text-gray-900 mb-2">Promediar</h5>
         <p class="text-sm text-gray-600 mb-4">Calcular y guardar el promedio grupal de todos los grupos</p>
         <button 
@@ -708,5 +732,30 @@
       cerrarModalConfirmacion();
     }
   });
+  
+  function guardarObservacion(competicionId, faseId, estudianteId) {
+    const textarea = document.getElementById(`observaciones-${estudianteId}`);
+    const observacion = textarea.value;
+    fetch(`/dashboard/admin/evaluacion/guardar-observacion/${competicionId}/${faseId}/${estudianteId}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify({ observacion })
+    })
+    .then(async response => {
+      const result = await response.json();
+      if (response.ok) {
+        mostrarNotificacion(result.message || 'Observación guardada correctamente', 'success');
+      } else {
+        mostrarNotificacion(result.message || 'Error al guardar la observación', 'error');
+      }
+    })
+    .catch(error => {
+      mostrarNotificacion('Error de red al guardar la observación', 'error');
+    });
+  }
 </script>
 @endsection

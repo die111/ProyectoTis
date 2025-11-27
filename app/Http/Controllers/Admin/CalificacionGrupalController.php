@@ -38,6 +38,8 @@ class CalificacionGrupalController extends \App\Http\Controllers\Controller
         $query->where('fase', $numeroFase);
         $query->where('categoria_id', 3);
         $query->where('estado', 'confirmada');
+        // Excluir estudiantes con estado pendiente
+        $query->where('estado', '!=', 'pendiente');
         if (request('estado_activo') === 'inactivo') { $query->where('is_active', false); }
         elseif (request('estado_activo') === 'todos') { /* no-op */ }
         else { $query->where('is_active', true); }
@@ -289,6 +291,46 @@ class CalificacionGrupalController extends \App\Http\Controllers\Controller
             $evaluacion->save();
         }
         return back()->with('success', 'Nota grupal guardada correctamente para todos los miembros del grupo.');
+    }
+
+    /**
+     * Guardar observación individual por estudiante (AJAX)
+     */
+    public function guardarObservacion(Request $request, $competicionId, $faseId, $estudianteId)
+    {
+        $request->validate([
+            'observacion' => 'nullable|string|max:1000'
+        ]);
+        try {
+            // Buscar inscripción del estudiante en la competición y fase
+            $inscripcion = Inscription::where('id', $estudianteId)
+                ->where('competition_id', $competicionId)
+                ->where('fase', $faseId)
+                ->where('categoria_id', 3)
+                ->first();
+            if (!$inscripcion) {
+                return response()->json(['message' => 'Inscripción no encontrada'], 404);
+            }
+            // Buscar evaluación
+            $evaluacion = Evaluation::firstOrNew([
+                'inscription_id' => $inscripcion->id
+            ]);
+            $evaluacion->observaciones_evaluador = $request->input('observacion');
+            $evaluacion->is_active = true;
+            $evaluacion->evaluator_id = \Illuminate\Support\Facades\Auth::id();
+            // Si ya tiene nota, mantenerla
+            if ($evaluacion->nota === null) {
+                $evaluacion->nota = null;
+            }
+            // Estado: mantener si existe
+            if ($evaluacion->estado === null) {
+                $evaluacion->estado = 'no_clasificado';
+            }
+            $evaluacion->save();
+            return response()->json(['message' => 'Observación guardada correctamente']);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Error al guardar la observación: ' . $e->getMessage()], 500);
+        }
     }
     // Puedes agregar aquí otros métodos grupales que sean necesarios
 }

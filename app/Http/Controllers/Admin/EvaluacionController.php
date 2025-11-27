@@ -601,6 +601,8 @@ class EvaluacionController extends \App\Http\Controllers\Controller
         $query->where('fase', $numeroFase);
         // Excluir estudiantes con categoría Grupal (ID 3)
         $query->where('categoria_id', '!=', 3);
+        // Excluir estudiantes con estado pendiente
+        $query->where('estado', '!=', 'pendiente');
         if (request('estado_activo') === 'inactivo') { $query->where('is_active', false); }
         elseif (request('estado_activo') === 'todos') { /* no-op */ }
         else { $query->where('is_active', true); }
