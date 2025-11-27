@@ -25,7 +25,7 @@
       </div>
       <div>
         <span class="font-semibold text-blue-800">Fase:</span>
-        <span class="text-blue-700">{{ $fase->name }} (Nivel {{ $numeroFase }})</span>
+        <span class="text-blue-700">{{ $fase->name }}</span>
       </div>
       <div>
         <span class="font-semibold text-blue-800">Estado:</span>
@@ -192,9 +192,6 @@
                     <div class="ml-4">
                       <div class="text-sm font-medium text-gray-900">
                         {{ $estudiante->user->name ?? 'N/A' }} {{ $estudiante->user->last_name_father ?? '' }} {{ $estudiante->user->last_name_mother ?? '' }}
-                      </div>
-                      <div class="text-sm text-gray-500">
-                        ID: {{ $estudiante->id }}
                       </div>
                     </div>
                   </div>

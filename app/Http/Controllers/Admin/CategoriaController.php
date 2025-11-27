@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Categoria;
+use App\Models\CompetitionCategoryArea;
 use Illuminate\Http\Request;
 
 class CategoriaController extends Controller
@@ -88,7 +89,13 @@ class CategoriaController extends Controller
         // Paginación
         $categories = $categories->paginate(10);
         
-        return view('admin.categorias.index', compact('categories', 'q'));
+        // Verificar qué categorías están en uso en competiciones
+        $categoriesInUse = CompetitionCategoryArea::whereIn('categoria_id', $categories->pluck('id'))
+            ->distinct()
+            ->pluck('categoria_id')
+            ->toArray();
+        
+        return view('admin.categorias.index', compact('categories', 'q', 'categoriesInUse'));
     }
 
     /**

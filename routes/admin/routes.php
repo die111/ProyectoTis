@@ -12,6 +12,7 @@ use App\Http\Controllers\Admin\EvaluacionController;
 use App\Http\Controllers\Admin\CategoriaController;
 use App\Http\Controllers\Admin\AuditController;
 use App\Http\Controllers\Admin\PromedioGrupalController;
+use App\Http\Controllers\Admin\CalificacionGrupalController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth'])->prefix('dashboard/admin')->name('admin.')->group(function () {
@@ -126,6 +127,9 @@ Route::middleware(['auth'])->prefix('dashboard/admin')->name('admin.')->group(fu
     
     // Obtener reporte de promedios por fase
     Route::get('promedios/reporte', [PromedioGrupalController::class, 'obtenerReportePromedios'])->name('promedios.reporte');
+
+    // Guardar observación individual por estudiante (AJAX)
+    Route::post('evaluacion/guardar-observacion/{competicion}/{fase}/{estudiante}', [CalificacionGrupalController::class, 'guardarObservacion'])->name('evaluacion.guardar-observacion');
 
     // Futuras rutas de áreas (descomentar cuando estén listas)
     // Route::resource('areas', App\Http\Controllers\Admin\AreaController::class);

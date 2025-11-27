@@ -28,6 +28,12 @@ function normalizeFlex(str){
     .trim();
 }
 
+function removeTildes(str){
+  return (str||'')
+    .normalize('NFD') // separa tildes
+    .replace(/[\u0300-\u036f]/g,''); // elimina diacríticos
+}
+
 function resetAllowed(){
   allowedCatAreas = []; allowedAreasFlat = new Set(); allowedCategoriasFlat = new Set();
 }
@@ -142,6 +148,18 @@ function nuevaFila(data = {}) {
   tr.setAttribute('data-selectable', '1');
   tr.className = 'border-b last:border-b-0';
 
+  // Validar si área y categoría son válidas para la competición
+  let isInvalid = false;
+  if(cmbCompeticiones?.value && allowedAreasFlat.size > 0){
+    const areaKey = normalizeFlex(data.area || '');
+    const categoriaKey = normalizeFlex(data.categoria || '');
+    if((data.area && !allowedAreasFlat.has(areaKey)) || (data.categoria && !allowedCategoriasFlat.has(categoriaKey))){
+      isInvalid = true;
+      tr.classList.add('bg-red-50', 'text-red-600');
+      tr.title = 'Esta fila tiene área o categoría inválida y NO se guardará';
+    }
+  }
+
   // Orden en tabla/CSV: nombre, ap_paterno, ap_materno, ci, email, area, categoria, codigo_usuario, password
   [
     'nombre',
@@ -154,10 +172,18 @@ function nuevaFila(data = {}) {
     'nombre_grupo',
     'codigo_usuario',
     'password'
-  ].forEach(k => {
+  ].forEach((k, idx) => {
     const td = document.createElement('td');
     td.className = 'px-3 py-2';
-    td.textContent = data[k] || '';
+    // Remover tildes de todos los valores antes de mostrarlos
+    const valorSinTildes = removeTildes(data[k] || '');
+    td.textContent = valorSinTildes;
+    
+    // Marcar las celdas de área y categoría inválidas
+    if(isInvalid && (idx === 5 || idx === 6)){ // área o categoría
+      td.classList.add('font-semibold');
+    }
+    
     tr.appendChild(td);
   });
 
@@ -206,24 +232,60 @@ function cargarCSV(csvText){
     if (/nombre|paterno|materno|ci|email|contraseña|password|rol|area|codigo|categor/i.test(headerGuess)) startIndex = 1;
   }
 
+  const areasInvalidas = new Set();
+  const categoriasInvalidas = new Set();
+
   for (let i=startIndex;i<filas.length;i++){
     const cols = parseLine(filas[i]).map(c => (c || '').trim());
     // Orden esperado del CSV: nombre(0), ap_paterno(1), ap_materno(2), ci(3), email(4), area(5), categoria(6), nombre_grupo(7), codigo_usuario(8), password(9)
+    // Remover tildes de todos los valores al cargar
     const data = {
-      nombre: cols[0] || '',
-      ap_paterno: cols[1] || '',
-      ap_materno: cols[2] || '',
+      nombre: removeTildes(cols[0] || ''),
+      ap_paterno: removeTildes(cols[1] || ''),
+      ap_materno: removeTildes(cols[2] || ''),
       ci: cols[3] || '',
       email: cols[4] || '',
-      area: cols[5] || '',
-      categoria: cols[6] || '',
-      nombre_grupo: cols[7] || 'N/A',
+      area: removeTildes(cols[5] || ''),
+      categoria: removeTildes(cols[6] || ''),
+      nombre_grupo: removeTildes(cols[7] || 'N/A'),
       codigo_usuario: cols[8] || '',
       password: cols[9] || ''
     };
 
     if (Object.values(data).every(v => v === '')) continue;
+    
+    // Validar áreas y categorías contra la competición seleccionada
+    if(cmbCompeticiones?.value && allowedAreasFlat.size > 0){
+      const areaKey = normalizeFlex(data.area);
+      const categoriaKey = normalizeFlex(data.categoria);
+      
+      if(data.area && !allowedAreasFlat.has(areaKey)){
+        areasInvalidas.add(data.area);
+      }
+      if(data.categoria && !allowedCategoriasFlat.has(categoriaKey)){
+        categoriasInvalidas.add(data.categoria);
+      }
+    }
+    
     nuevaFila(data);
+  }
+  
+  // Mostrar advertencia si hay áreas o categorías inválidas
+  if(areasInvalidas.size > 0 || categoriasInvalidas.size > 0){
+    let warnings = [];
+    if(areasInvalidas.size > 0){
+      warnings.push(`<strong>Áreas inválidas:</strong> ${[...areasInvalidas].join(', ')}`);
+    }
+    if(categoriasInvalidas.size > 0){
+      warnings.push(`<strong>Categorías inválidas:</strong> ${[...categoriasInvalidas].join(', ')}`);
+    }
+    showMsg({
+      title: '⚠️ Advertencia en CSV',
+      html: `Se cargaron datos pero hay valores que no coinciden exactamente con la competición seleccionada:<br><br>${warnings.join('<br>')}<br><br>Estos registros NO se guardarán al exportar.`,
+      icon: 'warning',
+      confirmText: 'Entendido',
+      color: '#f59e0b'
+    });
   }
 }
 
@@ -293,11 +355,11 @@ btnExport.addEventListener('click', () => {
       const areaKey = normalizeFlex(areaNombre);
       const categoriaKey = normalizeFlex(categoriaNombre);
 
-      // Coincidencia flexible: exacta, contiene o es contenida
-      const areaOk = areaKey === '' || [...allowedAreasFlat].some(v => v === areaKey || v.includes(areaKey) || areaKey.includes(v));
-      const categoriaOk = categoriaKey === '' || [...allowedCategoriasFlat].some(v => v === categoriaKey || v.includes(categoriaKey) || categoriaKey.includes(v));
+      // Coincidencia EXACTA (normalizada) - sin coincidencias parciales
+      const areaOk = areaKey === '' || allowedAreasFlat.has(areaKey);
+      const categoriaOk = categoriaKey === '' || allowedCategoriasFlat.has(categoriaKey);
 
-      if(!(areaOk && categoriaOk)) return null; // descartar si no coincide flexiblemente
+      if(!(areaOk && categoriaOk)) return null; // descartar si no coincide exactamente
       const areaId = getAreaId(areaNombre);
       return {
         name: (tds[0]?.textContent || '').trim(),
@@ -317,9 +379,10 @@ btnExport.addEventListener('click', () => {
     .filter(e => e !== null);
 
   if(estudiantes.length === 0){
+    const totalFilas = [...tbody.querySelectorAll('tr')].filter(tr => tr.style.display !== 'none').length;
     showMsg({
       title: '🙈 Sin estudiantes válidos',
-      html: 'No hay estudiantes con área y categoría permitidas para esta competición.',
+      html: `No hay estudiantes con área y categoría que coincidan <strong>exactamente</strong> con la competición seleccionada.<br><br>Se encontraron ${totalFilas} fila(s) pero ninguna tiene valores válidos.<br><br><strong>Importante:</strong> Los nombres de área y categoría deben coincidir exactamente (sin importar mayúsculas/minúsculas o tildes).`,
       icon: 'info',
       color: '#6366f1'
     });

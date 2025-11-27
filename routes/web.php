@@ -151,4 +151,5 @@ Route::middleware('auth')->group(function () {
     Route::get('/admin/etapas', [EtapasController::class, 'admin'])
         ->name('admin.etapas.index'); // para más adelante (CRUD, finalizar, etc.)
     
+    Route::post('admin/evaluacion/{competicion}/fase/{fase}/grupo/evaluar', [App\Http\Controllers\Admin\CalificacionGrupalController::class, 'evaluarGrupo'])->name('admin.evaluacion.evaluar-grupo');
 });

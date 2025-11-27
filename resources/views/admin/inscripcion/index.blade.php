@@ -277,14 +277,16 @@
           card.className='min-w-[140px] flex-shrink-0 border rounded-md bg-white shadow-sm p-2';
           const title = document.createElement('h4');
           title.className='font-semibold text-gray-700 mb-1 text-center';
-          title.textContent = cat.nombre;
+          // Remover tildes al mostrar la categoría
+          title.textContent = cat.nombre ? cat.nombre.normalize('NFD').replace(/\u0300-\u036f/g,'') : '';
           card.appendChild(title);
           if(cat.areas && cat.areas.length){
             const ul = document.createElement('ul');
             ul.className='list-disc list-inside space-y-0.5';
             cat.areas.forEach(a=>{
               const li = document.createElement('li');
-              li.textContent = a.name;
+              // Remover tildes al mostrar el área
+              li.textContent = a.name ? a.name.normalize('NFD').replace(/\u0300-\u036f/g,'') : '';
               ul.appendChild(li);
             });
             card.appendChild(ul);

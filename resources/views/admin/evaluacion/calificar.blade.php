@@ -17,7 +17,7 @@
   </header>
 
   <!-- Información de la competición y fase -->
-  <section class="mb-8 bg-gradient-to-r from-blue-50 to-emerald-50 rounded-lg p-4 border border-blue-200">
+  <section class="mb-8 bg-gradient-to-r from-blue-50 to-blue-50 rounded-lg p-4 border border-blue-200">
     <div class="grid grid-cols-1 md:grid-cols-5 gap-4 text-sm">
       <div>
         <span class="font-semibold text-blue-800">Competición:</span>
@@ -25,7 +25,7 @@
       </div>
       <div>
         <span class="font-semibold text-blue-800">Fase:</span>
-        <span class="text-blue-700">{{ $fase->name }} (Nivel {{ $numeroFase }})</span>
+        <span class="text-blue-700">{{ $fase->name }}</span>
       </div>
       <div>
         <span class="font-semibold text-blue-800">Estado:</span>
@@ -171,10 +171,7 @@
                     <div class="ml-4">
                       <div class="text-sm font-medium text-gray-900">
                         {{ $estudiante->user->name ?? 'N/A' }} {{ $estudiante->user->last_name_father ?? '' }} {{ $estudiante->user->last_name_mother ?? '' }}
-                      </div>
-                      <div class="text-sm text-gray-500">
-                        ID: {{ $estudiante->id }}
-                      </div>
+                      </div>                      
                     </div>
                   </div>
                 </td>
@@ -225,15 +222,13 @@
                   <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full {{ $estadoCalifClass }}">
                     {{ $estadoCalifTexto }}
                   </span>
-                  <!-- Formulario por fila - solo mostrar si no está calificado -->
-                  @if(!$estaCalificado)
-                    <form id="calif-{{ $estudiante->id }}" method="POST" action="{{ route('admin.evaluacion.guardar-calificaciones', ['competicion' => $competicion->id, 'fase' => $fase->id]) }}" class="mt-2 inline-block">
-                      @csrf
-                      <button type="submit" class="rounded-md px-3 py-1.5 text-xs font-medium text-white shadow-sm hover:opacity-90" style="background-color: #091C47;">
-                        Calificar
-                      </button>
-                    </form>
-                  @endif
+                  <!-- Formulario por fila - mostrar siempre el botón de calificar/recalificar -->
+                  <form id="calif-{{ $estudiante->id }}" method="POST" action="{{ route('admin.evaluacion.guardar-calificaciones', ['competicion' => $competicion->id, 'fase' => $fase->id]) }}" class="mt-2 inline-block">
+                    @csrf
+                    <button type="submit" class="rounded-md px-3 py-1.5 text-xs font-medium text-white shadow-sm hover:opacity-90" style="background-color: #091C47;">
+                      {{ $estaCalificado ? 'Recalificar' : 'Calificar' }}
+                    </button>
+                  </form>
                 </td>
               </tr>
             @endforeach

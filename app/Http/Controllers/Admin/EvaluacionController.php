@@ -568,6 +568,15 @@ class EvaluacionController extends \App\Http\Controllers\Controller
         return view('admin.evaluacion.estudiantes', compact('fase', 'competicion', 'categorias', 'areas', 'estudiantes', 'numeroFase'));
     }
 
+    /**
+     * Métodos grupales movidos a CalificacionGrupalController
+     * Para calificaciones grupales, usar el controlador CalificacionGrupalController
+     * Ejemplo:
+     * (new CalificacionGrupalController)->calificarGrupal($competicion, $faseId);
+     */
+
+    // Métodos individuales y generales permanecen aquí
+
     public function calificar(Competicion $competicion, $faseId)
     {
         $fase = $competicion->phases()->findOrFail($faseId);
@@ -592,6 +601,8 @@ class EvaluacionController extends \App\Http\Controllers\Controller
         $query->where('fase', $numeroFase);
         // Excluir estudiantes con categoría Grupal (ID 3)
         $query->where('categoria_id', '!=', 3);
+        // Excluir estudiantes con estado pendiente
+        $query->where('estado', '!=', 'pendiente');
         if (request('estado_activo') === 'inactivo') { $query->where('is_active', false); }
         elseif (request('estado_activo') === 'todos') { /* no-op */ }
         else { $query->where('is_active', true); }
@@ -727,8 +738,9 @@ class EvaluacionController extends \App\Http\Controllers\Controller
             });
         }
         
-        // Ordenar por nombre de grupo para agrupar estudiantes del mismo grupo
-        $query->orderBy('name_grupo', 'asc');
+        // Ordenar por área y nombre de grupo para agrupar correctamente
+        $query->orderBy('area_id', 'asc')
+              ->orderBy('name_grupo', 'asc');
         
         $estudiantes = $query->paginate(20)->appends(request()->query());
         
