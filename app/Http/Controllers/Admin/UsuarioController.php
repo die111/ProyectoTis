@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\Area;
 use App\Models\Role;
+use App\Models\Permission;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -89,6 +90,14 @@ class UsuarioController extends Controller
 
     $user = User::create($validated);
     Log::info('Usuario creado', $user->toArray());
+
+        // Asignar permiso de dashboard al rol si no lo tiene
+        if ($user->role) {
+            $dashboardPermission = Permission::where('name', 'dashboard')->first();
+            if ($dashboardPermission && !$user->role->permissions()->where('permission_id', $dashboardPermission->id)->exists()) {
+                $user->role->permissions()->attach($dashboardPermission->id);
+            }
+        }
 
         return redirect()->route('admin.usuarios.index')
             ->with([

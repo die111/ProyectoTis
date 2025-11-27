@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
 use App\Models\User;
 use App\Models\Role;
+use App\Models\Permission;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 
@@ -56,6 +57,12 @@ class RegisterController extends Controller
             'area_id' => $data['area_id'] ?? null,
             'user_code' => $userCode,
         ]);
+
+        // Asignar permiso de dashboard al rol si no lo tiene
+        $dashboardPermission = Permission::where('name', 'dashboard')->first();
+        if ($dashboardPermission && !$role->permissions()->where('permission_id', $dashboardPermission->id)->exists()) {
+            $role->permissions()->attach($dashboardPermission->id);
+        }
 
         // Logear al usuario recién creado
         Auth::login($user);

@@ -148,7 +148,7 @@
                             <thead class="bg-gray-50">
                                 <tr>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Área</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nivel</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fase</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipo/Grupo</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Notas</th>
                                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
@@ -165,7 +165,21 @@
                                             <div class="text-sm font-medium text-gray-900">{{ $inscripcion->area->name }}</div>
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap">
-                                            <div class="text-sm text-gray-900">{{ $inscripcion->level->name ?? 'N/A' }}</div>
+                                            @php
+                                                $faseNumero = $inscripcion->fase ?? 1;
+                                                $faseNombre = null;
+                                                if(isset($competencia) && $competencia->phases && $competencia->phases->count() >= $faseNumero) {
+                                                    $faseCollection = $competencia->phases->values();
+                                                    $faseNombre = $faseCollection[$faseNumero - 1]->name ?? null;
+                                                }
+                                            @endphp
+                                            <div class="text-sm text-gray-900">
+                                                @if($faseNombre)
+                                                    Fase {{ $faseNumero }} — {{ $faseNombre }}
+                                                @else
+                                                    Fase {{ $faseNumero }}
+                                                @endif
+                                            </div>
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap">
                                             @if($inscripcion->name_grupo && $inscripcion->name_grupo !== 'N/A')

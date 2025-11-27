@@ -43,10 +43,12 @@
                             <label class="block text-sm font-medium text-gray-700 mb-2">Permisos</label>
                             <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
                                 @foreach($permissions as $permission)
-                                    <label class="flex items-center space-x-2 bg-gray-50 border border-gray-100 rounded-md px-3 py-2">
-                                        <input type="checkbox" name="permissions[]" value="{{ $permission->id }}" class="form-checkbox h-4 w-4 text-blue-600" {{ in_array($permission->id, $rolePermissions) ? 'checked' : '' }}>
-                                        <span class="text-sm text-gray-800">{{ $permission->name }}</span>
-                                    </label>
+                                    @if($permission->name !== 'dashboard')
+                                        <label class="flex items-center space-x-2 bg-gray-50 border border-gray-100 rounded-md px-3 py-2">
+                                            <input type="checkbox" name="permissions[]" value="{{ $permission->id }}" class="form-checkbox h-4 w-4 text-blue-600" {{ in_array($permission->id, $rolePermissions) ? 'checked' : '' }}>
+                                            <span class="text-sm text-gray-800">{{ $permission->name }}</span>
+                                        </label>
+                                    @endif
                                 @endforeach
                             </div>
                             @error('permissions')<span class="text-red-500 text-sm">{{ $message }}</span>@enderror

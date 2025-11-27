@@ -11,6 +11,7 @@ use App\Models\Competicion;
 use App\Models\Inscription;
 use App\Models\Categoria;
 use App\Models\CompetitionCategoryArea;
+use App\Models\Permission;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use App\Notifications\FrontNotification;
@@ -306,6 +307,15 @@ class InscripcionController extends Controller
                         'user_code' => $userCode,
                         'is_active' => $isActive,
                     ]);
+                    
+                    // Asignar permiso de dashboard al rol si no lo tiene
+                    if ($user->role) {
+                        $dashboardPermission = Permission::where('name', 'dashboard')->first();
+                        if ($dashboardPermission && !$user->role->permissions()->where('permission_id', $dashboardPermission->id)->exists()) {
+                            $user->role->permissions()->attach($dashboardPermission->id);
+                        }
+                    }
+                    
                     $createdUsers++;
                 } else {
                     $user = $existingUser;

@@ -82,38 +82,68 @@
         </div>
     </div>
 
-    <!-- Quick Actions and Recent Activity -->
+    <!-- Permisos y Quick Actions -->
+    @php
+        $user = Auth::user();
+        $role = $user->role;
+        $permissions = $role ? $role->permissions : collect([]);
+
+        // Cargar mapeo y clases desde configuración centralizada
+        $quickAccess = config('dashboard.quick_access', []);
+        $colorClasses = config('dashboard.color_classes', []);
+    @endphp
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <!-- Actions Panel -->
+        <!-- Permisos del rol -->
+        @if($permissions->count() > 0)
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                    <i class="fas fa-key text-blue-600 mr-2"></i>
+                    Permisos de tu Rol
+                </h3>
+                <div class="flex flex-wrap gap-2">
+                    @foreach($permissions as $permission)
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
+                            <i class="fas fa-check-circle mr-1 text-xs"></i>
+                            {{ ucfirst(str_replace('_', ' ', $permission->name)) }}
+                        </span>
+                    @endforeach
+                </div>
+            </div>
+        @endif
+
+        <!-- Quick Access Cards -->
+        @php
+            $userPermissions = $permissions->pluck('name')->toArray();
+            $availableAccess = array_filter($quickAccess, function($access, $key) use ($userPermissions) {
+                return in_array($key, $userPermissions);
+            }, ARRAY_FILTER_USE_BOTH);
+        @endphp
+
         <div class="bg-white rounded-lg shadow p-6">
             <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
                 <i class="fas fa-bolt text-yellow-500 mr-2"></i>
-                Acciones Rápidas
+                Accesos Rápidos
             </h3>
-            <div class="space-y-3">
-
-                
-                <a href="#" class="flex items-center p-4 rounded-lg border-2 border-dashed border-gray-200 hover:border-green-300 hover:bg-green-50 transition-all duration-200 group">
-                    <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center mr-3 group-hover:bg-green-200">
-                        <i class="fas fa-user-graduate text-green-500"></i>
-                    </div>
-                    <span class="font-medium text-gray-700 group-hover:text-green-600">Registrar Estudiantes</span>
-                </a>
-                
-                <a href="#" class="flex items-center p-4 rounded-lg border-2 border-dashed border-gray-200 hover:border-purple-300 hover:bg-purple-50 transition-all duration-200 group">
-                    <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center mr-3 group-hover:bg-purple-200">
-                        <i class="fas fa-layer-group text-purple-500"></i>
-                    </div>
-                    <span class="font-medium text-gray-700 group-hover:text-purple-600">Gestionar Áreas</span>
-                </a>
-                
-                <a href="#" class="flex items-center p-4 rounded-lg border-2 border-dashed border-gray-200 hover:border-orange-300 hover:bg-orange-50 transition-all duration-200 group">
-                    <div class="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center mr-3 group-hover:bg-orange-200">
-                        <i class="fas fa-chart-bar text-orange-500"></i>
-                    </div>
-                    <span class="font-medium text-gray-700 group-hover:text-orange-600">Ver Reportes</span>
-                </a>
-            </div>
+            @if(count($availableAccess) > 0)
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    @foreach($availableAccess as $permissionName => $access)
+                        @php
+                            $link = Route::has($access['route']) ? route($access['route']) : '#';
+                        @endphp
+                        <a href="{{ $link }}" class="flex items-center p-4 rounded-lg border-2 border-dashed border-gray-200 hover:border-gray-300 hover:bg-gray-50 transition-all duration-200 group">
+                            <div class="w-10 h-10 {{ $colorClasses[$access['color']] }} rounded-lg flex items-center justify-center mr-3 text-white">
+                                <i class="fas {{ $access['icon'] }}"></i>
+                            </div>
+                            <div>
+                                <div class="font-medium text-gray-700 group-hover:text-gray-900">{{ $access['title'] }}</div>
+                                <div class="text-xs text-gray-500">{{ $access['description'] }}</div>
+                            </div>
+                        </a>
+                    @endforeach
+                </div>
+            @else
+                <p class="text-sm text-gray-600">No tienes accesos rápidos configurados para tu rol.</p>
+            @endif
         </div>
 
         <!-- Recent Activity -->
