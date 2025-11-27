@@ -20,7 +20,7 @@ return new class extends Migration
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
             $table->foreignId('role_id')->constrained('roles')->onDelete('cascade');
-            $table->foreignId('area_id')->constrained()->onDelete('cascade');
+            $table->foreignId('area_id')->constrained()->onDelete('cascade')->nullable();
             $table->string('user_code')->unique();
             $table->string('school')->nullable();
             $table->string('level')->nullable();

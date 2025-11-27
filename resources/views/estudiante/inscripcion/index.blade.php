@@ -91,58 +91,158 @@
                 <p class="text-gray-600">Aún no te has inscrito a ninguna competencia.</p>
             </div>
         @else
-            <div class="bg-white rounded-lg shadow overflow-hidden">
-                <table class="min-w-full divide-y divide-gray-200">
-                    <thead class="bg-gray-50">
-                        <tr>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Competencia</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Área</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nivel</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha de Inscripción</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody class="bg-white divide-y divide-gray-200">
-                        @foreach($misInscripciones as $inscripcion)
-                            <tr class="hover:bg-gray-50 inscripcion-row" data-inscripcion-id="{{ $inscripcion->id }}">
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="text-sm font-medium text-gray-900">{{ $inscripcion->competition->name }}</div>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="text-sm text-gray-900">{{ $inscripcion->area->name }}</div>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="text-sm text-gray-900">{{ $inscripcion->level->name ?? 'N/A' }}</div>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    @if($inscripcion->estado === 'pendiente')
-                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
-                                            <i class="fas fa-clock mr-1"></i>Pendiente
-                                        </span>
-                                    @elseif($inscripcion->estado === 'confirmada')
-                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                                            <i class="fas fa-check mr-1"></i>Confirmada
-                                        </span>
-                                    @else
-                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
-                                            <i class="fas fa-times mr-1"></i>Rechazada
-                                        </span>
-                                    @endif
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                    {{ $inscripcion->created_at->format('d/m/Y H:i') }}
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm">
-                                    <button onclick="window.location.href='{{ route('estudiante.inscripcion.detalle', $inscripcion->id) }}'" 
-                                            class="text-blue-600 hover:text-blue-800 font-medium">
-                                        <i class="fas fa-eye mr-1"></i>Ver Detalle
-                                    </button>
-                                </td>
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
+            <!-- Filtros -->
+            <div class="mb-4 flex items-center justify-between">
+                <div class="flex gap-2">
+                    <button onclick="filtrarInscripciones('todas')" class="filter-btn active px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors" data-filter="todas">
+                        <i class="fas fa-list mr-2"></i>Todas
+                    </button>
+                    <button onclick="filtrarInscripciones('individual')" class="filter-btn px-4 py-2 rounded-lg bg-gray-200 text-gray-700 hover:bg-gray-300 transition-colors" data-filter="individual">
+                        <i class="fas fa-user mr-2"></i>Individuales
+                    </button>
+                    <button onclick="filtrarInscripciones('grupal')" class="filter-btn px-4 py-2 rounded-lg bg-gray-200 text-gray-700 hover:bg-gray-300 transition-colors" data-filter="grupal">
+                        <i class="fas fa-users mr-2"></i>Grupales
+                    </button>
+                </div>
+                <div class="text-sm text-gray-600">
+                    <span id="contador-inscripciones">{{ $misInscripciones->count() }}</span> inscripción(es)
+                </div>
+            </div>
+            
+            @php
+                $inscripcionesPorCompetencia = $misInscripciones->groupBy('competition_id');
+            @endphp
+            
+            <div class="space-y-6">
+                @foreach($inscripcionesPorCompetencia as $competenciaId => $inscripcionesGrupo)
+                    @php
+                        $competencia = $inscripcionesGrupo->first()->competition;
+                    @endphp
+                    
+                    <div class="bg-white rounded-lg shadow-lg overflow-hidden border border-gray-200">
+                        <!-- Header de la Competencia -->
+                        <div class="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-4">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center backdrop-blur-sm">
+                                        <i class="fas fa-trophy text-2xl text-white"></i>
+                                    </div>
+                                    <div>
+                                        <h3 class="text-xl font-bold text-white">{{ $competencia->name }}</h3>
+                                        <p class="text-blue-100 text-sm">
+                                            <i class="far fa-calendar mr-1"></i>
+                                            {{ $competencia->fechaInicio->format('d/m/Y') }} - {{ $competencia->fechaFin->format('d/m/Y') }}
+                                        </p>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <span class="px-3 py-1 bg-white/20 backdrop-blur-sm rounded-full text-sm font-medium text-white">
+                                        {{ $inscripcionesGrupo->count() }} inscripción(es)
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Tabla de Inscripciones -->
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Área</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fase</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipo/Grupo</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Notas</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                @foreach($inscripcionesGrupo as $inscripcion)
+                                    <tr class="hover:bg-gray-50 inscripcion-row" 
+                                        data-inscripcion-id="{{ $inscripcion->id }}" 
+                                        data-tipo="{{ ($inscripcion->name_grupo && $inscripcion->name_grupo !== 'N/A') ? 'grupal' : 'individual' }}">
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="text-sm font-medium text-gray-900">{{ $inscripcion->area->name }}</div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            @php
+                                                $faseNumero = $inscripcion->fase ?? 1;
+                                                $faseNombre = null;
+                                                if(isset($competencia) && $competencia->phases && $competencia->phases->count() >= $faseNumero) {
+                                                    $faseCollection = $competencia->phases->values();
+                                                    $faseNombre = $faseCollection[$faseNumero - 1]->name ?? null;
+                                                }
+                                            @endphp
+                                            <div class="text-sm text-gray-900">
+                                                @if($faseNombre)
+                                                    Fase {{ $faseNumero }} — {{ $faseNombre }}
+                                                @else
+                                                    Fase {{ $faseNumero }}
+                                                @endif
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            @if($inscripcion->name_grupo && $inscripcion->name_grupo !== 'N/A')
+                                                <div class="flex items-center gap-2">
+                                                    <span class="px-2 py-0.5 text-xs font-semibold rounded-full bg-purple-100 text-purple-800">
+                                                        <i class="fas fa-users mr-1"></i>GRUPAL
+                                                    </span>
+                                                    <div class="text-sm text-gray-900">{{ $inscripcion->name_grupo }}</div>
+                                                </div>
+                                            @else
+                                                <span class="px-2 py-0.5 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
+                                                    <i class="fas fa-user mr-1"></i>INDIVIDUAL
+                                                </span>
+                                            @endif
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            @php
+                                                $evaluaciones = $inscripcion->evaluations ?? collect();
+                                                $notasActivas = $evaluaciones->where('is_active', true);
+                                                $totalNotas = $notasActivas->count();
+                                                $promedio = $totalNotas > 0 ? round($notasActivas->avg('nota'), 2) : null;
+                                            @endphp
+                                            @if($totalNotas > 0)
+                                                <div class="text-sm">
+                                                    <span class="font-semibold text-gray-900">{{ $promedio }}</span>
+                                                    <span class="text-gray-500 text-xs">({{ $totalNotas }} nota{{ $totalNotas > 1 ? 's' : '' }})</span>
+                                                </div>
+                                            @else
+                                                <div class="text-sm text-gray-400">
+                                                    <i class="fas fa-minus"></i> Sin notas
+                                                </div>
+                                            @endif
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            @if($inscripcion->estado === 'pendiente')
+                                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
+                                                    <i class="fas fa-clock mr-1"></i>Pendiente
+                                                </span>
+                                            @elseif($inscripcion->estado === 'confirmada')
+                                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                                                    <i class="fas fa-check mr-1"></i>Confirmada
+                                                </span>
+                                            @else
+                                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
+                                                    <i class="fas fa-times mr-1"></i>Rechazada
+                                                </span>
+                                            @endif
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                            {{ $inscripcion->created_at->format('d/m/Y H:i') }}
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                            <button onclick="window.location.href='{{ route('estudiante.inscripcion.detalle', $inscripcion->id) }}'" 
+                                                    class="text-blue-600 hover:text-blue-800 font-medium">
+                                                <i class="fas fa-eye mr-1"></i>Ver Detalle
+                                            </button>
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                @endforeach
             </div>
         @endif
     </div>
@@ -365,30 +465,48 @@
         }
     });
 
-    // Auto-abrir desde notificaciones
+    // Función para filtrar inscripciones
+    function filtrarInscripciones(tipo) {
+        const filas = document.querySelectorAll('.inscripcion-row');
+        let contador = 0;
+        
+        filas.forEach(fila => {
+            const tipoFila = fila.getAttribute('data-tipo');
+            
+            if (tipo === 'todas') {
+                fila.style.display = '';
+                contador++;
+            } else if (tipoFila === tipo) {
+                fila.style.display = '';
+                contador++;
+            } else {
+                fila.style.display = 'none';
+            }
+        });
+        
+        // Actualizar contador
+        document.getElementById('contador-inscripciones').textContent = contador;
+        
+        // Actualizar botones activos
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            if (btn.getAttribute('data-filter') === tipo) {
+                btn.classList.remove('bg-gray-200', 'text-gray-700');
+                btn.classList.add('bg-blue-600', 'text-white', 'active');
+            } else {
+                btn.classList.remove('bg-blue-600', 'text-white', 'active');
+                btn.classList.add('bg-gray-200', 'text-gray-700');
+            }
+        });
+    }
+
+    // Auto-redirigir a detalle desde notificaciones
     document.addEventListener('DOMContentLoaded', function() {
         const urlParams = new URLSearchParams(window.location.search);
         const inscripcionId = urlParams.get('inscripcion_id');
         
         if (inscripcionId) {
-            // Cambiar a la pestaña de Mis Inscripciones
-            document.getElementById('tabMisInscripciones').click();
-            
-            // Esperar un momento para que la pestaña cambie
-            setTimeout(() => {
-                // Resaltar la fila
-                const fila = document.querySelector(`tr[data-inscripcion-id="${inscripcionId}"]`);
-                if (fila) {
-                    fila.classList.add('bg-yellow-50', 'border-2', 'border-yellow-400');
-                    fila.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                }
-                
-                // Abrir el modal de detalle
-                verDetalleInscripcion(parseInt(inscripcionId));
-                
-                // Limpiar el parámetro de la URL
-                window.history.replaceState({}, document.title, window.location.pathname);
-            }, 300);
+            // Redirigir directamente a la página de detalle
+            window.location.href = `/inscripcion/${inscripcionId}/detalle`;
         }
     });
 

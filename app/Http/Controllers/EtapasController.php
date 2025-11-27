@@ -31,7 +31,7 @@ class EtapasController extends Controller
     // GET /admin/etapas -> pantalla de gestión (a futuro)
     public function admin(Request $request)
     {
-        $etapas = Etapa::orderBy('orden')->paginate(20);
-        return view('admin.etapas.index', compact('etapas'));
+        $phases = Etapa::orderBy('created_at', 'desc')->paginate(20);
+        return view('admin.etapas.index', compact('phases'));
     } 
 }

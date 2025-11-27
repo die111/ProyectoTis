@@ -19,6 +19,7 @@ use App\Notifications\FrontNotification;
 use App\Models\Evaluation;
 use App\Models\Reclamo;
 use App\Models\Phase;
+use App\Models\Stage;
 
 class InscripcionController extends Controller
 {
@@ -33,9 +34,11 @@ class InscripcionController extends Controller
             ->with(['area', 'phases'])
             ->orderBy('fechaInicio', 'asc')
             ->get();
-        // Obtener inscripciones del usuario
+        // Obtener inscripciones del usuario con evaluaciones
         $misInscripciones = Inscription::where('user_id', $user->id)
-            ->with(['competition'])
+            ->with(['competition', 'area', 'level', 'evaluations' => function($query) {
+                $query->where('is_active', true)->orderBy('created_at', 'desc');
+            }])
             ->get();
         return view('estudiante.inscripcion.index', compact('competenciasActivas', 'misInscripciones', 'user'));
     }
@@ -81,11 +84,14 @@ class InscripcionController extends Controller
         }
 
         $user = Auth::user();
-        $areas = Area::where('is_active', true)->get();
+        // Cargar sólo las áreas y categorías asociadas a la competencia
+        $areas = $competencia->areas()->where('is_active', true)->get();
         $levels = Level::all();
-        $categorias = Categoria::where('is_active', true)->get();
+        $categorias = $competencia->categorias()->where('is_active', true)->get();
+        // Obtener los pares categoria-area para esta competencia
+        $categoryAreas = $competencia->categoryAreas()->with(['categoria', 'area'])->get();
 
-        return view('estudiante.inscripcion.create', compact('competencia', 'areas', 'levels', 'categorias', 'user'));
+        return view('estudiante.inscripcion.create', compact('competencia', 'areas', 'levels', 'categorias', 'user', 'categoryAreas'));
     }
 
     /**
@@ -343,8 +349,12 @@ class InscripcionController extends Controller
             abort(403);
         }
 
-        $competicion = $inscripcion->competition()->with('phases')->first();
-        $phases = $competicion->phases()->orderBy('competition_phase.id')->get();
+        $competicion = $inscripcion->competition;
+        
+        // Obtener todos los stages de esta competición ordenados por fecha
+        $stages = Stage::where('id_competition', $competicion->id)
+            ->orderBy('fechaInicio')
+            ->get();
 
         $evaluaciones = Evaluation::with('stage')
             ->where('inscription_id', $inscripcion->id)
@@ -355,6 +365,6 @@ class InscripcionController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
 
-        return view('estudiante.inscripcion.detalle', compact('inscripcion', 'competicion', 'phases', 'evaluaciones', 'reclamos', 'user'));
+        return view('estudiante.inscripcion.detalle', compact('inscripcion', 'competicion', 'stages', 'evaluaciones', 'reclamos', 'user'));
     }
 }
