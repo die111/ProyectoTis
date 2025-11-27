@@ -199,7 +199,7 @@
       // Lista de clasificados esperada desde el controlador (colección o array)
       $clasificadosList = collect($clasificados ?? []);
     @endphp
-
+    @if($clasificadosList->count() > 0)
     <article class="phase-card rounded-2xl bg-white shadow overflow-hidden transition-all duration-200 hover:shadow-lg hover:scale-[1.02]" 
              style="border: 2px solid {{ $colorHexPrem }};"
              data-phase="{{ strtolower($numeroFasePrem . ' premiacion') }}" 
@@ -237,6 +237,7 @@
         </div>
       </div>
     </article>
+    @endif
   </section>
 </div>
 
