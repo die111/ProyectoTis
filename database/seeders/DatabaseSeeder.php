@@ -21,6 +21,9 @@ class DatabaseSeeder extends Seeder
             PermissionSeeder::class,
             CategoriaSeeder::class,
             \Database\Seeders\AuditSeeder::class,
+            CompeticionSeeder::class,
+            CompetitionCategoryAreaSeeder::class,
+            CompetitionPhaseSeeder::class,
         ]);
     }
 }

@@ -2,6 +2,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\Competicion;
+use App\Models\CompetitionCategoryArea;
+use App\Models\Categoria;
+use App\Models\Area;
+use App\Models\CompetitionPhase;
 use Illuminate\Http\Request;
 
 class HomeController extends Controller
@@ -19,8 +23,19 @@ class HomeController extends Controller
         return view('home.contactos', compact('contact'));
     }
 
-    public function clasificados(Request $request) {
-        return view('home.clasificados');
+    public function clasificados(Request $request)
+    {
+        $competiciones = Competicion::all();
+        $categoriasAreas = [];
+        $phases = [];
+        $selectedId = $request->input('competencia_id');
+        if ($selectedId) {
+            $categoriasAreas = CompetitionCategoryArea::where('competition_id', $selectedId)
+                ->with(['categoria', 'area'])
+                ->get();
+            $phases = CompetitionPhase::where('competition_id', $selectedId)->pluck('phase_id');
+        }
+        return view('home.clasificados', compact('competiciones', 'categoriasAreas', 'selectedId', 'phases'));
     }
 
     public function etapas(Request $request)
@@ -43,7 +58,9 @@ class HomeController extends Controller
             ];
         }) ?? collect();
 
-        return view('home.etapas', compact('competicion', 'etapas'));
+        $competiciones = Competicion::where('state', '!=', 'borrador')->orderBy('fechaInicio', 'desc')->get();
+
+        return view('home.etapas', compact('competicion', 'etapas', 'competiciones'));
     }
 
     private function getEstadoBadge($fechaInicio, $fechaFin)

@@ -13,33 +13,50 @@
       <div class="title-decorator">
         <div class="line-thick"></div>
       </div>
+      <!-- Combo box de competiciones -->
+      <div class="competicion-select-wrapper" style="margin-top: 32px; text-align: center;">
+        <label for="competicion-select" style="font-weight: 500; margin-right: 8px;">Competición:</label>
+        <select id="competicion-select" name="competicion" style="padding: 8px 16px; border-radius: 8px; border: 1px solid #ccc; font-family: 'Poppins', sans-serif;">
+          <option value="" selected disabled>Seleccione una competición</option>
+          @foreach($competiciones as $competicion)
+            <option value="{{ $competicion->id }}" 
+              data-inicio="{{ $competicion->inscripcion_inicio }}" 
+              data-fin="{{ $competicion->inscripcion_fin }}"
+              data-eval-inicio="{{ $competicion->evaluacion_inicio }}"
+              data-eval-fin="{{ $competicion->evaluacion_fin }}"
+              data-prem-inicio="{{ $competicion->premiacion_inicio }}"
+              data-prem-fin="{{ $competicion->premiacion_fin }}"
+            >{{ $competicion->name }}</option>
+          @endforeach
+        </select>
+      </div>
     </div>
     
     <div class="phases-grid">
-      <article class="phase-card">
+      <article class="phase-card" id="inscripcion-card" style="display: none;">
         <img src="{{ asset('images/fases/image_20.png') }}" alt="Icono de fase de inscripción" class="phase-icon">
         <div class="phase-content">
           <h3 class="phase-title">Fase de Inscripción</h3>
-          <p class="phase-date">De 12/09/2025 al 23/09/2025</p>
-          <p class="phase-status phase-status--completed">CONCLUIDO</p>
+          <p class="phase-date" id="inscripcion-date"></p>
+          <p class="phase-status phase-status--completed" id="inscripcion-status"></p>
         </div>
       </article>
 
-      <article class="phase-card">
+      <article class="phase-card" id="evaluacion-card" style="display: none;">
         <img src="{{ asset('images/fases/image_21.png') }}" alt="Icono de fase de evaluación" class="phase-icon">
         <div class="phase-content">
           <h3 class="phase-title">Fase de Evaluación</h3>
-          <p class="phase-date">De 24/09/2025 al 15/10/2025</p>
-          <p class="phase-status phase-status--active">EN PROCESO</p>
+          <p class="phase-date" id="evaluacion-date"></p>
+          <p class="phase-status phase-status--active" id="evaluacion-status"></p>
         </div>
       </article>
 
-      <article class="phase-card">
+      <article class="phase-card" id="premiacion-card" style="display: none;">
         <img src="{{ asset('images/fases/image_22.png') }}" alt="Icono de fase de premiación" class="phase-icon">
         <div class="phase-content">
           <h3 class="phase-title">Fase de Premiación</h3>
-          <p class="phase-date">De 20/10/2025 al 25/10/2025</p>
-          <p class="phase-status phase-status--pending">PENDIENTE</p>
+          <p class="phase-date" id="premiacion-date"></p>
+          <p class="phase-status phase-status--pending" id="premiacion-status"></p>
         </div>
       </article>
     </div>
@@ -47,221 +64,88 @@
 </section>
 @endsection
 
-<style>
-  body {
-  margin: 0;
-  font-family: 'Poppins', sans-serif;
-  background-color: #ffffff;
-}
+{{-- Se movió el CSS a public/css/etapas.css --}}
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const select = document.getElementById('competicion-select');
+  const inscDate = document.getElementById('inscripcion-date');
+  const evalDate = document.getElementById('evaluacion-date');
+  const premDate = document.getElementById('premiacion-date');
+  const inscCard = document.getElementById('inscripcion-card');
+  const evalCard = document.getElementById('evaluacion-card');
+  const premCard = document.getElementById('premiacion-card');
+  const inscStatus = document.getElementById('inscripcion-status');
+  const evalStatus = document.getElementById('evaluacion-status');
+  const premStatus = document.getElementById('premiacion-status');
 
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
-}
-
-#etapas {
-  background-color: #ffffff;
-  padding: 60px 20px;
-  overflow: hidden;
-}
-
-.etapas-container {
-  max-width: 1440px;
-  margin: 0 auto;
-}
-
-.title-wrapper {
-  text-align: center;
-  margin-bottom: 98px;
-}
-
-.etapas-title {
-  font-family: 'Poppins', sans-serif;
-  font-weight: 700;
-  font-size: 20px;
-  line-height: 26px;
-  color: #000000;
-  margin: 0 0 11px 0;
-  text-transform: uppercase;
-  letter-spacing: 2px;
-}
-
-.title-decorator {
-  position: relative;
-  display: inline-block;
-  width: 224px;
-  height: 1px;
-  background-color: #000000;
-}
-
-.title-decorator .line-thick {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  width: 94px;
-  height: 4px;
-  background-color: #000000;
-  box-shadow: 0px 4px 4px 0px rgba(0, 0, 0, 0.25);
-}
-
-.phases-grid {
-  display: flex;
-  justify-content: space-around;
-  align-items: flex-start;
-  flex-wrap: wrap;
-  gap: 40px;
-}
-
-.phase-card {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  flex-basis: 331px;
-  flex-grow: 0;
-  transition: transform 0.3s ease;
-}
-
-.phase-card:hover {
-  transform: translateY(-10px);
-}
-
-.phase-icon {
-  width: 195px;
-  height: 195px;
-  object-fit: contain;
-  margin-bottom: 10px;
-}
-
-.phase-content {
-  font-family: 'Poppins', sans-serif;
-  font-weight: 500;
-  font-size: 20px;
-  line-height: 26px;
-  color: #000000;
-}
-
-.phase-title {
-  margin: 0;
-  font-weight: 600;
-  margin-bottom: 8px;
-}
-
-.phase-date {
-  margin: 0;
-  font-size: 16px;
-  color: #666666;
-  margin-bottom: 26px;
-}
-
-.phase-status {
-  margin: 0;
-  font-weight: 700;
-  font-size: 18px;
-  padding: 8px 20px;
-  border-radius: 20px;
-  display: inline-block;
-}
-
-/* Estados de fase */
-.phase-status--completed {
-  background-color: #e8f5e9;
-  color: #2e7d32;
-}
-
-.phase-status--active {
-  background-color: #fff3e0;
-  color: #e65100;
-  animation: pulse 2s ease-in-out infinite;
-}
-
-.phase-status--pending {
-  background-color: #f5f5f5;
-  color: #757575;
-}
-
-@keyframes pulse {
-  0%, 100% {
-    opacity: 1;
+  function ocultarFases() {
+    inscCard.style.display = 'none';
+    evalCard.style.display = 'none';
+    premCard.style.display = 'none';
+    inscDate.textContent = '';
+    evalDate.textContent = '';
+    premDate.textContent = '';
+    inscStatus.textContent = '';
+    evalStatus.textContent = '';
+    premStatus.textContent = '';
+    inscStatus.className = 'phase-status phase-status--completed';
+    evalStatus.className = 'phase-status phase-status--active';
+    premStatus.className = 'phase-status phase-status--pending';
   }
-  50% {
-    opacity: 0.7;
-  }
-}
 
-@media (max-width: 1200px) {
-  .phases-grid {
-    justify-content: center;
+  function getStatus(inicio, fin, el) {
+    if (!inicio || !fin) {
+      el.className = el.className.replace(/phase-status--\w+/g, '');
+      return '';
+    }
+    const hoy = new Date();
+    const ini = new Date(inicio);
+    const fini = new Date(fin);
+    if (hoy < ini) {
+      el.className = 'phase-status phase-status--pending';
+      return 'PENDIENTE';
+    }
+    if (hoy >= ini && hoy <= fini) {
+      el.className = 'phase-status phase-status--active';
+      return 'EN PROCESO';
+    }
+    if (hoy > fini) {
+      el.className = 'phase-status phase-status--completed';
+      return 'CONCLUIDO';
+    }
+    el.className = 'phase-status';
+    return '';
   }
-}
 
-@media (max-width: 768px) {
-  #etapas {
-    padding: 40px 20px;
-  }
-  
-  .title-wrapper {
-    margin-bottom: 60px;
-  }
-  
-  .etapas-title {
-    font-size: 18px;
-  }
-  
-  .phase-card {
-    flex-basis: 100%;
-    max-width: 400px;
-  }
-  
-  .phase-icon {
-    width: 150px;
-    height: 150px;
-  }
-  
-  .phase-content {
-    font-size: 18px;
-  }
-  
-  .phase-date {
-    font-size: 14px;
-  }
-  
-  .phase-status {
-    font-size: 16px;
-  }
-}
+  ocultarFases();
 
-@media (max-width: 480px) {
-  .etapas-title {
-    font-size: 16px;
-  }
-  
-  .title-decorator {
-    width: 180px;
-  }
-  
-  .title-decorator .line-thick {
-    width: 70px;
-  }
-  
-  .phase-icon {
-    width: 120px;
-    height: 120px;
-  }
-  
-  .phase-title {
-    font-size: 16px;
-  }
-  
-  .phase-date {
-    font-size: 13px;
-  }
-  
-  .phase-status {
-    font-size: 14px;
-    padding: 6px 16px;
-  }
-}
-</style>
+  select.addEventListener('change', function() {
+    if (!select.value) {
+      ocultarFases();
+      return;
+    }
+    const selected = select.options[select.selectedIndex];
+    function soloFecha(fecha) {
+      if (!fecha || fecha === '...') return '...';
+      return fecha.split(' ')[0];
+    }
+    const inicio = soloFecha(selected.getAttribute('data-inicio'));
+    const fin = soloFecha(selected.getAttribute('data-fin'));
+    const evalInicio = soloFecha(selected.getAttribute('data-eval-inicio'));
+    const evalFin = soloFecha(selected.getAttribute('data-eval-fin'));
+    const premInicio = soloFecha(selected.getAttribute('data-prem-inicio'));
+    const premFin = soloFecha(selected.getAttribute('data-prem-fin'));
+    inscDate.textContent = `De ${inicio} al ${fin}`;
+    evalDate.textContent = `De ${evalInicio} al ${evalFin}`;
+    premDate.textContent = `De ${premInicio} al ${premFin}`;
+    inscStatus.textContent = getStatus(selected.getAttribute('data-inicio'), selected.getAttribute('data-fin'), inscStatus);
+    evalStatus.textContent = getStatus(selected.getAttribute('data-eval-inicio'), selected.getAttribute('data-eval-fin'), evalStatus);
+    premStatus.textContent = getStatus(selected.getAttribute('data-prem-inicio'), selected.getAttribute('data-prem-fin'), premStatus);
+    inscCard.style.display = '';
+    evalCard.style.display = '';
+    premCard.style.display = '';
+  });
+});
+</script>
+@endpush
