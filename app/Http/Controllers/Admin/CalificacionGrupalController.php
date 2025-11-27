@@ -257,40 +257,81 @@ class CalificacionGrupalController extends \App\Http\Controllers\Controller
     {
         $request->validate([
             'nota_grupal' => 'required|numeric|min:0|max:100',
-            'grupo' => 'required',
-            'area' => 'required',
+            'grupo' => 'required|string',
+            'area' => 'required|string',
         ]);
+        
         $notaGrupal = $request->input('nota_grupal');
-        $nombreGrupo = $request->input('grupo');
-        $areaNombre = $request->input('area');
-        // Buscar el área
-        $area = Area::where('name', $areaNombre)->first();
+        $nombreGrupo = trim($request->input('grupo'));
+        $areaNombre = trim($request->input('area'));
+        
+        // Obtener el número de fase actual desde el request
+        $numeroFase = (int) $request->input('fase_n', 1);
+        
+        // Buscar el área por nombre (con trim para evitar problemas de espacios)
+        $area = Area::whereRaw('TRIM(name) = ?', [$areaNombre])->first();
+        
         if (!$area) {
-            return back()->with('error', 'Área no encontrada');
+            // Intentar búsqueda alternativa sin case-sensitive
+            $area = Area::whereRaw('LOWER(TRIM(name)) = ?', [strtolower($areaNombre)])->first();
         }
-        // Buscar inscripciones del grupo en la fase y área
+        
+        if (!$area) {
+            $areasDisponibles = Area::where('is_active', true)->pluck('name')->implode(', ');
+            return back()->with('error', "Área no encontrada: '{$areaNombre}'. Áreas disponibles: {$areasDisponibles}");
+        }
+        
+        // Buscar inscripciones del grupo en la fase y área actual
+        // Usar el número de fase (fase) en lugar del ID de fase
         $inscripciones = Inscription::where('competition_id', $competicionId)
-            ->where('fase', $faseId)
+            ->where('fase', $numeroFase)
             ->where('categoria_id', 3)
             ->where('area_id', $area->id)
-            ->where('name_grupo', $nombreGrupo)
+            ->whereRaw('TRIM(name_grupo) = ?', [$nombreGrupo])
+            ->where('estado', 'confirmada')
+            ->where('is_active', true)
             ->get();
+        
         if ($inscripciones->isEmpty()) {
-            return back()->with('error', 'No se encontraron inscripciones para el grupo');
+            // Debug: mostrar información adicional
+            $totalGrupos = Inscription::where('competition_id', $competicionId)
+                ->where('fase', $numeroFase)
+                ->where('categoria_id', 3)
+                ->where('area_id', $area->id)
+                ->distinct('name_grupo')
+                ->count('name_grupo');
+                
+            return back()->with('error', "No se encontraron estudiantes activos del grupo '{$nombreGrupo}' en el área '{$areaNombre}' (ID: {$area->id}) para la fase {$numeroFase}. Total grupos en esta área/fase: {$totalGrupos}");
         }
-        // Guardar nota y promedio en evaluations
-        foreach ($inscripciones as $inscripcion) {
-            $evaluacion = Evaluation::firstOrNew([
-                'inscription_id' => $inscripcion->id
-            ]);
-            $evaluacion->nota = $notaGrupal;
-            $evaluacion->promedio = $notaGrupal;
-            $evaluacion->is_active = true;
-            $evaluacion->evaluator_id = \Illuminate\Support\Facades\Auth::id();
-            $evaluacion->estado = $this->determinarEstadoGrupal($notaGrupal);
-            $evaluacion->save();
+        
+        try {
+            DB::beginTransaction();
+            
+            // Guardar nota y promedio en evaluations para cada miembro del grupo
+            $estudiantesCalificados = 0;
+            foreach ($inscripciones as $inscripcion) {
+                $evaluacion = Evaluation::firstOrNew([
+                    'inscription_id' => $inscripcion->id
+                ]);
+                
+                $evaluacion->nota = $notaGrupal;
+                $evaluacion->promedio = $notaGrupal;
+                $evaluacion->is_active = true;
+                $evaluacion->evaluator_id = \Illuminate\Support\Facades\Auth::id();
+                $evaluacion->estado = $this->determinarEstadoGrupal($notaGrupal);
+                $evaluacion->save();
+                
+                $estudiantesCalificados++;
+            }
+            
+            DB::commit();
+            
+            return back()->with('success', "Nota grupal de {$notaGrupal} guardada correctamente para {$estudiantesCalificados} estudiantes del grupo '{$nombreGrupo}' en el área '{$areaNombre}'.");
+            
+        } catch (\Exception $e) {
+            DB::rollback();
+            return back()->with('error', 'Error al guardar la nota grupal: ' . $e->getMessage());
         }
-        return back()->with('success', 'Nota grupal guardada correctamente para todos los miembros del grupo.');
     }
 
     /**
@@ -301,33 +342,42 @@ class CalificacionGrupalController extends \App\Http\Controllers\Controller
         $request->validate([
             'observacion' => 'nullable|string|max:1000'
         ]);
+        
         try {
-            // Buscar inscripción del estudiante en la competición y fase
+            // Buscar inscripción del estudiante en la competición
+            // Nota: estudianteId es el inscription_id, no necesitamos buscar por fase
             $inscripcion = Inscription::where('id', $estudianteId)
                 ->where('competition_id', $competicionId)
-                ->where('fase', $faseId)
                 ->where('categoria_id', 3)
                 ->first();
+            
             if (!$inscripcion) {
                 return response()->json(['message' => 'Inscripción no encontrada'], 404);
             }
+            
             // Buscar evaluación
             $evaluacion = Evaluation::firstOrNew([
                 'inscription_id' => $inscripcion->id
             ]);
+            
             $evaluacion->observaciones_evaluador = $request->input('observacion');
             $evaluacion->is_active = true;
             $evaluacion->evaluator_id = \Illuminate\Support\Facades\Auth::id();
+            
             // Si ya tiene nota, mantenerla
             if ($evaluacion->nota === null) {
                 $evaluacion->nota = null;
             }
-            // Estado: mantener si existe
+            
+            // Estado: mantener si existe, sino poner no_clasificado
             if ($evaluacion->estado === null) {
                 $evaluacion->estado = 'no_clasificado';
             }
+            
             $evaluacion->save();
+            
             return response()->json(['message' => 'Observación guardada correctamente']);
+            
         } catch (\Exception $e) {
             return response()->json(['message' => 'Error al guardar la observación: ' . $e->getMessage()], 500);
         }

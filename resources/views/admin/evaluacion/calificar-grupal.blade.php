@@ -1,5 +1,6 @@
 {{-- 
 se hizo invisible la columna promedio, tarjeta de promedio, boton de calificar/recalificar,
+puntaje,
 solo hay q hacerlos visibles
 --}}
 @extends('layouts.app')
@@ -64,32 +65,6 @@ solo hay q hacerlos visibles
     </form>
   </section>
 
-  <!-- Mensajes de alerta -->
-  @if(session('success'))
-    <div class="mb-6 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded relative" role="alert">
-      <strong class="font-bold">¡Éxito!</strong>
-      <span class="block sm:inline">{{ session('success') }}</span>
-    </div>
-  @endif
-
-  @if(session('error'))
-    <div class="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative" role="alert">
-      <strong class="font-bold">¡Error!</strong>
-      <span class="block sm:inline">{{ session('error') }}</span>
-    </div>
-  @endif
-
-  @if($errors->any())
-    <div class="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative" role="alert">
-      <strong class="font-bold">¡Errores de validación!</strong>
-      <ul class="mt-2 list-disc list-inside">
-        @foreach($errors->all() as $error)
-          <li>{{ $error }}</li>
-        @endforeach
-      </ul>
-    </div>
-  @endif
-
   <!-- Mensajes de alerta (ocultos, se mostrarán como notificaciones flotantes) -->
   @if(session('success'))
     <div id="session-success" data-message="{{ e(session('success')) }}" style="display: none;"></div>
@@ -129,7 +104,7 @@ solo hay q hacerlos visibles
               <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Categoría</th>
               <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre de Grupo</th>
               <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">CI</th>
-              <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Puntaje (0-100)</th>
+              <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider hidden">Puntaje (0-100)</th>
               <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Observaciones</th>
               <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider hidden">Promedio</th>
               <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Estado Calificación</th>
@@ -166,13 +141,35 @@ solo hay q hacerlos visibles
                         <span class="px-4 text-sm font-semibold" style="color: #091c47;">Grupo: {{ $nombreGrupo }} &mdash; Área: {{ $areaNombre }}</span>
                         <div class="flex-grow border-t-2 border-blue-300"></div>
                       </div>
+                      @php
+                        // Obtener la nota del grupo (usando el primer estudiante del grupo como referencia)
+                        $notaGrupo = null;
+                        foreach($estudiantes as $est) {
+                          if(($est->name_grupo ?? 'Sin nombre') === $nombreGrupo && ($est->area->name ?? 'No asignada') === $areaNombre) {
+                            $evalGrupo = $est->evaluations->first();
+                            if($evalGrupo && $evalGrupo->nota !== null) {
+                              $notaGrupo = $evalGrupo->nota;
+                              break;
+                            }
+                          }
+                        }
+                      @endphp
                       <!-- Campo de nota grupal y botón de evaluar -->
-                      <form method="POST" action="{{ route('admin.evaluacion.evaluar-grupo', ['competicion' => $competicion->id, 'fase' => $fase->id, 'grupo' => $nombreGrupo, 'area' => $areaNombre]) }}" class="mt-4 flex items-center justify-center gap-3">
+                      <form method="POST" action="{{ route('admin.evaluacion.evaluar-grupo', ['competicion' => $competicion->id, 'fase' => $fase->id]) }}" class="mt-4 flex items-center justify-center gap-3">
                         @csrf
-                        <input type="number" name="nota_grupal" min="0" max="100" step="0.1" placeholder="Nota grupal (0-100)" class="w-32 rounded-md border border-blue-300 px-2 py-1 text-sm text-center focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500" oninput="if(this.value<0)this.value=0;if(this.value>100)this.value=100;">
+                        <input type="hidden" name="fase_n" value="{{ $numeroFase }}">
+                        <input type="hidden" name="grupo" value="{{ $nombreGrupo }}">
+                        <input type="hidden" name="area" value="{{ $areaNombre }}">
+                        <input type="number" name="nota_grupal" min="0" max="100" step="0.1" placeholder="Nota grupal (0-100)" value="{{ $notaGrupo }}" class="w-32 rounded-md border border-blue-300 px-2 py-1 text-sm text-center focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500" oninput="if(this.value<0)this.value=0;if(this.value>100)this.value=100;" required>
                         <button type="submit" class="rounded-md px-4 py-2 text-sm font-medium text-white shadow-sm hover:opacity-90" style="background-color: #091c47;">
-                          Evaluar Grupo
+                          {{ $notaGrupo !== null ? 'Recalificar Grupo' : 'Evaluar Grupo' }}
                         </button>
+                        @if($notaGrupo !== null)
+                          <div class="flex items-center gap-2 ml-2">
+                            <span class="text-lg font-semibold" style="color: #091c47;">Nota:</span>
+                            <span class="text-lg font-bold text-blue-700">{{ number_format($notaGrupo, 2) }}</span>
+                          </div>
+                        @endif
                       </form>
                     </td>
                   </tr>
@@ -208,7 +205,7 @@ solo hay q hacerlos visibles
                   <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     {{ $estudiante->user->ci ?? 'N/A' }}
                   </td>
-                  <td class="px-6 py-4 whitespace-nowrap text-center">
+                  <td class="px-6 py-4 whitespace-nowrap text-center hidden">
                     @php
                       $puntajeExistente = $evaluacion ? $evaluacion->nota : '';
                     @endphp
