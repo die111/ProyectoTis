@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Notifications\Events\BroadcastNotificationCreated;
 use App\Listeners\AddNotificationIdToBroadcast;
 use Carbon\Carbon;
