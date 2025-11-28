@@ -1,26 +1,216 @@
-:root{
-  --umss-red:#E30613;
-  --umss-blue:#0C3E92;
-  --bg:#0b0f1a;
-  --card:#161c2c;
-  --text:#e9eefc;
-  --muted:#a7b1c6;
+body {
+  margin: 0;
+  font-family: 'Poppins', sans-serif;
+  background-color: #ffffff;
 }
-.etp-container{max-width:1100px;margin:0 auto;padding:24px}
-.etp-hero{background:linear-gradient(90deg,var(--umss-blue),var(--umss-red));border-radius:18px;color:#fff;padding:28px 24px;margin-bottom:20px}
-.etp-hero h1{margin:0 0 6px 0;font-weight:800}
-.etp-hero p{margin:0;opacity:.95}
-.etp-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
-.etp-card{background:#fff;border:1px solid #e9edf5;border-radius:16px;padding:16px;display:flex;gap:12px;align-items:center;box-shadow:0 6px 14px rgba(12,62,146,.08)}
-@media (prefers-color-scheme: dark){
-  body{background:var(--bg);color:var(--text)}
-  .etp-card{background:var(--card);border-color:#232a3d}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
 }
-.etp-icon svg{fill:var(--umss-blue)}
-.etp-title{margin:0 0 6px 0;font-weight:700}
-.etp-dates{margin:0;color:var(--muted);font-size:.95rem}
-.badge{display:inline-block;margin-top:8px;padding:4px 10px;border-radius:999px;font-size:.8rem;font-weight:700;color:#fff}
-.badge--ok{background:#00a66c}
-.badge--info{background:var(--umss-blue)}
-.badge--warn{background:#f39c12}
-.etp-footer{margin-top:24px;color:var(--muted);text-align:center}
+
+#etapas {
+  background-color: #ffffff;
+  padding: 60px 20px;
+  overflow: hidden;
+}
+
+.etapas-container {
+  max-width: 1440px;
+  margin: 0 auto;
+}
+
+.title-wrapper {
+  text-align: center;
+  margin-bottom: 98px;
+}
+
+.etapas-title {
+  font-family: 'Poppins', sans-serif;
+  font-weight: 700;
+  font-size: 20px;
+  line-height: 26px;
+  color: #000000;
+  margin: 0 0 11px 0;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+.title-decorator {
+  position: relative;
+  display: inline-block;
+  width: 224px;
+  height: 1px;
+  background-color: #000000;
+}
+
+.title-decorator .line-thick {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 94px;
+  height: 4px;
+  background-color: #000000;
+  box-shadow: 0px 4px 4px 0px rgba(0, 0, 0, 0.25);
+}
+
+.phases-grid {
+  display: flex;
+  justify-content: space-around;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 40px;
+}
+
+.phase-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  flex-basis: 331px;
+  flex-grow: 0;
+  transition: transform 0.3s ease;
+}
+
+.phase-card:hover {
+  transform: translateY(-10px);
+}
+
+.phase-icon {
+  width: 195px;
+  height: 195px;
+  object-fit: contain;
+  margin-bottom: 10px;
+}
+
+.phase-content {
+  font-family: 'Poppins', sans-serif;
+  font-weight: 500;
+  font-size: 20px;
+  line-height: 26px;
+  color: #000000;
+}
+
+.phase-title {
+  margin: 0;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.phase-date {
+  margin: 0;
+  font-size: 16px;
+  color: #666666;
+  margin-bottom: 26px;
+}
+
+.phase-status {
+  margin: 0;
+  font-weight: 700;
+  font-size: 18px;
+  padding: 8px 20px;
+  border-radius: 20px;
+  display: inline-block;
+}
+
+/* Estados de fase */
+.phase-status--completed {
+  background-color: #e8f5e9;
+  color: #2e7d32;
+}
+
+.phase-status--active {
+  background-color: #fff3e0;
+  color: #e65100;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+.phase-status--pending {
+  background-color: #f5f5f5;
+  color: #757575;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+@media (max-width: 1200px) {
+  .phases-grid {
+    justify-content: center;
+  }
+}
+
+@media (max-width: 768px) {
+  #etapas {
+    padding: 40px 20px;
+  }
+  
+  .title-wrapper {
+    margin-bottom: 60px;
+  }
+  
+  .etapas-title {
+    font-size: 18px;
+  }
+  
+  .phase-card {
+    flex-basis: 100%;
+    max-width: 400px;
+  }
+  
+  .phase-icon {
+    width: 150px;
+    height: 150px;
+  }
+  
+  .phase-content {
+    font-size: 18px;
+  }
+  
+  .phase-date {
+    font-size: 14px;
+  }
+  
+  .phase-status {
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .etapas-title {
+    font-size: 16px;
+  }
+  
+  .title-decorator {
+    width: 180px;
+  }
+  
+  .title-decorator .line-thick {
+    width: 70px;
+  }
+  
+  .phase-icon {
+    width: 120px;
+    height: 120px;
+  }
+  
+  .phase-title {
+    font-size: 16px;
+  }
+  
+  .phase-date {
+    font-size: 13px;
+  }
+  
+  .phase-status {
+    font-size: 14px;
+    padding: 6px 16px;
+  }
+}

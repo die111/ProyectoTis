@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\Area;
 use App\Models\Role;
+use App\Models\Permission;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -78,7 +79,6 @@ class UsuarioController extends Controller
             'role_id' => 'required|integer|exists:roles,id',
             'area_id' => 'required|integer|exists:areas,id',
             'user_code' => 'required|string|max:255|unique:users,user_code',
-            'level' => 'required|string|in:Primaria,Secundaria,Preuniversitario',
             'ci' => 'required|string|max:20|unique:users,ci',
             'address' => 'nullable|string|max:255',
             'telephone_number' => 'required|string|max:20',
@@ -90,6 +90,14 @@ class UsuarioController extends Controller
 
     $user = User::create($validated);
     Log::info('Usuario creado', $user->toArray());
+
+        // Asignar permiso de dashboard al rol si no lo tiene
+        if ($user->role) {
+            $dashboardPermission = Permission::where('name', 'dashboard')->first();
+            if ($dashboardPermission && !$user->role->permissions()->where('permission_id', $dashboardPermission->id)->exists()) {
+                $user->role->permissions()->attach($dashboardPermission->id);
+            }
+        }
 
         return redirect()->route('admin.usuarios.index')
             ->with([
@@ -130,7 +138,6 @@ class UsuarioController extends Controller
             'role_id' => 'required|integer|exists:roles,id',
             'area_id' => 'required|integer|exists:areas,id',
             'user_code' => 'required|string|max:255|unique:users,user_code,' . $id,
-            'level' => 'required|string|in:Primaria,Secundaria,Preuniversitario',
             'ci' => 'required|string|max:20|unique:users,ci,' . $id,
             'address' => 'nullable|string|max:255',
             'telephone_number' => 'required|string|max:20',

@@ -2,6 +2,10 @@
 
 @section('title', 'Detalle de Notificación')
 
+@push('styles')
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+@endpush
+
 @section('content')
 <div class="p-6">
     <div class="max-w-4xl mx-auto">
@@ -286,11 +290,20 @@ function cerrarModalRechazo() {
 }
 
 function aceptarInscripcion(inscripcionId) {
-    if (!confirm('¿Estás seguro de que deseas aceptar esta inscripción?')) {
-        return;
-    }
-    
-    actualizarEstadoInscripcion(inscripcionId, 'confirmada', null);
+    Swal.fire({
+        title: '¿Aceptar inscripción?',
+        text: "Se confirmará la inscripción del estudiante a esta competencia",
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#16a34a',
+        cancelButtonColor: '#6b7280',
+        confirmButtonText: 'Sí, aceptar',
+        cancelButtonText: 'Cancelar'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            actualizarEstadoInscripcion(inscripcionId, 'confirmada', null);
+        }
+    });
 }
 
 function confirmarRechazo() {
@@ -329,18 +342,34 @@ function actualizarEstadoInscripcion(inscripcionId, estado, observaciones) {
     .then(data => {
         if (data.success) {
             // Mostrar mensaje de éxito
-            alert(data.message || 'Estado actualizado correctamente');
-            // Recargar la página para ver los cambios
-            window.location.reload();
+            Swal.fire({
+                icon: 'success',
+                title: '¡Éxito!',
+                text: data.message || 'Estado actualizado correctamente',
+                confirmButtonColor: '#3b82f6'
+            }).then(() => {
+                // Recargar la página para ver los cambios
+                window.location.reload();
+            });
         } else {
-            alert(data.message || 'Error al actualizar el estado');
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: data.message || 'Error al actualizar el estado',
+                confirmButtonColor: '#ef4444'
+            });
             if (btnAceptar) btnAceptar.disabled = false;
             if (btnRechazar) btnRechazar.disabled = false;
         }
     })
     .catch(error => {
         console.error('Error:', error);
-        alert('Error al procesar la solicitud');
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Error al procesar la solicitud',
+            confirmButtonColor: '#ef4444'
+        });
         if (btnAceptar) btnAceptar.disabled = false;
         if (btnRechazar) btnRechazar.disabled = false;
     });

@@ -1,12 +1,1 @@
-/* Tailwind CSS entry file
-	Used by Vite: @vite(['resources/css/app.css', 'resources/js/app.js'])
-
-	Add any custom styles below the Tailwind directives.
-*/
-
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-/* Example: custom utilities or overrides */
-/* .brand-color { @apply text-indigo-700; } */
+@import "tailwindcss";

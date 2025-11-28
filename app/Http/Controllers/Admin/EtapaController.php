@@ -19,7 +19,12 @@ class EtapaController extends Controller
                 $q->whereRaw('LOWER(name) LIKE ?', ["%$search%"])
                   ->orWhereRaw('LOWER(description) LIKE ?', ["%$search%"]);
             })
-            ->orderBy('name')
+            // Mostrar primero las fases con `created_at` válido en orden descendente.
+            // Para filas sin `created_at` (valores nulos/""), colocarlas al final
+            // y ordenarlas por `id` descendente.
+            // Evitar comparaciones con '' (causa error en Postgres). Ordenar colocando
+            // primero las filas con created_at NO nulo, luego por created_at desc, y por id desc.
+            ->orderByRaw("(created_at IS NULL) ASC, created_at DESC, id DESC")
             ->paginate(10);
         
         // Agregar información de uso para cada fase

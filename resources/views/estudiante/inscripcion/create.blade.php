@@ -65,22 +65,7 @@
         <form id="formInscripcion" method="POST" action="{{ route('estudiante.inscripcion.inscribir', $competencia->id) }}">
             @csrf
             
-            <!-- Área -->
-            <div class="mb-6">
-                <label for="area_id" class="block text-sm font-semibold text-gray-700 mb-2">
-                    Área de Competencia <span class="text-red-500">*</span>
-                </label>
-                <select id="area_id" name="area_id" required 
-                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
-                    <option value="">Seleccione un área</option>
-                    @foreach($areas as $area)
-                        <option value="{{ $area->id }}">{{ $area->name }}</option>
-                    @endforeach
-                </select>
-                <p class="mt-1 text-sm text-gray-500">Selecciona el área en la que deseas competir</p>
-            </div>
-
-            <!-- Categoría -->
+            <!-- Categoría (primero) -->
             <div class="mb-6">
                 <label for="categoria_id" class="block text-sm font-semibold text-gray-700 mb-2">
                     Categoría <span class="text-red-500">*</span>
@@ -93,6 +78,18 @@
                     @endforeach
                 </select>
                 <p class="mt-1 text-sm text-gray-500">Selecciona la categoría correspondiente</p>
+            </div>
+
+            <!-- Área (dependiente de la categoría) -->
+            <div class="mb-6">
+                <label for="area_id" class="block text-sm font-semibold text-gray-700 mb-2">
+                    Área de Competencia <span class="text-red-500">*</span>
+                </label>
+                <select id="area_id" name="area_id" required disabled
+                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition">
+                    <option value="">Seleccione una categoría primero</option>
+                </select>
+                <p class="mt-1 text-sm text-gray-500">Selecciona el área en la que deseas competir</p>
             </div>
 
             <!-- Nombre del Grupo (oculto inicialmente) -->
@@ -161,14 +158,30 @@
 @push('scripts')
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
-    // Mostrar/ocultar campo de nombre de grupo según la categoría seleccionada
+    // Mapeo categoria_id => [ {id, name}, ... ] creado desde los pares enviados por el controlador
+    @php
+        $mapping = [];
+        if (isset($categoryAreas)) {
+            $mapping = collect($categoryAreas)
+                ->groupBy('categoria_id')
+                ->map(function($group) {
+                    return $group->map(function($item) {
+                        return ['id' => $item->area->id, 'name' => $item->area->name];
+                    })->values();
+                })->toArray();
+        }
+    @endphp
+    const categoryAreasMap = @json($mapping);
+
+    // Cuando cambie la categoría: poblar el select de áreas y manejar campo de grupo
     document.getElementById('categoria_id').addEventListener('change', function() {
         const selectedOption = this.options[this.selectedIndex];
-        const nombre = selectedOption.getAttribute('data-nombre');
+        const categoriaId = this.value;
+        const nombre = selectedOption ? selectedOption.getAttribute('data-nombre') : null;
         const container = document.getElementById('grupoNombreContainer');
         const grupoNombreInput = document.getElementById('name_grupo');
-        
-        // Mostrar el campo si la categoría se llama "Grupal"
+
+        // Mostrar u ocultar campo de grupo según nombre de categoría
         if (nombre && nombre.toLowerCase() === 'grupal') {
             container.classList.remove('hidden');
             grupoNombreInput.required = true;
@@ -177,6 +190,55 @@
             grupoNombreInput.required = false;
             grupoNombreInput.value = '';
         }
+
+        // Poblar áreas relacionadas a la categoría seleccionada
+        const areaSelect = document.getElementById('area_id');
+        // Limpiar opciones
+        areaSelect.innerHTML = '';
+        // Manejar claves numéricas/strings en el mapping
+        const areasForCat = (categoryAreasMap[categoriaId] || categoryAreasMap[Number(categoriaId)]) || [];
+        console.log('categoria change ->', categoriaId, 'areasForCat:', areasForCat);
+
+        if (!categoriaId || areasForCat.length === 0) {
+            areaSelect.setAttribute('disabled', 'disabled');
+            areaSelect.innerHTML = '';
+            const opt = document.createElement('option');
+            opt.value = '';
+            opt.text = 'No hay áreas disponibles para esta categoría';
+            areaSelect.appendChild(opt);
+            return;
+        }
+
+        // Agregar opción por defecto
+        areaSelect.innerHTML = '';
+        const placeholder = document.createElement('option');
+        placeholder.value = '';
+        placeholder.text = 'Seleccione un área';
+        areaSelect.appendChild(placeholder);
+
+        // Agregar las áreas asociadas
+        areasForCat.forEach(function(area) {
+            const opt = document.createElement('option');
+            opt.value = area.id;
+            opt.text = area.name;
+            areaSelect.appendChild(opt);
+        });
+
+        areaSelect.removeAttribute('disabled');
+        areaSelect.disabled = false;
+        console.log('areaSelect enabled, options count:', areaSelect.options.length);
+        // poner foco para facilitar selección
+        try { areaSelect.focus(); } catch(e) {}
+
+        // Actualizar estado del botón de envío
+        const submitBtn = document.querySelector('#formInscripcion button[type="submit"]');
+        submitBtn.disabled = areaSelect.disabled || !areaSelect.value;
+    });
+
+    // Cuando cambie el select de área, ajustar el estado del botón de envío
+    document.getElementById('area_id').addEventListener('change', function() {
+        const submitBtn = document.querySelector('#formInscripcion button[type="submit"]');
+        submitBtn.disabled = this.disabled || !this.value;
     });
 
     // Manejar el envío del formulario

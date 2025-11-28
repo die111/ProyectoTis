@@ -20,6 +20,9 @@ class DatabaseSeeder extends Seeder
             LevelSeeder::class,
             PermissionSeeder::class,
             CategoriaSeeder::class,
+            CompeticionSeeder::class,
+            CompetitionCategoryAreaSeeder::class,
+            CompetitionPhaseSeeder::class,
         ]);
     }
 }

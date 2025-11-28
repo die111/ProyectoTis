@@ -9,7 +9,7 @@ use App\Models\Role;
 use App\Models\Area;
 use App\Models\Audit;
 
-class IntegracionAuditoriaReclamoTest extends TestCase
+class AuditoriaReclamoFeatureTest extends TestCase
 {
     use RefreshDatabase;
 

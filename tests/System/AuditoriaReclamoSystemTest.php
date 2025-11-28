@@ -8,7 +8,7 @@ use App\Models\User;
 use App\Models\Role;
 use App\Models\Area;
 
-class SistemaAuditoriaReclamoTest extends TestCase
+class AuditoriaReclamoSystemTest extends TestCase
 {
     use RefreshDatabase;
 

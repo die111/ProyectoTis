@@ -69,10 +69,13 @@
                 </td>
                 <td class="py-3 px-2 align-middle text-left">
                     @php
-                            $changed = [];
-                            if (is_array($audit->new_values)) {
-                                    $changed = array_keys($audit->new_values);
-                            }
+                        $changed = [];
+                        if (is_array($audit->new_values)) {
+                            // Omitir claves triviales para mostrar sólo campos relevantes
+                            $skip = ['id','created_at','updated_at'];
+                            $keys = array_keys($audit->new_values);
+                            $changed = array_values(array_diff($keys, $skip));
+                        }
                     @endphp
                     @if(count($changed))
                         <small class="text-muted">Campos cambiados:</small>
@@ -113,9 +116,9 @@
     --text-dark:#3a4651;
     --white:#fff;
 }
-.content-header{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;margin-bottom:24px}
+.content-header{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;margin-bottom:24px;max-width:980px;margin-left:auto;margin-right:auto}
 .content-title{grid-column:2;justify-self:center;text-align:center;font-family:'Roboto',sans-serif;font-weight:400;font-size:28px;color:var(--text-dark);margin:0}
-.search-panel{display:flex;gap:12px;margin-bottom:16px;justify-content:flex-start;align-items:center;flex-wrap:wrap}
+.search-panel{display:flex;gap:12px;margin-bottom:16px;justify-content:flex-start;align-items:center;flex-wrap:wrap;max-width:980px;margin-left:auto;margin-right:auto}
 .search-input-wrapper{position:relative;width:360px;max-width:92vw}
 .search-input-wrapper input{width:100%;height:40px;background:#c4c4c4;border:1px solid #0b0b0b;border-radius:10px;padding:0 40px 0 12px;font-size:13px;color:var(--text-dark);font-weight:600}
 .search-input-wrapper input::placeholder{color:rgba(58,70,81,.5);font-weight:400}

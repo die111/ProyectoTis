@@ -27,8 +27,8 @@
 </form>
 
 <!--  TABLA DE ETAPAS (HTML table)   -->
-<div class="table-card overflow-x-auto py-8 px-32"> <!-- Aumentado margen lateral de la tabla -->
-    <table class="w-full min-w-[600px] text-center align-middle">
+<div class="table-card overflow-x-auto"> 
+    <table class="w-full text-center align-middle">
         <thead class="grid-headers">
             <tr>
                 <!-- <th class="cell header whitespace-nowrap">ID</th> -->

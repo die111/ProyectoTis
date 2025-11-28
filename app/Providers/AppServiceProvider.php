@@ -6,7 +6,7 @@ use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Event;
-use Illuminate\Support\Facades\URL;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Notifications\Events\BroadcastNotificationCreated;
 use App\Listeners\AddNotificationIdToBroadcast;
 use Carbon\Carbon;
@@ -69,6 +69,11 @@ class AppServiceProvider extends ServiceProvider
             try {
                 app(AuditService::class)->record($model, 'created');
             } catch (\Throwable $e) {
+                Log::error('Error en auditoría (created): ' . $e->getMessage(), [
+                    'model' => get_class($model),
+                    'id' => $model->getKey(),
+                    'trace' => $e->getTraceAsString()
+                ]);
             }
         });
 
@@ -85,6 +90,11 @@ class AppServiceProvider extends ServiceProvider
             try {
                 app(AuditService::class)->record($model, 'updated');
             } catch (\Throwable $e) {
+                Log::error('Error en auditoría (updated): ' . $e->getMessage(), [
+                    'model' => get_class($model),
+                    'id' => $model->getKey(),
+                    'trace' => $e->getTraceAsString()
+                ]);
             }
         });
 
@@ -101,6 +111,11 @@ class AppServiceProvider extends ServiceProvider
             try {
                 app(AuditService::class)->record($model, 'deleted');
             } catch (\Throwable $e) {
+                Log::error('Error en auditoría (deleted): ' . $e->getMessage(), [
+                    'model' => get_class($model),
+                    'id' => $model->getKey(),
+                    'trace' => $e->getTraceAsString()
+                ]);
             }
         });
         

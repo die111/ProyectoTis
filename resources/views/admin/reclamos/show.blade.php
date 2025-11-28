@@ -54,10 +54,10 @@
 
         <div class="flex justify-end gap-3 mt-6">
             @if($reclamo->estado === 'pendiente')
-                <form action="{{ route('admin.reclamos.show', $reclamo->id) }}" method="POST" onsubmit="return confirm('Marcar como atendido?')">
+                <form action="{{ route('admin.reclamos.show', $reclamo->id) }}" method="POST" class="swal-atender-form">
                     @csrf
                     <input type="hidden" name="accion" value="atender">
-                    <button class="px-4 py-2 bg-green-600 text-white rounded-md">Marcar como atendido</button>
+                    <button type="submit" class="px-4 py-2 bg-green-600 text-white rounded-md">Marcar como atendido</button>
                 </form>
             @endif
         </div>
@@ -73,4 +73,37 @@
 .content-title{grid-column:2;justify-self:center;text-align:center;font-family:'Roboto',sans-serif;font-weight:400;font-size:32px;color:#3a4651;margin:0}
 .table-card{width:100%;max-width:100vw;margin:0 auto 16px auto;background:#eef0f3;border-radius:10px;overflow:hidden;border:1px solid #cfd6df}
 </style>
+@endpush
+
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('.swal-atender-form').forEach(function(form) {
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                // Use SweetAlert2 if available
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        title: 'Marcar como atendido?',
+                        text: '¿Deseas marcar este reclamo como atendido? Esta acción no se puede revertir fácilmente.',
+                        icon: 'question',
+                        showCancelButton: true,
+                        confirmButtonText: 'Sí, marcar',
+                        cancelButtonText: 'Cancelar',
+                        confirmButtonColor: '#10b981',
+                        cancelButtonColor: '#6b7280'
+                    }).then(function(result) {
+                        if (result.isConfirmed) {
+                            form.submit();
+                        }
+                    });
+                } else {
+                    if (confirm('Marcar como atendido?')) {
+                        form.submit();
+                    }
+                }
+            });
+        });
+    });
+</script>
 @endpush

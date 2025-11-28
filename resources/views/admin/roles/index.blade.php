@@ -42,7 +42,7 @@
       @foreach($roles as $i => $role)
       <tr class="{{ $i % 2 === 0 ? 'bg-white' : 'bg-[#d7dde4]' }} hover:bg-blue-50 transition-colors">
         <td class="py-3 px-2 text-gray-900 align-middle">{{ $role->name }}</td>
-        <td class="py-3 px-2 text-gray-700 align-middle">{{ $role->description ?? '—' }}</td>
+        <td class="py-3 px-2 text-gray-700 align-middle text-left">{{ $role->description ?? '—' }}</td>
         <td class="py-2 px-2 align-middle">
           <div class="flex flex-wrap gap-2 justify-center">
             <a href="{{ route('admin.roles.edit', $role->id) }}" class="btn btn-primary btn-pressable px-3 py-1 text-sm">Editar</a>
