@@ -14,3 +14,9 @@ Route::get('/etapas', [HomeController::class, 'etapas'])
 Route::get('/etapas/{etapa}', [HomeController::class, 'show'])
     ->whereNumber('etapa')
     ->name('etapas.show');
+
+Route::get('/documentos', [HomeController::class, 'documentos'])
+    ->name('documentos.index');
+Route::get('/documentos/{competicion}/download', [HomeController::class, 'downloadConvocatoria'])
+    ->whereNumber('competicion')
+    ->name('documentos.download');

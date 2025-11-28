@@ -202,7 +202,7 @@ class CompeticionController extends Controller
         return view('admin.competicion.edit', compact('competicion', 'areasCatalog', 'fasesCatalog', 'categoriasCatalog'));
     }
 
-    public function update(Request $request, $id)
+    public function update(Request $request, $competicion)
     {
         $rules = [
             'name' => 'required|string',
@@ -255,7 +255,10 @@ class CompeticionController extends Controller
             return redirect()->back()->withErrors($validator)->withInput();
         }
 
-        $competicion = Competicion::findOrFail($id);
+        // Convertir a modelo si es ID
+        if (!$competicion instanceof Competicion) {
+            $competicion = Competicion::findOrFail($competicion);
+        }
         
         $competicion->update([
             'name' => $request->name,

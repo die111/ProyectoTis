@@ -88,4 +88,37 @@ class HomeController extends Controller
         if ($now->between($inicio, $fin)) return 'En curso';
         return 'Finalizada';
     }
+
+    public function documentos()
+    {
+        // Obtener competencias activas cuyas fechas no hayan pasado completamente
+        $competencias = Competicion::where('state', 'activa')
+            ->where('fechaFin', '>=', now())
+            ->with([
+                'categoryAreas.categoria',
+                'categoryAreas.area',
+                'phases' => function($query) {
+                    $query->orderBy('start_date', 'asc');
+                }
+            ])
+            ->orderBy('fechaInicio', 'asc')
+            ->get();
+
+        return view('home.documentos', compact('competencias'));
+    }
+
+    public function downloadConvocatoria(int $competicion)
+    {
+        $compet = Competicion::with(['categoryAreas.categoria', 'categoryAreas.area', 'phases'])->findOrFail($competicion);
+
+        // Construir contenido simple de la convocatoria (HTML) para descargar.
+        $html = view('home.partials.convocatoria-template', compact('compet'))->render();
+
+        $filename = 'convocatoria-' . $compet->id . '-' . now()->format('Ymd') . '.html';
+
+        return response($html, 200, [
+            'Content-Type' => 'text/html; charset=utf-8',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"'
+        ]);
+    }
 }

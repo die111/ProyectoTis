@@ -1,0 +1,614 @@
+/* Documentos - Convocatorias */
+.documentos-header {
+    text-align: center;
+    margin: 3rem 0 2rem;
+}
+
+.documentos-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #091c47;
+    margin-bottom: 0.5rem;
+}
+
+.documentos-subtitle {
+    font-size: 1.1rem;
+    color: #666;
+    margin-top: 0.5rem;
+}
+
+.no-convocatorias {
+    text-align: center;
+    padding: 4rem 2rem;
+    background: #f8f9fa;
+    border-radius: 12px;
+    margin: 2rem auto;
+    max-width: 600px;
+}
+
+.no-convocatorias i {
+    font-size: 4rem;
+    color: #6c757d;
+    margin-bottom: 1rem;
+}
+
+.no-convocatorias p {
+    font-size: 1.2rem;
+    color: #495057;
+}
+
+.competencias-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(600px, 1fr));
+    gap: 2rem;
+    margin: 2rem 0;
+}
+
+@media (max-width: 768px) {
+    .competencias-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.competencia-card {
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    padding: 2rem;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.competencia-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+.competencia-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid #e9ecef;
+}
+
+/* Specific adjustments when header is inside carousel slides: center title */
+.carousel-header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 0.25rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid #eef3f7;
+}
+.carousel-header .competencia-badge {
+    align-self: center;
+}
+.carousel-header .competencia-nombre {
+    font-size: 1.9rem;
+    line-height: 1.1;
+}
+
+.competencia-nombre {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: #091c47;
+    margin: 0;
+    flex: 1;
+}
+
+.competencia-badge {
+    padding: 0.4rem 1rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.badge-activa {
+    background: #d4edda;
+    color: #155724;
+}
+
+.badge-pending {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.badge-active {
+    background: #d1ecf1;
+    color: #0c5460;
+}
+
+.badge-completed {
+    background: #d4edda;
+    color: #155724;
+}
+
+.competencia-description {
+    margin-bottom: 1.5rem;
+}
+
+.competencia-description p {
+    color: #495057;
+    line-height: 1.6;
+    margin: 0;
+}
+
+.competencia-fechas {
+    margin-bottom: 1.5rem;
+}
+
+.fecha-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem;
+    background: #f8f9fa;
+    border-radius: 8px;
+    margin-bottom: 0.5rem;
+}
+
+.fecha-item i {
+    color: #5AA9E6;
+    font-size: 1.2rem;
+}
+
+.fecha-item strong {
+    color: #091c47;
+    margin-right: 0.5rem;
+}
+
+.fecha-item span {
+    color: #495057;
+}
+
+.fases-section,
+.areas-section {
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #dee2e6;
+}
+
+.section-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #091c47;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.section-title i {
+    color: #5AA9E6;
+}
+
+.fases-grid {
+    display: grid;
+    gap: 1rem;
+}
+
+.fase-item {
+    padding: 1rem;
+    border-radius: 8px;
+    border: 1px solid #dee2e6;
+    background: #ffffff;
+    transition: all 0.3s ease;
+}
+
+.fase-item:hover {
+    border-color: #5AA9E6;
+    box-shadow: 0 2px 8px rgba(90, 169, 230, 0.2);
+}
+
+.fase-item.activa {
+    background: #e7f3ff;
+    border-color: #5AA9E6;
+}
+
+.fase-item.finalizada {
+    background: #f8f9fa;
+    opacity: 0.85;
+}
+
+.fase-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.75rem;
+}
+
+.fase-nombre {
+    font-weight: 600;
+    color: #091c47;
+    font-size: 1.05rem;
+}
+
+.fase-badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.fase-fechas {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #6c757d;
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+}
+
+.fase-fechas i {
+    color: #5AA9E6;
+}
+
+.fase-clasificacion {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #495057;
+    font-size: 0.9rem;
+    padding: 0.5rem;
+    background: #fff3cd;
+    border-radius: 6px;
+    margin-top: 0.5rem;
+}
+
+.fase-clasificacion i {
+    color: #ffc107;
+}
+
+.categorias-list {
+    display: grid;
+    gap: 1.5rem;
+}
+
+.categoria-group {
+    background: #f8f9fa;
+    padding: 1.25rem;
+    border-radius: 8px;
+}
+
+.categoria-nombre {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #091c47;
+    margin-bottom: 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.categoria-nombre i {
+    color: #5AA9E6;
+    font-size: 0.9rem;
+}
+
+.areas-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 0.5rem;
+}
+
+.area-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem;
+    background: white;
+    border-radius: 6px;
+    color: #495057;
+}
+
+.area-item i {
+    color: #28a745;
+    font-size: 0.85rem;
+}
+
+.competencia-footer {
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #dee2e6;
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+}
+
+.btn {
+    padding: 0.75rem 1.5rem;
+    border-radius: 8px;
+    font-weight: 600;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.3s ease;
+    border: none;
+    cursor: pointer;
+}
+
+.btn-primary {
+    background: #5AA9E6;
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #4a93cc;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(90, 169, 230, 0.3);
+}
+
+.btn-secondary {
+    background: #6c757d;
+    color: white;
+}
+
+.btn-secondary:hover {
+    background: #5a6268;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(108, 117, 125, 0.3);
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+    .documentos-header {
+        margin: 2rem 0 1.5rem;
+    }
+
+    .documentos-title {
+        font-size: 2.2rem;
+    }
+
+    .documentos-subtitle {
+        font-size: 1rem;
+    }
+
+    .competencia-card {
+        padding: 1.75rem;
+    }
+
+    .competencia-nombre {
+        font-size: 1.6rem;
+    }
+}
+
+@media (max-width: 768px) {
+    .documentos-header {
+        margin: 1.5rem 1rem 1rem;
+    }
+
+    .documentos-title {
+        font-size: 1.8rem;
+    }
+
+    .documentos-subtitle {
+        font-size: 0.95rem;
+    }
+
+    .competencia-card {
+        padding: 1.25rem;
+        border-radius: 12px;
+    }
+
+    .competencia-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+
+    .competencia-nombre {
+        font-size: 1.35rem;
+    }
+
+    .competencia-badge {
+        padding: 0.3rem 0.75rem;
+        font-size: 0.75rem;
+    }
+
+    .fecha-item {
+        padding: 0.6rem;
+        flex-wrap: wrap;
+    }
+
+    .fecha-item i {
+        font-size: 1rem;
+    }
+
+    .section-title {
+        font-size: 1.1rem;
+    }
+
+    .fase-item {
+        padding: 0.85rem;
+    }
+
+    .fase-nombre {
+        font-size: 0.95rem;
+    }
+
+    .fase-badge {
+        font-size: 0.7rem;
+        padding: 0.2rem 0.6rem;
+    }
+
+    .fase-fechas,
+    .fase-clasificacion {
+        font-size: 0.85rem;
+    }
+
+    .categoria-group {
+        padding: 1rem;
+    }
+
+    .categoria-nombre {
+        font-size: 1rem;
+    }
+
+    .areas-list {
+        grid-template-columns: 1fr;
+    }
+
+    .area-item {
+        padding: 0.4rem;
+        font-size: 0.9rem;
+    }
+
+    .competencia-footer {
+        margin-top: 1.5rem;
+        padding-top: 1rem;
+    }
+
+    .btn {
+        padding: 0.65rem 1.25rem;
+        font-size: 0.9rem;
+    }
+
+    .carousel-dots {
+        margin-top: 0.75rem;
+    }
+
+    .carousel-dots .dot {
+        width: 10px;
+        height: 10px;
+    }
+}
+
+@media (max-width: 480px) {
+    .documentos-header {
+        margin: 1rem 0.5rem 0.75rem;
+    }
+
+    .documentos-title {
+        font-size: 1.5rem;
+    }
+
+    .documentos-subtitle {
+        font-size: 0.85rem;
+    }
+
+    .no-convocatorias {
+        padding: 2.5rem 1rem;
+    }
+
+    .no-convocatorias i {
+        font-size: 3rem;
+    }
+
+    .no-convocatorias p {
+        font-size: 1rem;
+    }
+
+    .competencia-card {
+        padding: 1rem;
+    }
+
+    .competencia-nombre {
+        font-size: 1.2rem;
+    }
+
+    .section-title {
+        font-size: 1rem;
+    }
+
+    .fase-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.4rem;
+    }
+
+    .btn {
+        width: 100%;
+        justify-content: center;
+        padding: 0.6rem 1rem;
+    }
+}
+
+/* Carousel specific styles */
+.convocatoria-carousel {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+.carousel-track {
+    overflow: hidden;
+    width: 100%;
+}
+.carousel-track .carousel-slide {
+    width: 100%;
+    display: none;
+}
+.carousel-track .carousel-slide.active {
+    display: block;
+}
+.carousel-track { position: relative; display:flex; justify-content:center; }
+.carousel-track .carousel-slide { max-width: 980px; margin: 0 auto; }
+.carousel-nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(90,169,230,0.75); /* semi-transparent but visible */
+    border: none;
+    color: #fff;
+    width: 64px;
+    height: 64px;
+    border-radius: 12px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-weight: 800;
+    font-size: 1.25rem;
+    box-shadow: 0 10px 28px rgba(10, 85, 140, 0.18);
+    transition: transform 0.18s ease, box-shadow 0.18s ease, opacity 0.18s ease, background 0.12s ease;
+    opacity: 0.88;
+    z-index: 20;
+    backdrop-filter: blur(4px);
+}
+.carousel-nav:hover {
+    transform: translateY(-50%) scale(1.06);
+    box-shadow: 0 18px 40px rgba(10, 85, 140, 0.26);
+    background: rgba(74,147,204,0.95);
+    opacity: 1;
+}
+.carousel-nav.prev { left: 8px; }
+.carousel-nav.next { right: 8px; }
+.carousel-dots { display:flex; gap:.5rem; justify-content:center; margin-top:1rem; position:relative; z-index:40; }
+.carousel-dots .dot{ width:12px; height:12px; border-radius:50%; background:#e9ecef; border:none; cursor:pointer; transition: transform 0.12s ease, background 0.12s ease; }
+.carousel-dots .dot.active{ background:#5AA9E6; transform: scale(1.15); box-shadow: 0 6px 12px rgba(90,169,230,0.22); }
+
+@media (max-width: 768px) {
+    .carousel-nav { 
+        display: none; 
+    }
+
+    .convocatoria-carousel {
+        gap: 0;
+    }
+
+    .section-container {
+        padding: 0 1rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .section-container {
+        padding: 0 0.5rem;
+    }
+}
+
+/* On wide screens push nav buttons slightly outside the slide to avoid overlapping dots */
+@media (min-width: 1200px) {
+    /* slide max-width is 980px; compute side gutter and offset nav outside by ~36px */
+    .carousel-nav.prev { left: calc((100% - 980px) / 2 - 36px); }
+    .carousel-nav.next { right: calc((100% - 980px) / 2 - 36px); }
+}

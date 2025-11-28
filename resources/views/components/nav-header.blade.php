@@ -19,7 +19,7 @@
                 </a>
             </li>
             <li>
-                <a href="#" class="{{ request()->routeIs('documents.*') ? 'active' : '' }}">
+                <a href="{{ route('documentos.index') }}" class="{{ request()->routeIs('documentos.*') ? 'active' : '' }}">
                     DOCUMENTOS
                 </a>
             </li>
@@ -146,7 +146,7 @@
             <a href="{{ route('welcome') }}">INICIO</a>
         </li>
         <li>
-            <a href="#">DOCUMENTOS</a>
+            <a href="{{ route('documentos.index') }}">DOCUMENTOS</a>
         </li>
         <li>
             <a href="#">ETAPAS</a>
