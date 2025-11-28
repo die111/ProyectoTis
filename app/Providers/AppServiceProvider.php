@@ -33,6 +33,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Forzar HTTPS en producción para evitar errores de contenido mixto
+        if ($this->app->environment('production')) {
+            URL::forceScheme('https');
+        }
+        
         // Force Carbon locale to Spanish so diffForHumans() prints in Spanish
         try {
             Carbon::setLocale('es');

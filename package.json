@@ -3,7 +3,8 @@
     "type": "module",
     "scripts": {
         "dev": "vite",
-        "build": "vite build"
+        "build:css": "tailwindcss -i resources/css/app.css -o public/build/assets/app.css --minify --content \"./resources/views/**/*.blade.php\" \"./resources/js/**/*.js\" \"./resources/css/**/*.css\"",
+        "build": "npm run build:css && vite build"
     },
     "devDependencies": {
         "axios": "^1.6.4",
