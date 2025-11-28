@@ -23,12 +23,6 @@
                 <p class="text-gray-600 mt-1 font-medium">
                     {{ $role ? ucfirst(str_replace('_', ' ', $role->name)) : 'Sin rol asignado' }}
                 </p>
-                @if($user->area)
-                    <p class="text-sm text-gray-500 mt-1">
-                        <i class="fas fa-building mr-1"></i>
-                        Área: {{ $user->area->name }}
-                    </p>
-                @endif
             </div>
             <div class="text-sm text-gray-500">
                 <i class="fas fa-calendar mr-1"></i>
