@@ -43,7 +43,7 @@
                         <p class="font-semibold mb-2">Fases de la competencia:</p>
                         <div class="flex flex-wrap gap-2">
                             @foreach($competencia->phases as $phase)
-                                <span class="px-3 py-1 bg-white bg-opacity-20 rounded-full text-sm">
+                                <span class="px-3 py-1 rounded-full text-sm phase-chip">
                                     {{ $phase->name }}
                                 </span>
                             @endforeach
@@ -151,6 +151,12 @@
     /* Animación suave para mostrar/ocultar el campo de grupo */
     #grupoNombreContainer {
         transition: all 0.3s ease-in-out;
+    }
+    /* Fichas de fases: fondo semitransparente y texto contrastado sobre el header degradado */
+    .phase-chip {
+        background: rgba(255,255,255,0.12);
+        color: #ffffff !important;
+        display: inline-block;
     }
 </style>
 @endpush

@@ -35,31 +35,26 @@
             font-family: var(--font-poppins);
             background-color: var(--color-white);
             color: var(--color-black);
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-        }
-
-        main {
-            flex: 1;
         }
 
         .max-w-7xl {
-            width: 100%;
+            max-width: 1280px;
         }
     </style>
 </head>
-<body class="bg-gray-50">
-    <!-- Navbar -->
-    <x-nav-header :guest="true" />
+<body class="bg-gray-100 font-sans antialiased overflow-x-hidden">
+    <div class="flex min-h-screen flex-col">
+        <!-- Navbar -->
+        <x-nav-header :guest="true" />
 
-    <!-- Contenido principal -->
-    <main>
-        @yield('content')
-    </main>
+        <!-- Contenido principal -->
+        <main class="flex-1">
+            @yield('content')
+        </main>
 
-    <!-- Footer -->
-    <x-footer />
+        <!-- Footer -->
+        <x-footer />
+    </div>
     <script src="{{ asset('js/auth.js') }}"></script>
     @stack('scripts')
 </body>
