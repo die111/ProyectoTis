@@ -6,6 +6,8 @@ use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Event;
+use App\Models\Role;
+use App\Observers\RoleObserver;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Notifications\Events\BroadcastNotificationCreated;
@@ -136,5 +138,8 @@ class AppServiceProvider extends ServiceProvider
                 $view->with('sidebarNotifications', collect());
             }
         });
+
+        // Registrar observer para Role: evita eliminación si tiene usuarios y limpia caché
+        Role::observe(RoleObserver::class);
     }
 }

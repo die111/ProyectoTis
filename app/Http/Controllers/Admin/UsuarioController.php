@@ -204,9 +204,19 @@ class UsuarioController extends Controller
                 ->with('error', 'No puedes eliminar permanentemente tu propio usuario');
         }
 
-        $user->forceDelete();
+        // Verificar si el usuario es evaluador y tiene evaluaciones
+        if ($user->evaluationsAsEvaluator()->count() > 0) {
+            return redirect()->route('admin.usuarios.trashed')
+                ->with('error', 'No se puede eliminar permanentemente este usuario porque tiene evaluaciones registradas. Esto preserva la integridad del historial.');
+        }
 
-        return redirect()->route('admin.usuarios.trashed')
-            ->with('success', 'Usuario eliminado permanentemente');
+        try {
+            $user->forceDelete();
+            return redirect()->route('admin.usuarios.trashed')
+                ->with('success', 'Usuario eliminado permanentemente');
+        } catch (\Exception $e) {
+            return redirect()->route('admin.usuarios.trashed')
+                ->with('error', 'No se puede eliminar el usuario debido a restricciones de integridad.');
+        }
     }
 }

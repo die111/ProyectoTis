@@ -1,4 +1,5 @@
 <!-- Sidebar -->
+<?php use Illuminate\Support\Facades\Auth; ?>
 <aside class="fixed md:sticky top-[64px] md:top-[64px] left-0 z-50 w-64 bg-[#091c47] text-white transition-all duration-300 ease-in-out transform h-[calc(100vh-64px)] md:h-[calc(100vh-64px)]" id="sidebar">
     <div class="flex flex-col h-full">
         <!-- Top section -->
@@ -58,7 +59,7 @@
 
         <!-- Bottom section -->
         <div class="border-t border-gray-700/50 p-4 space-y-2 mt-auto">
-            @if(auth()->check() && method_exists(auth()->user(), 'hasPermissionTo') && auth()->user()->hasPermissionTo('reclamos'))
+            @if(Auth::check() && method_exists(Auth::user(), 'hasPermissionTo') && Auth::user()->hasPermissionTo('reclamos'))
             <a href="{{ route('admin.reclamos.index') }}" class="sidebar-item flex items-center px-4 py-2 text-sm font-medium text-gray-300 rounded-md hover:bg-primary-800 hover:text-white transition-all duration-200 {{ request()->routeIs('admin.reclamos.*') ? 'sidebar-item-active' : '' }}">
                 <i class="fas fa-exclamation-circle w-6 h-6 mr-3 text-lg"></i>
                 <span class="hide-on-collapse">Reclamos</span>

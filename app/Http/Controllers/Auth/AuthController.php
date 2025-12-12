@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\View\View;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Log;
 
 class AuthController extends Controller
 {
@@ -24,15 +25,32 @@ class AuthController extends Controller
             'password' => 'required|string|min:8',
         ]);
 
-        $user = User::where('email', $credentials['email'])->first();
+        // Sanitizar email
+        $email = filter_var($credentials['email'], FILTER_SANITIZE_EMAIL);
+        $credentials['email'] = $email;
+
+        $user = User::where('email', $email)->first();
 
         if (!$user) {
+            // Log intento fallido sin revelar si el usuario existe
+            Log::warning('Intento de login con email no registrado', [
+                'email' => $email,
+                'ip' => $request->ip(),
+                'user_agent' => $request->userAgent()
+            ]);
+            
             return back()->withErrors([
                 'email' => 'Las credenciales proporcionadas no son válidas.',
             ])->onlyInput('email');
         }
 
         if (!$user->is_active) {
+            Log::warning('Intento de login con cuenta inactiva', [
+                'user_id' => $user->id,
+                'email' => $email,
+                'ip' => $request->ip()
+            ]);
+            
             return back()->withErrors([
                 'email' => 'Tu cuenta está inactiva. Contacta al administrador.',
             ])->onlyInput('email');
@@ -41,8 +59,22 @@ class AuthController extends Controller
         if (Auth::attempt($credentials, $request->filled('remember'))) {
             $request->session()->regenerate();
             
+            // Log login exitoso
+            Log::info('Login exitoso', [
+                'user_id' => $user->id,
+                'email' => $email,
+                'ip' => $request->ip()
+            ]);
+            
             return redirect()->intended(route('dashboard'));
         }
+
+        // Log intento fallido con contraseña incorrecta
+        Log::warning('Intento de login con contraseña incorrecta', [
+            'user_id' => $user->id,
+            'email' => $email,
+            'ip' => $request->ip()
+        ]);
 
         return back()->withErrors([
             'email' => 'Las credenciales proporcionadas no son válidas.',

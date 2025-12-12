@@ -75,14 +75,36 @@ class RoleController extends Controller
     public function destroy($id)
     {
         $role = Role::findOrFail($id);
-        $role->delete();
-        return redirect()->route('admin.roles.index')
-        ->with([
-            'swal_custom' => true,
-            'swal_title' => '¡Éxito!',
-            'swal_icon' => 'success',
-            'swal_text' => 'Rol deshabilitado correctamente.'
-        ]);
+        
+        // Verificar si hay usuarios con este rol
+        if ($role->users()->count() > 0) {
+            return redirect()->route('admin.roles.index')
+            ->with([
+                'swal_custom' => true,
+                'swal_title' => 'Error',
+                'swal_icon' => 'error',
+                'swal_text' => 'No se puede eliminar el rol porque hay usuarios asignados a él. Por favor, reasigne los usuarios primero.'
+            ]);
+        }
+        
+        try {
+            $role->delete();
+            return redirect()->route('admin.roles.index')
+            ->with([
+                'swal_custom' => true,
+                'swal_title' => '¡Éxito!',
+                'swal_icon' => 'success',
+                'swal_text' => 'Rol eliminado correctamente.'
+            ]);
+        } catch (\Exception $e) {
+            return redirect()->route('admin.roles.index')
+            ->with([
+                'swal_custom' => true,
+                'swal_title' => 'Error',
+                'swal_icon' => 'error',
+                'swal_text' => 'No se puede eliminar el rol debido a restricciones de integridad.'
+            ]);
+        }
     }
 
     public function activate($id)

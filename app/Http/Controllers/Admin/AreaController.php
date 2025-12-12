@@ -52,8 +52,8 @@ class AreaController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:20|unique:areas,name',
-            'description' => 'required|string|max:30',
+            'name' => 'required|string|max:50|unique:areas,name',
+            'description' => 'required|string|max:255',
         ]);
 
         $area = new Area();
@@ -73,8 +73,8 @@ class AreaController extends Controller
     public function update(Request $request, $id)
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:20|unique:areas,name,' . $id,
-            'description' => 'required|string|max:30',
+            'name' => 'required|string|max:50|unique:areas,name,' . $id,
+            'description' => 'required|string|max:255',
         ]);
 
         $area = Area::findOrFail($id);
@@ -94,14 +94,47 @@ class AreaController extends Controller
     public function destroy($id)
     {
         $area = Area::findOrFail($id);
-        $area->delete();
-        return redirect()->route('admin.areas.index')
-        ->with([
-            'swal_custom' => true,
-            'swal_title' => '¡Éxito!',
-            'swal_icon' => 'success',
-            'swal_text' => 'Área eliminada correctamente.'
-        ]);
+        
+        // Verificar si hay usuarios asociados al área
+        if ($area->users()->count() > 0) {
+            return redirect()->route('admin.areas.index')
+            ->with([
+                'swal_custom' => true,
+                'swal_title' => 'Error',
+                'swal_icon' => 'error',
+                'swal_text' => 'No se puede eliminar el área porque hay usuarios asignados. Los usuarios serán desvinculados del área si continúa.'
+            ]);
+        }
+        
+        // Verificar si el área está siendo usada en competiciones
+        if ($area->isInUse()) {
+            return redirect()->route('admin.areas.index')
+            ->with([
+                'swal_custom' => true,
+                'swal_title' => 'Error',
+                'swal_icon' => 'error',
+                'swal_text' => 'No se puede eliminar el área porque está siendo utilizada en competiciones.'
+            ]);
+        }
+        
+        try {
+            $area->delete();
+            return redirect()->route('admin.areas.index')
+            ->with([
+                'swal_custom' => true,
+                'swal_title' => '¡Éxito!',
+                'swal_icon' => 'success',
+                'swal_text' => 'Área eliminada correctamente.'
+            ]);
+        } catch (\Exception $e) {
+            return redirect()->route('admin.areas.index')
+            ->with([
+                'swal_custom' => true,
+                'swal_title' => 'Error',
+                'swal_icon' => 'error',
+                'swal_text' => 'No se puede eliminar el área debido a restricciones de integridad.'
+            ]);
+        }
     }
 
     public function create()
