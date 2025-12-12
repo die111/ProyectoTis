@@ -19,6 +19,38 @@ function competitionForm() {
             this.addArea();
             this.addLevel();
             // Eliminar la línea que fija septiembre 2025
+            
+            // Sincronizar inscripcionInicio con startDate
+            this.$watch('inscripcionInicio', (value) => {
+                if (value && value !== this.startDate) {
+                    this.startDate = value;
+                }
+            });
+            
+            // Sincronizar premiacionFin con endDate
+            this.$watch('premiacionFin', (value) => {
+                if (value && value !== this.endDate) {
+                    this.endDate = value;
+                }
+            });
+            
+            // Auto-establecer fecha de inicio de evaluación al día siguiente de fin de inscripción
+            this.$watch('inscripcionFin', (value) => {
+                if (value) {
+                    const finInscripcion = new Date(value);
+                    finInscripcion.setDate(finInscripcion.getDate() + 1);
+                    this.evaluacionInicio = finInscripcion.toISOString().split('T')[0];
+                }
+            });
+            
+            // Auto-establecer fecha de inicio de premiación al día siguiente de fin de evaluación
+            this.$watch('evaluacionFin', (value) => {
+                if (value) {
+                    const finEvaluacion = new Date(value);
+                    finEvaluacion.setDate(finEvaluacion.getDate() + 1);
+                    this.premiacionInicio = finEvaluacion.toISOString().split('T')[0];
+                }
+            });
         },
 
         get inscripcionCompleta() {
@@ -35,6 +67,14 @@ function competitionForm() {
 
         get todasEtapasCompletas() {
             return this.inscripcionCompleta && this.evaluacionCompleta && this.premiacionCompleta;
+        },
+
+        get maxEvaluacionFin() {
+            // La fecha máxima para fin de evaluación debe dejar al menos 1 día para premiación
+            if (!this.endDate) return undefined;
+            const maxDate = new Date(this.endDate);
+            maxDate.setDate(maxDate.getDate() - 1);
+            return maxDate.toISOString().split('T')[0];
         },
 
         get currentMonth() {
@@ -176,12 +216,19 @@ function competitionForm() {
             if (this.startDate && this.endDate) {
                 this.startDate = date;
                 this.endDate = '';
+                this.inscripcionInicio = date;
+                this.inscripcionFin = '';
+                this.evaluacionInicio = '';
+                this.evaluacionFin = '';
+                this.premiacionInicio = '';
+                this.premiacionFin = '';
                 this.phases = [];
                 return;
             }
             // Si no hay fecha de inicio, la establecemos
             if (!this.startDate) {
                 this.startDate = date;
+                this.inscripcionInicio = date;
                 return;
             }
             // Si hay fecha de inicio pero no de fin
@@ -191,8 +238,11 @@ function competitionForm() {
                 if (selected < start) {
                     this.endDate = this.startDate;
                     this.startDate = date;
+                    this.premiacionFin = this.inscripcionInicio;
+                    this.inscripcionInicio = date;
                 } else {
                     this.endDate = date;
+                    this.premiacionFin = date;
                 }
             }
         },
@@ -246,16 +296,53 @@ function competitionForm() {
                 id: 'phase-' + Date.now(),
                 name: 'Fase ' + (this.phases.length + 1),
                 phase_id: '',
-                start_date: timelineStartDate,
-                end_date: this.calculateDefaultEndDate(timelineStartDate),
+                start_date: timelineStartDate,  // se ajustará en redistribución
+                end_date: timelineEndDate,      // se ajustará en redistribución
                 clasificados: '',
                 color: randomColor,
                 errors: []
             };
 
             this.phases.push(newPhase);
+            // Redistribuir fechas proporcionalmente entre todas las fases
+            this.redistributePhasesByTimeline(timelineStartDate, timelineEndDate);
             this.updatePhaseValidation(newPhase);
             this.editingPhase = newPhase.id;
+        },
+
+        redistributePhasesByTimeline(timelineStartDate, timelineEndDate) {
+            if (!timelineStartDate || !timelineEndDate || this.phases.length === 0) return;
+            const totalDays = this.getTotalDaysForTimeline(timelineStartDate, timelineEndDate); // días inclusivos
+            const n = this.phases.length;
+            if (totalDays < n) {
+                // Si hay más fases que días, asignar al menos 1 día por fase hasta donde se pueda y que las últimas compartan el último día
+                // Aún así mantenemos consecutivo y el último termina en timelineEndDate
+            }
+            const start = new Date(timelineStartDate);
+
+            // tamaño base de segmento en días (inclusivo)
+            const baseSegment = Math.floor(totalDays / n);
+            const remainder = totalDays % n; // distribuir 1 día extra a las primeras 'remainder' fases
+
+            let cursor = new Date(start);
+            for (let i = 0; i < n; i++) {
+                // calcular tamaño del segmento para esta fase
+                const segSize = baseSegment + (i < remainder ? 1 : 0);
+                // inicio
+                const segStart = new Date(cursor);
+                // fin: inicio + (segSize - 1) días
+                const segEnd = new Date(cursor);
+                segEnd.setDate(segEnd.getDate() + Math.max(0, segSize - 1));
+
+                // aplicar fechas
+                this.phases[i].start_date = segStart.toISOString().split('T')[0];
+                this.phases[i].end_date = segEnd.toISOString().split('T')[0];
+
+                // mover cursor al siguiente día
+                cursor.setDate(cursor.getDate() + segSize);
+            }
+            // Asegurar que la última fase termine exactamente en timelineEndDate
+            this.phases[n - 1].end_date = new Date(timelineEndDate).toISOString().split('T')[0];
         },
 
         calculateDefaultEndDate(startDate = null) {

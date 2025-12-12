@@ -32,6 +32,7 @@ Route::middleware(['auth'])->prefix('dashboard/admin')->name('admin.')->group(fu
     Route::resource('competicion', CompeticionController::class); // ->middleware('permission:competicion')
     Route::patch('competicion/{id}/estado/{state}', [CompeticionController::class, 'updateState'])->name('competicion.updateState'); // ->middleware('permission:competicion')
     Route::get('competicion/{id}/json', [CompeticionController::class, 'json'])->name('competicion.json'); // ->middleware('permission:competicion')
+    Route::post('competicion/check-name', [CompeticionController::class, 'checkNameAvailability'])->name('competicion.checkName'); // Verificar nombre duplicado
 
 
     // Rutas de roles

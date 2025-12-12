@@ -76,7 +76,7 @@
                                 <input type="text" id="competition-name" name="name"
                                     value="{{ old('name', $competicion->name) }}"
                                     placeholder="Ej: Olimpiada Nacional de Ciencias 2025"
-                                    class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('name') border-red-500 @enderror"
                                     maxlength="64"
                                     title="Debe contener al menos 1 letra. Máximo 60 letras y 4 números. No se permiten caracteres especiales ni más de 2 caracteres idénticos consecutivos."
                                     required>
@@ -87,6 +87,12 @@
                                         Números: <span id="number-count" class="font-semibold">0</span>/4
                                     </span>
                                 </div>
+                                @error('name')
+                                    <div class="mt-1 text-xs text-red-600 flex items-center gap-1">
+                                        <i class="fas fa-exclamation-circle"></i>
+                                        <span>{{ $message }}</span>
+                                    </div>
+                                @enderror
                                 <div id="validation-error" class="mt-1 text-xs text-red-600 flex items-center gap-1" style="display: none;">
                                     <i class="fas fa-exclamation-circle"></i>
                                     <span id="validation-error-message"></span>
@@ -415,8 +421,12 @@
                 const numberCountEl = document.getElementById('number-count');
                 const validationError = document.getElementById('validation-error');
                 const validationErrorMsg = document.getElementById('validation-error-message');
+                const competicionId = {{ $competicion->id }};
                 
                 let lastValidValue = '';
+                let nameCheckTimeout = null;
+                let isNameAvailable = true;
+                let originalName = input.value; // Store original name
                 
                 function removeConsecutiveDuplicates(str) {
                     // Remove more than 2 consecutive identical characters
@@ -515,6 +525,52 @@
                     input.classList.remove('border-red-500');
                 }
                 
+                // Check if name is available via AJAX
+                function checkNameAvailability(name) {
+                    // If name is same as original, it's always available
+                    if (name === originalName) {
+                        isNameAvailable = true;
+                        hideError();
+                        return;
+                    }
+                    
+                    if (!name || name.trim().length === 0) {
+                        isNameAvailable = true;
+                        return;
+                    }
+                    
+                    fetch('{{ route("admin.competicion.checkName") }}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                        },
+                        body: JSON.stringify({
+                            name: name,
+                            competicion_id: competicionId
+                        })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        isNameAvailable = data.available;
+                        if (!data.available) {
+                            showError(data.message);
+                        } else {
+                            // Check if has at least 1 letter
+                            const result = validateInput(name);
+                            const lettersOnly = result.textPart.replace(/[\s0-9]/g, '');
+                            if (name && lettersOnly.length < 1) {
+                                showError('El nombre debe contener al menos 1 letra (sin contar espacios y números)');
+                            } else {
+                                hideError();
+                            }
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error al verificar el nombre:', error);
+                    });
+                }
+                
                 // Initialize with current value
                 if (input.value) {
                     const result = validateInput(input.value);
@@ -546,8 +602,17 @@
                     const lettersOnly = result.textPart.replace(/[\s0-9]/g, '');
                     if (newValue && lettersOnly.length < 1) {
                         showError('El nombre debe contener al menos 1 letra (sin contar espacios y números)');
+                        isNameAvailable = false;
                     } else {
-                        hideError();
+                        // Clear previous timeout
+                        if (nameCheckTimeout) {
+                            clearTimeout(nameCheckTimeout);
+                        }
+                        
+                        // Check name availability after 500ms of no typing
+                        nameCheckTimeout = setTimeout(() => {
+                            checkNameAvailability(newValue);
+                        }, 500);
                     }
                     
                     // Restore cursor position
@@ -573,6 +638,19 @@
                     // Trigger input event to update counters
                     this.dispatchEvent(new Event('input'));
                 });
+                
+                // Prevent form submission if name is not available
+                const form = input.closest('form');
+                if (form) {
+                    form.addEventListener('submit', function(e) {
+                        if (!isNameAvailable) {
+                            e.preventDefault();
+                            showError('Este nombre de competencia ya está registrado. Por favor, elige otro nombre.');
+                            input.focus();
+                            return false;
+                        }
+                    });
+                }
             });
         </script>
     </body>

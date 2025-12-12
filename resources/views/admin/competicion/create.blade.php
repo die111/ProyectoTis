@@ -48,9 +48,10 @@
                                 </label>
                                 <input type="text" id="competition-name" name="name"
                                     placeholder="Ej: Olimpiada Nacional de Ciencias 2025"
-                                    class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 @error('name') border-red-500 @enderror"
                                     maxlength="64"
                                     title="Debe contener al menos 1 letra. Máximo 60 letras y 4 números. No se permiten caracteres especiales ni más de 2 caracteres idénticos consecutivos."
+                                    value="{{ old('name') }}"
                                     required>
                                 <div class="mt-1 flex justify-between text-xs">
                                     <span class="text-gray-500">Mínimo 1 letra. Máximo 60 letras y 4 números. No más de 2 caracteres idénticos consecutivos.</span>
@@ -59,6 +60,12 @@
                                         Números: <span id="number-count" class="font-semibold">0</span>/4
                                     </span>
                                 </div>
+                                @error('name')
+                                    <div class="mt-1 text-xs text-red-600 flex items-center gap-1">
+                                        <i class="fas fa-exclamation-circle"></i>
+                                        <span>{{ $message }}</span>
+                                    </div>
+                                @enderror
                                 <div id="validation-error" class="mt-1 text-xs text-red-600 flex items-center gap-1" style="display: none;">
                                     <i class="fas fa-exclamation-circle"></i>
                                     <span id="validation-error-message"></span>
@@ -81,8 +88,13 @@
                     <div class="px-6 py-4 border-b border-gray-200">
                         <h2 class="text-lg font-semibold text-gray-900 flex items-center gap-2">
                             <i class="fas fa-calendar text-blue-600"></i>
-                            Seleccionar Rango de Fechas de la Competencia
+                            Rango de Fechas de la Competencia
                         </h2>
+                        <p class="text-sm text-gray-600 mt-1">
+                            <i class="fas fa-info-circle text-blue-500"></i>
+                            <strong>1er clic:</strong> Define la fecha de inicio de inscripción | 
+                            <strong>2do clic:</strong> Define la fecha de fin de premiación
+                        </p>
                     </div>
                     <div class="p-6">
                         <!-- Calendario Visual -->
@@ -101,24 +113,23 @@
                                         <label class="block text-sm font-medium text-gray-700 mb-1">Fecha de Inicio</label>
                                         <input type="date" name="inscripcion_inicio"
                                             x-model="inscripcionInicio"
-                                            :disabled="!startDate || !endDate"
-                                            :min="startDate"
-                                            :max="endDate"
-                                            class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 text-sm disabled:bg-gray-100 disabled:cursor-not-allowed">
+                                            :min="startDate || undefined"
+                                            :max="endDate || undefined"
+                                            class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 text-sm">
                                     </div>
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 mb-1">Fecha de Fin</label>
                                         <input type="date" name="inscripcion_fin"
                                             x-model="inscripcionFin"
-                                            :disabled="!startDate || !endDate"
-                                            :min="startDate"
-                                            :max="endDate"
+                                            :disabled="!inscripcionInicio"
+                                            :min="inscripcionInicio || startDate"
+                                            :max="endDate || undefined"
                                             class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 text-sm disabled:bg-gray-100 disabled:cursor-not-allowed">
                                     </div>
                                 </div>
-                                <div x-show="!startDate || !endDate" class="mt-2 text-xs text-amber-600 flex items-center gap-1">
-                                    <i class="fas fa-exclamation-triangle"></i>
-                                    <span>Selecciona primero el rango de fechas de la competencia</span>
+                                <div x-show="!inscripcionInicio" class="mt-2 text-xs text-amber-600 flex items-center gap-1">
+                                    <i class="fas fa-mouse-pointer"></i>
+                                    <span>Haz clic en el calendario para definir la fecha inicial</span>
                                 </div>
                             </div>
 
@@ -134,8 +145,8 @@
                                         <input type="date" name="evaluacion_inicio"
                                             x-model="evaluacionInicio"
                                             :disabled="!inscripcionCompleta"
-                                            :min="startDate"
-                                            :max="endDate"
+                                            :min="inscripcionFin || inscripcionInicio || startDate"
+                                            :max="endDate || undefined"
                                             class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm disabled:bg-gray-100 disabled:cursor-not-allowed">
                                     </div>
                                     <div>
@@ -143,8 +154,8 @@
                                         <input type="date" name="evaluacion_fin"
                                             x-model="evaluacionFin"
                                             :disabled="!inscripcionCompleta"
-                                            :min="startDate"
-                                            :max="endDate"
+                                            :min="evaluacionInicio || inscripcionInicio || startDate"
+                                            :max="maxEvaluacionFin || undefined"
                                             class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm disabled:bg-gray-100 disabled:cursor-not-allowed">
                                     </div>
                                 </div>
@@ -167,8 +178,8 @@
                                         <input type="date" name="premiacion_inicio"
                                             x-model="premiacionInicio"
                                             :disabled="!evaluacionCompleta"
-                                            :min="startDate"
-                                            :max="endDate"
+                                            :min="evaluacionFin || evaluacionInicio || inscripcionInicio || startDate"
+                                            :max="endDate || undefined"
                                             class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
                                             :class="{'border-red-300': evaluacionCompleta && !premiacionInicio}"
                                             required>
@@ -178,8 +189,8 @@
                                         <input type="date" name="premiacion_fin"
                                             x-model="premiacionFin"
                                             :disabled="!evaluacionCompleta"
-                                            :min="startDate"
-                                            :max="endDate"
+                                            :min="premiacionInicio || evaluacionInicio || inscripcionInicio || startDate"
+                                            :max="endDate || undefined"
                                             class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
                                             :class="{'border-red-300': evaluacionCompleta && !premiacionFin}"
                                             required>
@@ -188,6 +199,10 @@
                                 <div x-show="!evaluacionCompleta" class="mt-2 text-xs text-amber-600 flex items-center gap-1">
                                     <i class="fas fa-exclamation-triangle"></i>
                                     <span>Completa primero las fechas de evaluación</span>
+                                </div>
+                                <div x-show="evaluacionCompleta && !premiacionFin" class="mt-2 text-xs text-blue-600 flex items-center gap-1">
+                                    <i class="fas fa-mouse-pointer"></i>
+                                    <span>Haz un segundo clic en el calendario para definir la fecha final</span>
                                 </div>
                                 <div x-show="evaluacionCompleta && !premiacionCompleta" class="mt-2 text-xs text-red-600 flex items-center gap-1">
                                     <i class="fas fa-exclamation-circle"></i>
@@ -414,8 +429,11 @@
                 const numberCountEl = document.getElementById('number-count');
                 const validationError = document.getElementById('validation-error');
                 const validationErrorMsg = document.getElementById('validation-error-message');
+                const submitButton = document.querySelector('button[type="submit"]');
                 
                 let lastValidValue = '';
+                let nameCheckTimeout = null;
+                let isNameAvailable = true;
                 
                 function removeConsecutiveDuplicates(str) {
                     // Remove more than 2 consecutive identical characters
@@ -514,6 +532,44 @@
                     input.classList.remove('border-red-500');
                 }
                 
+                // Check if name is available via AJAX
+                function checkNameAvailability(name) {
+                    if (!name || name.trim().length === 0) {
+                        isNameAvailable = true;
+                        return;
+                    }
+                    
+                    fetch('{{ route("admin.competicion.checkName") }}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                        },
+                        body: JSON.stringify({
+                            name: name
+                        })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        isNameAvailable = data.available;
+                        if (!data.available) {
+                            showError(data.message);
+                        } else {
+                            // Check if has at least 1 letter
+                            const result = validateInput(name);
+                            const lettersOnly = result.textPart.replace(/[\s0-9]/g, '');
+                            if (name && lettersOnly.length < 1) {
+                                showError('El nombre debe contener al menos 1 letra (sin contar espacios y números)');
+                            } else {
+                                hideError();
+                            }
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error al verificar el nombre:', error);
+                    });
+                }
+                
                 // Initialize with current value (if any, e.g., after validation error)
                 if (input.value) {
                     const result = validateInput(input.value);
@@ -525,6 +581,9 @@
                     if (result.value && lettersOnly.length < 1) {
                         showError('El nombre debe contener al menos 1 letra (sin contar espacios y números)');
                     }
+                    
+                    // Check name availability on load if there's a value
+                    checkNameAvailability(result.value);
                 }
                 
                 input.addEventListener('input', function(e) {
@@ -545,8 +604,17 @@
                     const lettersOnly = result.textPart.replace(/[\s0-9]/g, '');
                     if (newValue && lettersOnly.length < 1) {
                         showError('El nombre debe contener al menos 1 letra (sin contar espacios y números)');
+                        isNameAvailable = false;
                     } else {
-                        hideError();
+                        // Clear previous timeout
+                        if (nameCheckTimeout) {
+                            clearTimeout(nameCheckTimeout);
+                        }
+                        
+                        // Check name availability after 500ms of no typing
+                        nameCheckTimeout = setTimeout(() => {
+                            checkNameAvailability(newValue);
+                        }, 500);
                     }
                     
                     // Restore cursor position
@@ -572,6 +640,19 @@
                     // Trigger input event to update counters
                     this.dispatchEvent(new Event('input'));
                 });
+                
+                // Prevent form submission if name is not available
+                const form = input.closest('form');
+                if (form) {
+                    form.addEventListener('submit', function(e) {
+                        if (!isNameAvailable) {
+                            e.preventDefault();
+                            showError('Este nombre de competencia ya está registrado. Por favor, elige otro nombre.');
+                            input.focus();
+                            return false;
+                        }
+                    });
+                }
             });
         </script>
     </body>

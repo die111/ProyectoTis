@@ -115,7 +115,7 @@ class CategoriaController extends Controller
     {
         // Validar los datos del formulario
         $request->validate([
-            'nombre' => 'required|string|max:255',
+            'nombre' => 'required|string|max:255|unique:categorias,nombre',
             'descripcion' => 'required|string',
             'niveles' => 'required|string'
         ]);
@@ -223,7 +223,7 @@ class CategoriaController extends Controller
     {
         // Validar los datos del formulario
         $request->validate([
-            'nombre' => 'required|string|max:255',
+            'nombre' => 'required|string|max:255|unique:categorias,nombre,' . $id,
             'descripcion' => 'required|string',
             'niveles' => 'required|string'
         ]);

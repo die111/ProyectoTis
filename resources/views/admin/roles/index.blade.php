@@ -43,20 +43,20 @@
       <tr class="{{ $i % 2 === 0 ? 'bg-white' : 'bg-[#d7dde4]' }} hover:bg-blue-50 transition-colors">
         <td class="py-3 px-2 text-gray-900 align-middle">{{ $role->name }}</td>
         <td class="py-3 px-2 text-gray-700 align-middle text-left">{{ $role->description ?? '—' }}</td>
-        <td class="py-2 px-2 align-middle">
-          <div class="flex flex-wrap gap-2 justify-center">
-            <a href="{{ route('admin.roles.edit', $role->id) }}" class="btn btn-primary btn-pressable px-3 py-1 text-sm">Editar</a>
+        <td class="py-2 px-20 align-middle text-right">
+          <div class="inline-flex flex-wrap gap-2 justify-end">
             @if($role->is_active)
               <form action="{{ route('admin.roles.deactivate', $role->id) }}" method="POST" style="display:inline-block;" class="swal-delete">
                 @csrf
-                <button type="submit" class="btn btn-secondary btn-pressable px-3 py-1 text-sm">Desactivar</button>
+                <button type="submit" class="btn btn-pressable px-4 py-1.5 text-sm text-white" style="background-color: #E7000B; border-radius: 20px;">Desactivar</button>
               </form>
             @else
               <form action="{{ route('admin.roles.activate', $role->id) }}" method="POST" style="display:inline-block;">
                 @csrf
-                <button type="submit" class="btn btn-primary btn-pressable px-3 py-1 text-sm">Activar</button>
+                <button type="submit" class="btn btn-pressable px-4 py-1.5 text-sm text-white" style="background-color: #15803D; border-radius: 20px;">Activar</button>
               </form>
             @endif
+            <a href="{{ route('admin.roles.edit', $role->id) }}" class="btn btn-primary btn-pressable px-4 py-1.5 text-sm flex justify-center items-center" style="border-radius: 20px;">Editar</a>
           </div>
         </td>
       </tr>

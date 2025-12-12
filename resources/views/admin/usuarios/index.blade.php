@@ -105,7 +105,6 @@
                             <th scope="col" class="px-6 py-4">Apellido Paterno</th>
                             <th scope="col" class="px-6 py-4">Apellido Materno</th>
                             <th scope="col" class="px-6 py-4">Rol</th>
-                            <th scope="col" class="px-6 py-4">Nivel</th>
                             <th scope="col" class="px-6 py-4">Estado</th>
                             <th scope="col" class="px-6 py-4 text-right">Acciones</th>
                         </tr>
@@ -114,7 +113,7 @@
                     <tbody class="divide-y divide-slate-200 bg-white/95">
                         @if($users->isEmpty())
                             <tr>
-                                <td colspan="7" class="px-6 py-8 text-center text-slate-400 text-lg">No hay usuarios registrados.
+                                <td colspan="6" class="px-6 py-8 text-center text-slate-400 text-lg">No hay usuarios registrados.
                                 </td>
                             </tr>
                         @else
@@ -124,7 +123,6 @@
                                     <td class="px-6 py-3">{{ $user->last_name_father }}</td>
                                     <td class="px-6 py-3">{{ $user->last_name_mother }}</td>
                                     <td class="px-6 py-3">{{ $user->role ? $user->role->name : '-' }}</td>
-                                    <td class="px-6 py-3">{{ $user->level ?? '-' }}</td>
                                     <td class="px-6 py-3">
                                         @if($user->is_active)
                                             <span class="inline-block px-3 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">Activo</span>

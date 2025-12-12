@@ -45,24 +45,26 @@
                 <td class="py-3 px-2 text-gray-700 align-middle text-left">{{ $phase->description ?? '—' }}</td>
                 <td class="py-2 px-2 align-middle">
                     <div class="flex flex-wrap gap-2 justify-center">
-                        <a href="{{ route('admin.phases.edit', $phase->id) }}" class="btn btn-primary btn-pressable px-3 py-1 text-sm">Editar</a>
                         @if($phase->is_active)
                             <form action="{{ route('admin.phases.destroy', $phase->id) }}" method="POST" style="display:inline-block;" class="swal-delete">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" 
-                                    class="btn btn-secondary btn-pressable px-3 py-1 text-sm {{ $phase->in_use ? 'opacity-50 cursor-not-allowed' : '' }}" 
+                                    class="btn btn-pressable px-3 py-1 text-sm text-white {{ $phase->in_use ? 'opacity-50 cursor-not-allowed' : '' }}" 
+                                    style="background-color: #E7000B; border-radius: 20px;"
                                     {{ $phase->in_use ? 'disabled' : '' }}
                                     @if($phase->in_use) title="No se puede desactivar porque está en uso en una competición" @endif>
                                     Desactivar
                                 </button>
                             </form>
+                            <a href="{{ route('admin.phases.edit', $phase->id) }}" class="btn btn-primary btn-pressable px-3 py-1 text-sm flex justify-center items-center" style="border-radius: 20px;">Editar</a>
                         @else
                             <form action="{{ route('admin.phases.habilitar', $phase->id) }}" method="POST" style="display:inline-block;">
                                 @csrf
                                 @method('PATCH')
-                                <button type="submit" class="btn btn-primary btn-pressable px-3 py-1 text-sm">Habilitar</button>
+                                <button type="submit" class="btn btn-pressable px-3 py-1 text-sm text-white" style="background-color: #15803D; border-radius: 20px;">Activar</button>
                             </form>
+                            <a href="{{ route('admin.phases.edit', $phase->id) }}" class="btn btn-primary btn-pressable px-3 py-1 text-sm flex justify-center items-center" style="border-radius: 20px;">Editar</a>
                         @endif
                     </div>
                 </td>

@@ -126,10 +126,6 @@
                                   title="No se puede desactivar: Esta categoría está siendo utilizada en una competición activa"
                                   class="inline-flex items-center gap-1 rounded-lg px-3 py-1 text-xs font-medium text-white shadow-sm cursor-not-allowed opacity-50"
                                   style="background-color: #DC2626;">
-                            <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                            </svg>
                             Desactivar
                           </button>
                         @else
@@ -138,10 +134,6 @@
                             <button type="submit"
                                     class="inline-flex items-center gap-1 rounded-lg px-3 py-1 text-xs font-medium text-white shadow-sm hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-offset-2"
                                     style="background-color: #DC2626;">
-                              <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                      d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                              </svg>
                               Desactivar
                             </button>
                           </form>
@@ -152,10 +144,6 @@
                           <button type="submit"
                                   class="inline-flex items-center gap-1 rounded-lg px-3 py-1 text-xs font-medium text-white shadow-sm hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-offset-2"
                                   style="background-color: #15803D;">
-                            <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M5 13l4 4L19 7"></path>
-                            </svg>
                             Activar
                           </button>
                         </form>
@@ -164,11 +152,6 @@
                       <a href="{{ route('admin.categorias.edit', $c->id) }}"
                          class="inline-flex items-center gap-1 rounded-lg px-3 py-1 text-xs font-medium text-white shadow-sm hover:brightness-110 focus:outline-none focus:ring-2 focus:ring-offset-2"
                          style="background-color: #091C47;">
-                        <svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z">
-                          </path>
-                        </svg>
                         Editar
                       </a>
                     </div>

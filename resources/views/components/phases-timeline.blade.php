@@ -123,6 +123,16 @@
             </div>
         </template>
 
+        <!-- Botón Agregar Fase centrado -->
+        <div class="flex justify-center py-4">
+            <button type="button" @click="addPhase"
+                class="btn btn-primary inline-flex items-center px-4 py-2 text-sm font-medium rounded-md shadow-sm hover:shadow-md transition-shadow"
+                :disabled="!((typeof evaluacionInicio !== 'undefined' && evaluacionInicio && evaluacionFin) || (startDate && endDate))">
+                <i class="fas fa-plus mr-2"></i>
+                Agregar Fase
+            </button>
+        </div>
+
         <div x-show="phases.length === 0"
             class="text-center py-8 text-gray-500 border-2 border-dashed border-gray-300 rounded-lg">
             <i class="fas fa-calendar-plus text-3xl text-gray-400 mb-3"></i>

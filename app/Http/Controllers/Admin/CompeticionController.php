@@ -15,6 +15,25 @@ use Illuminate\Support\Facades\Validator;
 
 class CompeticionController extends Controller
 {
+    public function checkNameAvailability(Request $request)
+    {
+        $name = $request->input('name');
+        $competicionId = $request->input('competicion_id'); // Para excluir la competencia actual al editar
+        
+        $query = Competicion::where('name', $name);
+        
+        if ($competicionId) {
+            $query->where('id', '!=', $competicionId);
+        }
+        
+        $exists = $query->exists();
+        
+        return response()->json([
+            'available' => !$exists,
+            'message' => $exists ? 'Este nombre de competencia ya está registrado.' : 'Nombre disponible.'
+        ]);
+    }
+
     public function show($id)
     {
         $competicion = Competicion::with(['areas', 'phases', 'categorias'])->findOrFail($id);
@@ -58,7 +77,7 @@ class CompeticionController extends Controller
     public function store(Request $request)
     {
         $rules = [
-            'name' => 'required|string',
+            'name' => 'required|string|unique:competicions,name',
             'description' => 'nullable|string',
             'fechaInicio' => 'required|date',
             'fechaFin' => 'required|date|after_or_equal:fechaInicio',
@@ -205,7 +224,7 @@ class CompeticionController extends Controller
     public function update(Request $request, $competicion)
     {
         $rules = [
-            'name' => 'required|string',
+            'name' => 'required|string|unique:competicions,name,' . $competicion,
             'description' => 'nullable|string',
             'fechaInicio' => 'required|date',
             'fechaFin' => 'required|date|after_or_equal:fechaInicio',
